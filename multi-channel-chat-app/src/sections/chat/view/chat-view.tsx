@@ -1,0 +1,145 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+
+import Typography from "@mui/material/Typography";
+
+import { EmptyContent } from "@/components/empty-content";
+
+import { Layout } from "../layout";
+import { ChatNav } from "../chat-nav";
+import { ChatRoom } from "../chat-room";
+import { ChatMessageList } from "../chat-message-list";
+import { ChatMessageInput } from "../chat-message-input";
+import { ChatHeaderDetail } from "../chat-header-detail";
+import { ChatHeaderCompose } from "../chat-header-compose";
+import { useCollapseNav } from "../hooks/use-collapse-nav";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuthContext } from "@/auth/hooks/use-auth-context";
+import {
+  useGetContacts,
+  useGetConversation,
+  useGetConversations,
+} from "@/actions/chat";
+import { paths } from "@/routes/path";
+import { DashboardContent } from "@/layouts/dashboard";
+import { CONFIG } from "@/config-global";
+
+// ----------------------------------------------------------------------
+
+export function ChatView() {
+  const router = useRouter();
+
+  const { user } = useAuthContext();
+
+  const { contacts } = useGetContacts();
+
+  const searchParams = useSearchParams();
+
+  const selectedConversationId = searchParams.get("id") || "";
+
+  const [recipients, setRecipients] = useState([]);
+
+  const { conversations, conversationsLoading } = useGetConversations();
+
+  const { conversation, conversationError, conversationLoading } =
+    useGetConversation(`${selectedConversationId}`);
+
+  const roomNav = useCollapseNav();
+
+  const conversationsNav = useCollapseNav();
+
+  const participants = conversation
+    ? conversation.participants.filter(
+        (participant: any) => participant.id !== `${user?.userID}`
+      )
+    : [];
+
+  useEffect(() => {
+    if (conversationError || !selectedConversationId) {
+      router.push(paths.dashboard.chat);
+    }
+  }, [conversationError, router, selectedConversationId]);
+
+  const handleAddRecipients = useCallback((selected: any) => {
+    setRecipients(selected);
+  }, []);
+
+  return (
+    <DashboardContent
+      maxWidth={false}
+      sx={{ display: "flex", flex: "1 1 auto", flexDirection: "column" }}
+    >
+      <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
+        Chat
+      </Typography>
+
+      <Layout
+        sx={{
+          minHeight: 0,
+          flex: "1 1 0",
+          borderRadius: 2,
+          position: "relative",
+          bgcolor: "background.paper",
+          boxShadow: (theme: any) => theme.customShadows.card,
+        }}
+        slots={{
+          header: selectedConversationId ? (
+            <ChatHeaderDetail
+              collapseNav={roomNav}
+              participants={participants}
+              loading={conversationLoading}
+            />
+          ) : (
+            <ChatHeaderCompose
+              contacts={contacts}
+              onAddRecipients={handleAddRecipients}
+            />
+          ),
+          nav: (
+            <ChatNav
+              contacts={contacts}
+              conversations={conversations}
+              loading={conversationsLoading}
+              selectedConversationId={selectedConversationId}
+              collapseNav={conversationsNav}
+            />
+          ),
+          main: (
+            <>
+              {selectedConversationId ? (
+                <ChatMessageList
+                  messages={conversation?.messages ?? []}
+                  participants={participants}
+                  loading={conversationLoading}
+                />
+              ) : (
+                <EmptyContent
+                  imgUrl={`${CONFIG.assetsDir}/assets/icons/empty/ic-chat-active.svg`}
+                  title="Good morning!"
+                  description="Write something awesome..."
+                />
+              )}
+
+              <ChatMessageInput
+                recipients={recipients}
+                onAddRecipients={handleAddRecipients}
+                selectedConversationId={selectedConversationId}
+                disabled={!recipients.length && !selectedConversationId}
+              />
+            </>
+          ),
+          details: selectedConversationId && (
+            <ChatRoom
+              collapseNav={roomNav}
+              participants={participants}
+              loading={conversationLoading}
+              messages={conversation?.messages ?? []}
+            />
+          ),
+        }}
+      />
+    </DashboardContent>
+  );
+}
