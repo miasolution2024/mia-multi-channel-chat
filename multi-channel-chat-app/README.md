@@ -8,10 +8,10 @@ This project is a modern frontend application built with Next.js and TypeScript.
 ### Key Files and Directories
 - **`public/assets/`**: Contains static resources such as images, icons, and other assets used throughout the application.
 - **`src/app`**: Contains the Next.js App Router structure, including server components, layouts, and pages (if using the App Router).
-- **`@/actions`**: Contains API interaction logic, such as `user.ts`, `session.ts`, and `product-review.ts`.
-- **`@/auth`**: Includes authentication utilities like `auth-provider.tsx` and `auth-context.tsx`.
-- **`@/components`**: Houses reusable UI components, e.g., `carousel` and `notifications-drawer`.
-- **`@/hooks`**: Custom React hooks for managing reusable logic across components.
+- **`src/actions`**: Contains API interaction logic, such as `user.ts`, `session.ts`, and `product-review.ts`.
+- **`src/auth`**: Includes authentication utilities like `auth-provider.tsx` and `auth-context.tsx`.
+- **`src/components`**: Houses reusable UI components, e.g., `carousel` and `notifications-drawer`.
+- **`src/hooks`**: Custom React hooks for managing reusable logic across components.
 - **`src/ultis/axios.ts`**: Centralized Axios instance and API endpoint definitions.
 - **`src/layouts`**: Layout components for consistent page structure.
 - **`src/locales`**: Localization utilities for internationalization.
