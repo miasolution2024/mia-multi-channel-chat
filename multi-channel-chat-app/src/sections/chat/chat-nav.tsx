@@ -21,10 +21,10 @@ import { ChatNavItem } from './chat-nav-item';
 import { ChatNavAccount } from './chat-nav-account';
 import { ChatNavItemSkeleton } from './chat-skeleton';
 import { ChatNavSearchResults } from './chat-nav-search-results';
-import { useRouter } from 'next/router';
 import { useAuthContext } from '@/auth/hooks/use-auth-context';
 import { today } from '@/utils/format-time';
 import { paths } from '@/routes/path';
+import { useRouter } from 'next/navigation';
 
 // ----------------------------------------------------------------------
 
@@ -55,14 +55,14 @@ export function ChatNav({ loading, contacts, collapseNav, conversations, selecte
 
   const myContact = useMemo(
     () => ({
-      id: `${user?.userID}`,
+      id: `${user?.id}`,
       role: `${user?.role}`,
-      // email: `${user?.email}`,
-      // address: `${user?.address}`,
-      name: `${user?.fullName}`,
+      email: `${user?.email}`,
+      name: `${user?.full_name}`,
       lastActivity: today(),
-      avatarUrl: `${user?.photoURL}`,
-      // phoneNumber: `${user?.phoneNumber}`,
+      avatarUrl: `${user?.avatar}`,
+      // address: `${user?.address}`,
+      // phoneNumber: `${user?.p}`,
       status: 'online',
     }),
     [user]

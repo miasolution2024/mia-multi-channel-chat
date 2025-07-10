@@ -52,7 +52,7 @@ export function ChatView() {
 
   const participants = conversation
     ? conversation.participants.filter(
-        (participant: any) => participant.id !== `${user?.userID}`
+        (participant: any) => participant.id !== `${user?.id}`
       )
     : [];
 

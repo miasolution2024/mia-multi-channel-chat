@@ -28,12 +28,12 @@ export function SalesOrderNewEditCustomer() {
   const { customers } = useGetCustomers();
 
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    customers.find((customer) => customer.customerID === customerID) || null
+    customers.find((customer) => customer.id === customerID) || null
   );
 
   useEffect(() => {
     setSelectedCustomer(
-      customers.find((customer) => customer.customerID === customerID) || null
+      customers.find((customer) => customer.id === customerID) || null
     );
   }, [customers, customerID]);
 
@@ -69,10 +69,10 @@ export function SalesOrderNewEditCustomer() {
 
           <Stack spacing={1}>
             <Typography variant="subtitle2">
-              {selectedCustomer?.customerName}
+              {selectedCustomer?.name}
             </Typography>
             <Typography variant="body2">{selectedCustomer?.address}</Typography>
-            <Typography variant="body2"> {selectedCustomer?.phone}</Typography>
+            <Typography variant="body2"> {selectedCustomer?.phone_number}</Typography>
           </Stack>
         </Stack>
       </Stack>

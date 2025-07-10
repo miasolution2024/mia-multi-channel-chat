@@ -28,11 +28,19 @@ export default function AuthProvider({
       if (accessToken && isValidToken(accessToken)) {
         setSession(accessToken);
 
-        const res = await axios.get(`${endpoints.auth.me}`);
+        const res = await axios.get(`${endpoints.auth.me}?fields=*,role.name`);
 
-        const user = res.data.data;
+        const user = res.data.data as User;
 
-        setState({ user: { ...user, accessToken }, loading: false });
+        setState({
+          user: {
+            ...user,
+            accessToken,
+            full_name: `${user.first_name} ${user.last_name}`,
+            avatar:`${CONFIG.serverUrl}/assets/${user.avatar}`
+          },
+          loading: false,
+        });
       } else {
         setState({ user: null, loading: false });
       }
@@ -56,9 +64,9 @@ export default function AuthProvider({
       user: state.user
         ? {
             ...state.user,
-            role: state.user?.role ?? "user",
-            photoURL:
-              state.user?.photoURL ??
+            role: state.user?.role,
+            avatar:
+              state.user?.avatar ??
               `${CONFIG.assetsDir}/assets/images/mock/avatar/avatar-1.webp`,
           }
         : null,

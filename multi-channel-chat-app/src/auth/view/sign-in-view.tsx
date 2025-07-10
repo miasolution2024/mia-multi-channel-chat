@@ -25,9 +25,9 @@ import { signInAsync } from '@/actions/auth';
 // ----------------------------------------------------------------------
 
 export const SignInSchema = zod.object({
-  username: zod
+  email: zod
     .string()
-    .min(1, { message: 'Username is required!' }),
+    .min(1, { message: 'email is required!' }),
   password: zod
     .string()
     .min(1, { message: 'Password is required!' })
@@ -46,7 +46,7 @@ export function JwtSignInView() {
   const password = useBoolean();
 
   const defaultValues = {
-    username: '',
+    email: '',
     password: '',
   };
 
@@ -62,7 +62,7 @@ export function JwtSignInView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await signInAsync({ username: data.username, password: data.password });
+      await signInAsync({ email: data.email, password: data.password });
       await checkUserSession?.();
 
       router.refresh();
@@ -74,7 +74,7 @@ export function JwtSignInView() {
 
   const renderForm = (
     <Box gap={3} display="flex" flexDirection="column">
-      <Field.Text name="username" label="Username" InputLabelProps={{ shrink: true }} />
+      <Field.Text name="email" label="Email" InputLabelProps={{ shrink: true }} />
 
       <Box gap={1.5} display="flex" flexDirection="column">
         <Link

@@ -31,7 +31,7 @@ export function ChatMessageInput({
 
   const myContact = useMemo(
     () => ({
-      id: `${user?.userID}`,
+      id: `${user?.id}`,
       role: `${user?.role}`,
       // email: `${user?.email}`,
       // address: `${user?.address}`,

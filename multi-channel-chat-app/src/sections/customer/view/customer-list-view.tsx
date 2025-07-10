@@ -40,9 +40,10 @@ import { mutate } from "swr";
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: "customerName", label: "Full Name" },
-  { id: "phone", label: "Phone" },
-  { id: "address", label: "Address", width: 180 },
+  { id: "id", label: "Id" },
+  { id: "name", label: "Name" },
+  { id: "customer_source", label: "Customer Source" },
+  { id: "phone_number", label: "Phone Number", width: 180 },
   { id: "email", label: "Email" },
   { id: "", width: 88 },
 ];
@@ -97,7 +98,7 @@ export function CustomerListView() {
 
   const handleEditRow = useCallback(
     (id: string) => {
-      const customer = tableData.find((item) => item.customerID === id);
+      const customer = tableData.find((item) => item.id === id);
       selectedCustomer.setState({
         openDialog: true,
         currentCustomer: customer,
@@ -155,7 +156,7 @@ export function CustomerListView() {
               onSelectAllRows={(checked: boolean) =>
                 table.onSelectAllRows(
                   checked,
-                  dataFiltered.map((row: Customer) => row.customerID)
+                  dataFiltered.map((row: Customer) => row.id)
                 )
               }
               action={
@@ -182,7 +183,7 @@ export function CustomerListView() {
                   onSelectAllRows={(checked: boolean) =>
                     table.onSelectAllRows(
                       checked,
-                      dataFiltered.map((row: Customer) => row.customerID)
+                      dataFiltered.map((row: Customer) => row.id)
                     )
                   }
                 />
@@ -195,10 +196,10 @@ export function CustomerListView() {
                     )
                     .map((row: Customer) => (
                       <CustomerTableRow
-                        key={row.customerID}
+                        key={row.id}
                         row={row}
-                        selected={table.selected.includes(row.customerID)}
-                        onSelectRow={() => table.onSelectRow(row.customerID)}
+                        selected={table.selected.includes(row.id)}
+                        onSelectRow={() => table.onSelectRow(row.id)}
                         onEditRow={handleEditRow}
                       />
                     ))}
@@ -287,7 +288,7 @@ function applyFilter({
   if (customerName) {
     inputData = inputData.filter(
       (customer: Customer) =>
-        customer.customerName
+        customer.name
           .toLowerCase()
           .indexOf(customerName.toLowerCase()) !== -1
     );

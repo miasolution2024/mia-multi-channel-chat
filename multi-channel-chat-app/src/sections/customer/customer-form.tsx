@@ -43,9 +43,9 @@ export function CustomerForm({
 
   const defaultValues = useMemo(
     () => ({
-      customerName: currentCustomer?.customerName || "",
+      customerName: currentCustomer?.name || "",
       email: currentCustomer?.email || "",
-      phone: currentCustomer?.phone || "",
+      phone: currentCustomer?.phone_number || "",
       address: currentCustomer?.address || "",
     }),
     [currentCustomer]
@@ -73,7 +73,7 @@ export function CustomerForm({
 
   const onSubmit = handleSubmit(async (data) => {
     const promise = currentCustomer
-      ? updateCustomerAsync(currentCustomer?.customerID, data)
+      ? updateCustomerAsync(currentCustomer?.id, data)
       : createCustomerAsync(data);
 
     try {

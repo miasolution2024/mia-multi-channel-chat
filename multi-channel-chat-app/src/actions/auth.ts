@@ -13,7 +13,7 @@ export const signInAsync = async (request: SignInRequest) => {
   try {
     const response = await axios.post(endpoints.auth.signIn, request);
 
-    const { token } = response.data.data;
+    const { access_token: token } = response.data.data;
 
     if (!token) {
       throw new Error("Access token not found in response");

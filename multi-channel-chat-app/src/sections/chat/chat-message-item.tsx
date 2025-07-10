@@ -19,7 +19,7 @@ export function ChatMessageItem({ message, participants, onOpenLightbox }: any) 
   const { me, senderDetails, hasImage } = getMessage({
     message,
     participants,
-    currentUserId: `${user?.userID}`,
+    currentUserId: `${user?.id}`,
   });
 
   const { firstName, avatarUrl } = senderDetails;

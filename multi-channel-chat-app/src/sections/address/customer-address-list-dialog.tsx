@@ -58,7 +58,7 @@ export function CustomerAddressListDialog({
     <Scrollbar sx={{ p: 0.5, maxHeight: 480 }}>
       {dataFiltered.map((address: Customer) => (
         <ButtonBase
-          key={address.customerID}
+          key={address.id}
           onClick={() => handleSelectAddress(address)}
           sx={{
             py: 1,
@@ -70,22 +70,22 @@ export function CustomerAddressListDialog({
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-start",
-            ...(selected(`${address.customerID}`) && {
+            ...(selected(`${address.id}`) && {
               bgcolor: "action.selected",
             }),
           }}
         >
           <Stack direction="row" alignItems="center" spacing={1}>
-            <Typography variant="subtitle2">{address.customerName}</Typography>
+            <Typography variant="subtitle2">{address.name}</Typography>
           </Stack>
 
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
             {address.address}
           </Typography>
 
-          {address.phone && (
+          {address.phone_number && (
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {address.phone}
+              {address.phone_number}
             </Typography>
           )}
         </ButtonBase>
@@ -143,9 +143,9 @@ function applyFilter({
   if (query) {
     return inputData.filter(
       (address) =>
-        address.customerName.toLowerCase().indexOf(query.toLowerCase()) !== -1 ||
+        address.name.toLowerCase().indexOf(query.toLowerCase()) !== -1 ||
         address.address.toLowerCase().indexOf(query.toLowerCase()) !== -1 ||
-        `${address.phone}`.toLowerCase().indexOf(query.toLowerCase()) !== -1
+        `${address.phone_number}`.toLowerCase().indexOf(query.toLowerCase()) !== -1
     );
   }
 

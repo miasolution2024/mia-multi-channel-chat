@@ -48,8 +48,8 @@ export const fetcher = async (args: any) => {
 
 export const endpoints = {
   auth: {
-    me: "/api/auth/me",
-    signIn: "/api/auth/signin",
+    me: "/users/me",
+    signIn: "/auth/login",
     googleSignIn: "/api/auth/google/callback",
     facebookSignIn: "/api/auth/facebook/callback",
     signUp: "/api/auth/local/register",
@@ -62,11 +62,11 @@ export const endpoints = {
     update: "/api/users",
   },
   customers: {
-    list: "/api/customers",
-    update: "/api/customers",
-    create: "/api/customers",
-    delete: "/api/customers",
-    deleteBulk: "/api/customers/bulk-delete",
+    list: "/items/customers",
+    update: "/items/customers",
+    create: "/items/customers",
+    delete: "/items/customers",
+    deleteBulk: "/items/customers/bulk-delete",
   },
   products: {
     list: "/api/products",

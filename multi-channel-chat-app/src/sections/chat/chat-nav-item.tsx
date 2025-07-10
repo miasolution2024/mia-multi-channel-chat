@@ -27,7 +27,7 @@ export function ChatNavItem({ selected, collapse, conversation, onCloseMobile }:
   const router = useRouter();
 
   const { group, displayName, displayText, participants, lastActivity, hasOnlineInGroup } =
-    getNavItem({ conversation, currentUserId: `${user?.userID}` });
+    getNavItem({ conversation, currentUserId: `${user?.id}` });
 
   const singleParticipant = participants[0];
 

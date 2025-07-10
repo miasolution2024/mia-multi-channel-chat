@@ -35,27 +35,28 @@ export function CustomerTableRow({
   const popover = usePopover();
 
   const handleDeleteRow = useCallback(async () => {
-    await deleteCustomerAsync(row.customerID);
+    await deleteCustomerAsync(row.id);
 
     mutate(endpoints.customers.list);
 
     toast.success("Delete success!");
-  }, [row.customerID]);
+  }, [row.id]);
 
   return (
     <>
       <TableRow hover selected={selected} aria-checked={selected} tabIndex={-1}>
         <TableCell padding="checkbox">
           <Checkbox
-            id={row.customerID}
+            id={row.id}
             checked={selected}
             onClick={onSelectRow}
           />
         </TableCell>
 
-        <TableCell sx={{ whiteSpace: "nowrap" }}>{row.customerName}</TableCell>
-        <TableCell sx={{ whiteSpace: "nowrap" }}>{row.phone}</TableCell>
-        <TableCell sx={{ whiteSpace: "nowrap" }}>{row.address}</TableCell>
+        <TableCell sx={{ whiteSpace: "nowrap" }}>{row.id}</TableCell>
+        <TableCell sx={{ whiteSpace: "nowrap" }}>{row.name}</TableCell>
+        <TableCell sx={{ whiteSpace: "nowrap" }}>{row.customer_source}</TableCell>
+        <TableCell sx={{ whiteSpace: "nowrap" }}>{row.phone_number}</TableCell>
         <TableCell sx={{ whiteSpace: "nowrap" }}>{row.email}</TableCell>
 
         <TableCell>
@@ -63,7 +64,7 @@ export function CustomerTableRow({
             <Tooltip title="Edit" placement="top" arrow>
               <IconButton
                 color="inherit"
-                onClick={() => onEditRow(row.customerID)}
+                onClick={() => onEditRow(row.id)}
               >
                 <Iconify icon="solar:pen-bold" />
               </IconButton>

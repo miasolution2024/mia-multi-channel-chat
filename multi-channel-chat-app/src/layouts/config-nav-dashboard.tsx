@@ -89,6 +89,11 @@ export const navData = [
         path: paths.dashboard.inventoryTransaction.root,
         icon: ICONS.inventory,
       },
+       {
+        title: "Chat",
+        path: paths.dashboard.chat,
+        icon: ICONS.chat,
+      },
     ],
   },
 ];
