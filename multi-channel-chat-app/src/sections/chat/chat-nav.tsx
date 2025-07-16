@@ -1,30 +1,38 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from "react";
 
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Drawer from '@mui/material/Drawer';
-import TextField from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
-import InputAdornment from '@mui/material/InputAdornment';
-import ClickAwayListener from '@mui/material/ClickAwayListener';
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Drawer from "@mui/material/Drawer";
+import TextField from "@mui/material/TextField";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
 
-import { useResponsive } from '@/hooks/use-responsive';
+import { useResponsive } from "@/hooks/use-responsive";
 
+import { Iconify } from "@/components/iconify";
+import { Scrollbar } from "@/components/scrollbar";
 
-import { Iconify } from '@/components/iconify';
-import { Scrollbar } from '@/components/scrollbar';
-
-
-import { ToggleButton } from './styles';
-import { ChatNavItem } from './chat-nav-item';
-import { ChatNavAccount } from './chat-nav-account';
-import { ChatNavItemSkeleton } from './chat-skeleton';
-import { ChatNavSearchResults } from './chat-nav-search-results';
-import { useAuthContext } from '@/auth/hooks/use-auth-context';
-import { today } from '@/utils/format-time';
-import { paths } from '@/routes/path';
-import { useRouter } from 'next/navigation';
+import { ToggleButton } from "./styles";
+import { ChatNavItem } from "./chat-nav-item";
+import { ChatNavAccount } from "./chat-nav-account";
+import { ChatNavItemSkeleton } from "./chat-skeleton";
+import { ChatNavSearchResults } from "./chat-nav-search-results";
+import { useAuthContext } from "@/auth/hooks/use-auth-context";
+import { today } from "@/utils/format-time";
+import { paths } from "@/routes/path";
+import { useRouter } from "next/navigation";
+import { Participant } from "@/models/participants/participant";
+import { Conversation } from "@/models/conversation/conversations";
+import { initialConversation } from "./utils/initial-conversation";
+import {
+  createConversationAsync,
+  getConversationsURL,
+} from "@/actions/conversation";
+import { websocketMessage } from "@/models/websocket-message";
+import { mutate } from "swr";
+import { CONFIG } from "@/config-global";
 
 // ----------------------------------------------------------------------
 
@@ -32,12 +40,25 @@ const NAV_WIDTH = 320;
 
 const NAV_COLLAPSE_WIDTH = 96;
 
-export function ChatNav({ loading, contacts, collapseNav, conversations, selectedConversationId }: any) {
+export function ChatNav({
+  loading,
+  contacts,
+  collapseNav,
+  conversations,
+  selectedConversationId,
+}: {
+  loading: boolean;
+  contacts: Participant[];
+  collapseNav: any;
+  conversations: Conversation[];
+  selectedConversationId: string;
+}) {
   const router = useRouter();
 
-  const mdUp = useResponsive('up', 'md');
+  const mdUp = useResponsive("up", "md");
 
   const { user } = useAuthContext();
+  const allIds = conversations.map((c) => c.id);
 
   const {
     openMobile,
@@ -48,25 +69,90 @@ export function ChatNav({ loading, contacts, collapseNav, conversations, selecte
     onCollapseDesktop,
   } = collapseNav;
 
-  const [searchContacts, setSearchContacts] = useState({
-    query: '',
+  const [searchContacts, setSearchContacts] = useState<{
+    query: string;
+    results: Participant[];
+  }>({
+    query: "",
     results: [],
   });
 
   const myContact = useMemo(
     () => ({
       id: `${user?.id}`,
-      role: `${user?.role}`,
+      role: user?.role,
       email: `${user?.email}`,
-      name: `${user?.full_name}`,
+      full_name: `${user?.full_name}`,
       lastActivity: today(),
-      avatarUrl: `${user?.avatar}`,
-      // address: `${user?.address}`,
-      // phoneNumber: `${user?.p}`,
-      status: 'online',
+      avatar: `${user?.avatar}`,
+      status: "online",
     }),
     [user]
   );
+
+  useEffect(() => {
+    if (!user?.accessToken) return;
+
+    const connection = new WebSocket(CONFIG.websocketUrl);
+
+    const sendAuth = () => {
+      connection.send(
+        JSON.stringify({
+          type: "auth",
+          access_token: user?.accessToken,
+        })
+      );
+    };
+
+    const sendSubscribeConversations = () => {
+      connection.send(
+        JSON.stringify({
+          type: "subscribe",
+          action: "read",
+          collection: "mc_conversations",
+          query: {
+            fields: ["id,participants.participant_id"],
+            filter: {
+              participants: {
+                participant_id: {
+                  _eq: "$CURRENT_USER",
+                },
+              },
+            },
+          },
+        })
+      );
+    };
+
+    const handleOpen = () => {
+      sendAuth();
+      sendSubscribeConversations();
+    };
+
+    const handleMessage = (message: MessageEvent) => {
+      const data = JSON.parse(message.data) as websocketMessage;
+
+      if (data.event === "create" || data.event === "update") {
+        mutate(getConversationsURL());
+      }
+
+      if (data.type === "ping") {
+        connection.send(JSON.stringify({ type: "pong" }));
+      }
+    };
+
+    connection.addEventListener("open", () => {
+      console.log({ event: "onopen" });
+      handleOpen();
+    });
+    connection.addEventListener("message", handleMessage);
+    connection.addEventListener("close", function () {
+      console.log({ event: "onclose" });
+    });
+    connection.addEventListener("error", function (error) {
+      console.log({ event: "onerror", error });
+    });
+  }, [user?.accessToken]);
 
   useEffect(() => {
     if (!mdUp) {
@@ -94,8 +180,8 @@ export function ChatNav({ loading, contacts, collapseNav, conversations, selecte
       setSearchContacts((prevState) => ({ ...prevState, query: inputValue }));
 
       if (inputValue) {
-        const results = contacts.filter((contact: any) =>
-          contact.name.toLowerCase().includes(inputValue)
+        const results = contacts.filter((contact: Participant) =>
+          contact.participant_name.toLowerCase().includes(inputValue)
         );
 
         setSearchContacts((prevState) => ({ ...prevState, results }));
@@ -105,49 +191,49 @@ export function ChatNav({ loading, contacts, collapseNav, conversations, selecte
   );
 
   const handleClickAwaySearch = useCallback(() => {
-    setSearchContacts({ query: '', results: [] });
+    setSearchContacts({ query: "", results: [] });
   }, []);
 
   const handleClickResult = useCallback(
-    async (result:any) => {
+    async (result: Participant) => {
       handleClickAwaySearch();
 
-      const linkTo = (id: string) => router.push(`${paths.dashboard.chat}?id=${id}`);
+      const linkTo = (id: string) =>
+        router.push(`${paths.dashboard.chat}?id=${id}`);
 
       try {
+        const conversation = conversations.find((c) =>
+          c.participants.some((p) => p.participant_id == result.participant_id)
+        );
         // Check if the conversation already exists
-        if (conversations.allIds.includes(result.id)) {
-          linkTo(result.id);
+        if (!!conversation?.id) {
+          linkTo(conversation.id);
           return;
         }
 
         // Find the recipient in contacts
-        const recipient = contacts.find((contact: any) => contact.id === result.id);
+        const recipient = contacts.find(
+          (contact: any) => contact.id === result.id
+        );
         if (!recipient) {
-          console.error('Recipient not found');
+          console.error("Recipient not found");
           return;
         }
 
         // Prepare conversation data
-        // const { conversationData } = initialConversation({
-        //   recipients: [recipient],
-        //   me: myContact,
-        // });
+        const { conversationData } = initialConversation({
+          recipients: [recipient],
+          me: myContact,
+        });
 
-        // // Create a new conversation
-        // const res = await createConversation(conversationData);
-
-        // if (!res || !res.conversation) {
-        //   console.error('Failed to create conversation');
-        // }
-
-        // // Navigate to the new conversation
-        // linkTo(res.conversation.id);
+        // Create a new conversation
+        const res = await createConversationAsync(conversationData);
+        linkTo(res.data.id);
       } catch (error) {
-        console.error('Error handling click result:', error);
+        console.error("Error handling click result:", error);
       }
     },
-    [contacts, conversations.allIds, handleClickAwaySearch, myContact, router]
+    [contacts, handleClickAwaySearch, myContact, router, conversations]
   );
 
   const renderLoading = <ChatNavItemSkeleton />;
@@ -155,12 +241,12 @@ export function ChatNav({ loading, contacts, collapseNav, conversations, selecte
   const renderList = (
     <nav>
       <Box component="ul">
-        {conversations.allIds.map((conversationId: string) => (
+        {conversations.map((c: Conversation) => (
           <ChatNavItem
-            key={conversationId}
+            key={c.id}
             collapse={collapseDesktop}
-            conversation={conversations.byId[conversationId]}
-            selected={conversationId === selectedConversationId}
+            conversation={c}
+            selected={c.id === selectedConversationId}
             onCloseMobile={onCloseMobile}
           />
         ))}
@@ -186,7 +272,7 @@ export function ChatNav({ loading, contacts, collapseNav, conversations, selecte
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled' }} />
+              <Iconify icon="eva:search-fill" sx={{ color: "text.disabled" }} />
             </InputAdornment>
           ),
         }}
@@ -197,7 +283,12 @@ export function ChatNav({ loading, contacts, collapseNav, conversations, selecte
 
   const renderContent = (
     <>
-      <Stack direction="row" alignItems="center" justifyContent="center" sx={{ p: 2.5, pb: 0 }}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="center"
+        sx={{ p: 2.5, pb: 0 }}
+      >
         {!collapseDesktop && (
           <>
             <ChatNavAccount />
@@ -207,7 +298,11 @@ export function ChatNav({ loading, contacts, collapseNav, conversations, selecte
 
         <IconButton onClick={handleToggleNav}>
           <Iconify
-            icon={collapseDesktop ? 'eva:arrow-ios-forward-fill' : 'eva:arrow-ios-back-fill'}
+            icon={
+              collapseDesktop
+                ? "eva:arrow-ios-forward-fill"
+                : "eva:arrow-ios-back-fill"
+            }
           />
         </IconButton>
 
@@ -224,7 +319,9 @@ export function ChatNav({ loading, contacts, collapseNav, conversations, selecte
         renderLoading
       ) : (
         <Scrollbar sx={{ pb: 1 }}>
-          {searchContacts.query && !!conversations.allIds.length ? renderListResults : renderList}
+          {searchContacts.query && !!allIds.length
+            ? renderListResults
+            : renderList}
         </Scrollbar>
       )}
     </>
@@ -232,19 +329,20 @@ export function ChatNav({ loading, contacts, collapseNav, conversations, selecte
 
   return (
     <>
-      <ToggleButton onClick={onOpenMobile} sx={{ display: { md: 'none' } }}>
+      <ToggleButton onClick={onOpenMobile} sx={{ display: { md: "none" } }}>
         <Iconify width={16} icon="solar:users-group-rounded-bold" />
       </ToggleButton>
 
       <Stack
         sx={{
           minHeight: 0,
-          flex: '1 1 auto',
+          flex: "1 1 auto",
           width: NAV_WIDTH,
-          display: { xs: 'none', md: 'flex' },
-          borderRight: (theme: any) => `solid 1px ${theme.vars.palette.divider}`,
+          display: { xs: "none", md: "flex" },
+          borderRight: (theme: any) =>
+            `solid 1px ${theme.vars.palette.divider}`,
           transition: (theme) =>
-            theme.transitions.create(['width'], {
+            theme.transitions.create(["width"], {
               duration: theme.transitions.duration.shorter,
             }),
           ...(collapseDesktop && { width: NAV_COLLAPSE_WIDTH }),

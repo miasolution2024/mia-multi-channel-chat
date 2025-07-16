@@ -1,11 +1,16 @@
 // ----------------------------------------------------------------------
 
-import { AuthSplitLayout } from "@/layouts/auth-split";
+import AuthGuard from "@/auth/guard/auth-guard";
+import { DashboardLayout } from "@/layouts/dashboard";
 
 export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <AuthSplitLayout>{children}</AuthSplitLayout>;
+  return (
+    <AuthGuard>
+      <DashboardLayout>{children}</DashboardLayout>
+    </AuthGuard>
+  );
 }

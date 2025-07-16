@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Message } from '@/models/message/message';
 import { useRef, useEffect, useCallback } from 'react';
 
 // ----------------------------------------------------------------------
 
-export function useMessagesScroll(messages: any) {
+export function useMessagesScroll(messages: Message[]) {
   const messagesEndRef = useRef<any>(null);
 
   const scrollToBottom = useCallback(() => {

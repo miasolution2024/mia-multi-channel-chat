@@ -37,7 +37,7 @@ const ICONS = {
   parameter: icon("ic-parameter"),
   suppier: icon("ic-suppier"),
   category: icon("ic-category"),
-  inventory: icon('ic-inventory')
+  inventory: icon("ic-inventory"),
 };
 
 // ----------------------------------------------------------------------
@@ -54,42 +54,42 @@ export const navData = [
         path: paths.dashboard.root,
         icon: ICONS.dashboard,
       },
+      // {
+      //   title: "Customer",
+      //   path: paths.dashboard.customer.root,
+      //   icon: ICONS.user,
+      // },
+      // {
+      //   title: "Category",
+      //   path: paths.dashboard.category.root,
+      //   icon: ICONS.category,
+      // },
+      // {
+      //   title: "Product",
+      //   path: paths.dashboard.product.root,
+      //   icon: ICONS.product,
+      // },
+      // {
+      //   title: "Supplier",
+      //   path: paths.dashboard.supplier.root,
+      //   icon: ICONS.suppier,
+      // },
+      // {
+      //   title: "Purchase Order",
+      //   path: paths.dashboard.purchaseOrder.root,
+      //   icon: ICONS.order,
+      // },
+      // {
+      //   title: "Sales Order",
+      //   path: paths.dashboard.salesOrder.root,
+      //   icon: ICONS.invoice,
+      // },
+      // {
+      //   title: "Inventory",
+      //   path: paths.dashboard.inventoryTransaction.root,
+      //   icon: ICONS.inventory,
+      // },
       {
-        title: "Customer",
-        path: paths.dashboard.customer.root,
-        icon: ICONS.user,
-      },
-      {
-        title: "Category",
-        path: paths.dashboard.category.root,
-        icon: ICONS.category,
-      },
-      {
-        title: "Product",
-        path: paths.dashboard.product.root,
-        icon: ICONS.product,
-      },
-      {
-        title: "Supplier",
-        path: paths.dashboard.supplier.root,
-        icon: ICONS.suppier,
-      },
-      {
-        title: "Purchase Order",
-        path: paths.dashboard.purchaseOrder.root,
-        icon: ICONS.order,
-      },
-      {
-        title: "Sales Order",
-        path: paths.dashboard.salesOrder.root,
-        icon: ICONS.invoice,
-      },
-      {
-        title: "Inventory",
-        path: paths.dashboard.inventoryTransaction.root,
-        icon: ICONS.inventory,
-      },
-       {
         title: "Chat",
         path: paths.dashboard.chat,
         icon: ICONS.chat,

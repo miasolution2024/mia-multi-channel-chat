@@ -58,8 +58,8 @@ export const endpoints = {
     changePassword: "/api/auth/change-password",
   },
   user: {
-    list: "/api/users",
-    update: "/api/users",
+    list: "/users",
+    update: "/users",
   },
   customers: {
     list: "/items/customers",
@@ -104,7 +104,7 @@ export const endpoints = {
     create: "/api/purchase-orders",
     deleteBulk: "/api/purchase-orders/bulk-delete",
   },
-  salesOrders:{
+  salesOrders: {
     list: "/api/sales-orders",
     update: "/api/sales-orders",
     delete: "/api/sales-orders",
@@ -113,6 +113,15 @@ export const endpoints = {
   inventoryTransactions: {
     list: "/api/inventory-transactions",
   },
+  conversations: {
+    list: "items/mc_conversations",
+    create: "items/mc_conversations",
+    update: "items/mc_conversations",
+  },
+  messages: {
+    list: "items/mc_messages",
+    create: "items/mc_messages",
+  },
   upload: "/api/upload",
-  chat: '/api/chat',
+  chat: "/api/chat",
 };

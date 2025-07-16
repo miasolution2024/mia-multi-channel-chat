@@ -82,7 +82,7 @@ export function OverviewEcommerceView() {
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 8 }}>
           <EcommerceWelcome
-            title={`Congratulations 🎉  \n ${user?.fullName}`}
+            title={`Congratulations 🎉  \n ${user?.full_name}`}
             description="Best seller of the month you have done 57.6% more sales today."
             img={<MotivationIllustration hideBackground />}
             action={

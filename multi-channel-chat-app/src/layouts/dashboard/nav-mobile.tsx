@@ -32,9 +32,9 @@ export function NavMobile({ data, open, onClose, slots, sx, ...other }: any) {
       slotProps={{
         avatar: {
           src:
-            user?.photoURL ??
+            user?.avatar ??
             `${CONFIG.assetsDir}/assets/images/avatar/default.jpg`,
-          alt: user?.fullName,
+          alt: user?.full_name,
         },
         overlay: {
           border: 2,
@@ -46,7 +46,7 @@ export function NavMobile({ data, open, onClose, slots, sx, ...other }: any) {
         },
       }}
     >
-      {user?.fullName?.charAt(0).toUpperCase()}
+      {user?.full_name?.charAt(0).toUpperCase()}
     </AnimateAvatar>
   );
 

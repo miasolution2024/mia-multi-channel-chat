@@ -1,4 +1,6 @@
-export interface Customer {
+import { Common } from "../common";
+
+export type Customer = Common & {
   id: string;
   name: string;
   gender: string;
@@ -6,8 +8,7 @@ export interface Customer {
   email: string;
   status: string;
   customer_source: string;
-  created_at: Date;
-  updated_at: Date;
+  address: string;
 }
 
 export interface CustomerRequest {

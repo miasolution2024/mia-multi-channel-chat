@@ -1,17 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useRef, useMemo, useState, useCallback } from 'react';
+import { useRef, useMemo, useState, useCallback } from "react";
 
-import Stack from '@mui/material/Stack';
-import InputBase from '@mui/material/InputBase';
-import IconButton from '@mui/material/IconButton';
+import Stack from "@mui/material/Stack";
+import InputBase from "@mui/material/InputBase";
+import IconButton from "@mui/material/IconButton";
 
+import { Iconify } from "@/components/iconify";
 
-import { Iconify } from '@/components/iconify';
-
-import { initialConversation } from './utils/initial-conversation';
-import { useRouter } from 'next/navigation';
-import { useAuthContext } from '@/auth/hooks/use-auth-context';
-import { today } from '@/utils/format-time';
+import { initialConversation } from "./utils/initial-conversation";
+import { useRouter } from "next/navigation";
+import { useAuthContext } from "@/auth/hooks/use-auth-context";
+import { User } from "@/models/auth/user";
+import { mutate } from "swr";
+import { paths } from "@/routes/path";
+import {
+  createConversationAsync,
+  getConversationsURL,
+  updateConversationLastMessageDataAsync,
+} from "@/actions/conversation";
+import { sendMessage } from "@/actions/message";
 
 // ----------------------------------------------------------------------
 
@@ -27,19 +34,15 @@ export function ChatMessageInput({
 
   const fileRef = useRef<any | null>(null);
 
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
-  const myContact = useMemo(
+  const myContact: User = useMemo(
     () => ({
       id: `${user?.id}`,
-      role: `${user?.role}`,
-      // email: `${user?.email}`,
-      // address: `${user?.address}`,
-      name: `${user?.fullName}`,
-      lastActivity: today(),
-      avatarUrl: `${user?.photoURL}`,
-      // phoneNumber: `${user?.phoneNumber}`,
-      status: 'online',
+      role: user?.role,
+      email: `${user?.email}`,
+      full_name: `${user?.full_name}`,
+      avatar: `${user?.avatar}`,
     }),
     [user]
   );
@@ -48,41 +51,51 @@ export function ChatMessageInput({
     message,
     recipients,
     me: myContact,
+    selectedConversationId,
   });
 
-  const handleAttach = useCallback(() => {
-    if (fileRef.current) {
-      fileRef.current.click();
-    }
-  }, []);
+  // const handleAttach = useCallback(() => {
+  //   if (fileRef.current) {
+  //     fileRef.current.click();
+  //   }
+  // }, []);
 
   const handleChangeMessage = useCallback((event: any) => {
     setMessage(event.target.value);
   }, []);
 
-  const handleSendMessage = useCallback(
-    async (event: any) => {
-      if (event.key !== 'Enter' || !message) return;
+  const handleSendMessage = useCallback(async () => {
+    try {
+      if (!message) return;
 
-      try {
-        // if (selectedConversationId) {
-        //   // If the conversation already exists
-        //   await sendMessage(selectedConversationId, messageData);
-        // } else {
-        //   // If the conversation does not exist
-        //   const res = await createConversation(conversationData);
-        //   router.push(`${paths.dashboard.chat}?id=${res.conversation.id}`);
-
-        //   onAddRecipients([]);
-        // }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setMessage('');
+      if (selectedConversationId) {
+        // If the conversation already exists
+        await sendMessage(messageData);
+        await updateConversationLastMessageDataAsync(
+          selectedConversationId,
+          message
+        );
+        mutate(getConversationsURL());
+      } else {
+        // If the conversation does not exist
+        const res = await createConversationAsync(conversationData);
+        mutate(getConversationsURL());
+        router.push(`${paths.dashboard.chat}?id=${res.data.id}`);
+        onAddRecipients([]);
       }
-    },
-    [conversationData, message, messageData, onAddRecipients, router, selectedConversationId]
-  );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setMessage("");
+    }
+  }, [
+    conversationData,
+    message,
+    messageData,
+    onAddRecipients,
+    router,
+    selectedConversationId,
+  ]);
 
   return (
     <>
@@ -90,18 +103,21 @@ export function ChatMessageInput({
         name="chat-message"
         id="chat-message-input"
         value={message}
-        onKeyUp={handleSendMessage}
+        onKeyUp={(event) => {
+          if (event.key !== "Enter") return;
+          handleSendMessage();
+        }}
         onChange={handleChangeMessage}
         placeholder="Type a message"
         disabled={disabled}
-        startAdornment={
-          <IconButton>
-            <Iconify icon="eva:smiling-face-fill" />
-          </IconButton>
-        }
+        // startAdornment={
+        //   <IconButton>
+        //     <Iconify icon="eva:smiling-face-fill" />
+        //   </IconButton>
+        // }
         endAdornment={
           <Stack direction="row" sx={{ flexShrink: 0 }}>
-            <IconButton onClick={handleAttach}>
+            {/* <IconButton onClick={handleAttach}>
               <Iconify icon="solar:gallery-add-bold" />
             </IconButton>
             <IconButton onClick={handleAttach}>
@@ -109,6 +125,9 @@ export function ChatMessageInput({
             </IconButton>
             <IconButton>
               <Iconify icon="solar:microphone-bold" />
+            </IconButton> */}
+            <IconButton onClick={handleSendMessage}>
+              <Iconify icon="streamline-plump:mail-send-email-message-solid" />
             </IconButton>
           </Stack>
         }
@@ -120,7 +139,7 @@ export function ChatMessageInput({
         }}
       />
 
-      <input type="file" ref={fileRef} style={{ display: 'none' }} />
+      <input type="file" ref={fileRef} style={{ display: "none" }} />
     </>
   );
 }

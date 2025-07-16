@@ -1,0 +1,79 @@
+services:
+  cache:
+    image: redis:6
+    healthcheck:
+      test: ["CMD-SHELL", "[ $$(redis-cli ping) = 'PONG' ]"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_interval: 5s
+      start_period: 30s
+
+
+  directus:
+    image: directus/directus:11.8.0
+    ports:
+      - 8055:8055
+    volumes:
+      - ./extensions:/directus/extensions
+      - ./migrations:/directus/migrations
+      - ./key.json:/directus/key.json
+      
+    depends_on:
+      cache:
+        condition: service_healthy
+    environment:
+      SECRET: ${DIRECTUS_SECRET}
+
+      DB_CLIENT: "pg"
+      DB_HOST: ${DATABASE_HOST}
+      DB_PORT: ${DATABASE_PORT}
+      DB_DATABASE: ${DATABASE_NAME}
+      DB_USER: ${DATABASE_USER}
+      DB_PASSWORD: ${DATABASE_PASSWORD}
+
+      CACHE_ENABLED: "true"
+      CACHE_AUTO_PURGE: "true"
+      CACHE_STORE: "redis"
+      REDIS: "redis://cache:6379"
+
+      ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
+
+      STORAGE_LOCATIONS: "gcs"
+      STORAGE_GCS_DRIVER: "gcs"
+      STORAGE_GCS_ROOT: ${STORAGE_GCS_ROOT}
+      STORAGE_GCS_BUCKET : ${STORAGE_GCS_BUCKET}
+      STORAGE_GCS_KEY_FILENAME: ${STORAGE_GCS_KEY_FILENAME}
+
+      EMAIL_TRANSPORT: "smtp"
+      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST}
+      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT}
+      EMAIL_SMTP_USER: ${EMAIL_SMTP_USER}
+      EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD}
+
+      CORS_ENABLED: true
+      CORS_ORIGIN: "http://localhost:3000"
+
+      ACCESS_TOKEN_TTL: "1d"
+      
+      MIGRATIONS_PATH: "/directus/migrations"
+
+      WEBSOCKETS_ENABLED: true
+
+      FILES_MAX_UPLOAD_SIZE: "20mb"
+
+      ROBOTS_TXT: |
+        User-agent: *
+        Disallow: /admin/
+        Disallow: /private/
+
+        User-agent: facebookexternalhit
+        Allow: /assets/
+
+        User-agent: Meta
+        Allow: /assets/
+volumes:
+  extensions:
+  database:
+  migrations:

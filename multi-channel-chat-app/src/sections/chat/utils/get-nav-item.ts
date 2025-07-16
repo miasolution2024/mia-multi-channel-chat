@@ -1,37 +1,42 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function getNavItem({ currentUserId, conversation }: any) {
+import { Conversation } from "@/models/conversation/conversations";
+import { MessageType } from "@/models/message/message";
+
+export function getNavItem({
+  currentUserId,
+  conversation,
+}: {
+  currentUserId: string;
+  conversation: Conversation;
+}) {
   const { messages, participants } = conversation;
 
   const participantsInConversation = participants.filter(
-    (participant: any) => participant.id !== currentUserId
+    (participant) => participant.participant_id !== currentUserId
   );
+
+  const displayName = participantsInConversation
+    .map((participant) => participant.participant_name)
+    .join(", ");
 
   const lastMessage = messages[messages.length - 1];
 
-  const group = participantsInConversation.length > 1;
-
-  const displayName = participantsInConversation.map((participant: any) => participant.name).join(', ');
-
-  const hasOnlineInGroup = group
-    ? participantsInConversation.map((item: any) => item.status).includes('online')
-    : false;
-
-  let displayText = '';
+  let displayText = "";
 
   if (lastMessage) {
-    const sender = lastMessage.senderId === currentUserId ? 'You: ' : '';
+    const sender = lastMessage.sender_id === currentUserId ? "You: " : "";
 
-    const message = lastMessage.contentType === 'image' ? 'Sent a photo' : lastMessage.body;
+    const message =
+      lastMessage.type === MessageType.IMAGE
+        ? "Sent a photo"
+        : lastMessage.content;
 
     displayText = `${sender}${message}`;
   }
 
   return {
-    group,
-    displayName,
+    displayName: displayName,
     displayText,
     participants: participantsInConversation,
-    lastActivity: lastMessage.createdAt,
-    hasOnlineInGroup,
+    lastActivity: lastMessage?.date_created,
   };
 }

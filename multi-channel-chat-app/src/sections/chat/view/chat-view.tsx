@@ -3,8 +3,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-import Typography from "@mui/material/Typography";
-
 import { EmptyContent } from "@/components/empty-content";
 
 import { Layout } from "../layout";
@@ -16,15 +14,20 @@ import { ChatHeaderDetail } from "../chat-header-detail";
 import { ChatHeaderCompose } from "../chat-header-compose";
 import { useCollapseNav } from "../hooks/use-collapse-nav";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuthContext } from "@/auth/hooks/use-auth-context";
-import {
-  useGetContacts,
-  useGetConversation,
-  useGetConversations,
-} from "@/actions/chat";
 import { paths } from "@/routes/path";
 import { DashboardContent } from "@/layouts/dashboard";
 import { CONFIG } from "@/config-global";
+import { useGetCustomers } from "@/actions/customer";
+import { useAuthContext } from "@/auth/hooks/use-auth-context";
+import {
+  Participant,
+  ParticipantType,
+} from "@/models/participants/participant";
+import { useGetUsers } from "@/actions/user";
+import {
+  useGetConversation,
+  useGetConversations,
+} from "@/actions/conversation";
 
 // ----------------------------------------------------------------------
 
@@ -33,13 +36,17 @@ export function ChatView() {
 
   const { user } = useAuthContext();
 
-  const { contacts } = useGetContacts();
+  const { customers } = useGetCustomers();
+
+  const { users } = useGetUsers();
 
   const searchParams = useSearchParams();
 
   const selectedConversationId = searchParams.get("id") || "";
 
-  const [recipients, setRecipients] = useState([]);
+  const [contacts, setContacts] = useState<Participant[]>([]);
+
+  const [recipients, setRecipients] = useState<Participant[]>([]);
 
   const { conversations, conversationsLoading } = useGetConversations();
 
@@ -52,9 +59,35 @@ export function ChatView() {
 
   const participants = conversation
     ? conversation.participants.filter(
-        (participant: any) => participant.id !== `${user?.id}`
+        (participant) => participant.participant_id !== `${user?.id}`
       )
     : [];
+
+  useEffect(() => {
+    if (customers.length > 0 || users.length > 0) {
+      const customerContacts = customers.map((c) => ({
+        id: c.id,
+        participant_id: c.id,
+        participant_name: c.name,
+        participant_email: c.email,
+        participant_phone: c.phone_number,
+        participant_type: ParticipantType.CUSTOMER,
+      }));
+
+      const userContacts = users
+        .filter((u) => u.id !== user?.id)
+        .map((u) => ({
+          id: u.id,
+          participant_id: u.id,
+          participant_name: `${u.first_name} ${u.last_name}`,
+          participant_email: u.email,
+          participant_phone: "",
+          participant_type: ParticipantType.STAFF,
+        }));
+
+      setContacts([...customerContacts, ...userContacts]);
+    }
+  }, [customers, users, user?.id]);
 
   useEffect(() => {
     if (conversationError || !selectedConversationId) {
@@ -62,7 +95,7 @@ export function ChatView() {
     }
   }, [conversationError, router, selectedConversationId]);
 
-  const handleAddRecipients = useCallback((selected: any) => {
+  const handleAddRecipients = useCallback((selected: Participant[]) => {
     setRecipients(selected);
   }, []);
 
@@ -71,10 +104,6 @@ export function ChatView() {
       maxWidth={false}
       sx={{ display: "flex", flex: "1 1 auto", flexDirection: "column" }}
     >
-      <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
-        Chat
-      </Typography>
-
       <Layout
         sx={{
           minHeight: 0,
@@ -90,6 +119,8 @@ export function ChatView() {
               collapseNav={roomNav}
               participants={participants}
               loading={conversationLoading}
+              is_chatbot_active={conversation?.is_chatbot_active ?? false}
+              selectedConversationId={selectedConversationId}
             />
           ) : (
             <ChatHeaderCompose
@@ -113,6 +144,7 @@ export function ChatView() {
                   messages={conversation?.messages ?? []}
                   participants={participants}
                   loading={conversationLoading}
+                  selectConversationId={selectedConversationId}
                 />
               ) : (
                 <EmptyContent

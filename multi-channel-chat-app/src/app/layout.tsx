@@ -18,8 +18,6 @@ export default async function RootLayout({
 }>) {
   const lang = CONFIG.isStaticExport ? "vi" : await detectLanguage();
 
-  console.log(lang);
-
   return (
     <html lang="vi" suppressHydrationWarning>
       <body>

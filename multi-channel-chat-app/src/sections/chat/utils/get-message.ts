@@ -1,15 +1,32 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function getMessage({ message, participants, currentUserId }: any) {
-  const sender = participants.find((participant: any) => participant.id === message.senderId);
+import { Message, MessageType } from "@/models/message/message";
+import { Participant } from "@/models/participants/participant";
+
+export function getMessage({
+  message,
+  participants,
+  currentUserId,
+}: {
+  message: Message;
+  participants: Participant[];
+  currentUserId: string;
+}) {
+  const sender = participants.find(
+    (participant: Participant) =>
+      participant.participant_id == message.sender_id
+  );
+
 
   const senderDetails =
-    message.senderId === currentUserId
-      ? { type: 'me' }
-      : { avatarUrl: sender?.avatarUrl, firstName: sender?.name.split(' ')[0] };
+    message.sender_id === currentUserId
+      ? { type: "me" }
+      : {
+          firstName: sender?.participant_name,
+          participant_type: sender?.participant_type,
+        };
 
-  const me = senderDetails.type === 'me';
+  const me = senderDetails.type === "me";
 
-  const hasImage = message.contentType === 'image';
+  const hasImage = message.type === MessageType.IMAGE;
 
   return { hasImage, me, senderDetails };
 }

@@ -37,12 +37,12 @@ export function ChatNavAccount() {
     <>
       <Badge variant='dot' anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
         <Avatar
-          src={user?.photoURL}
-          alt={user?.fullName}
+          src={user?.avatar}
+          alt={user?.full_name}
           onClick={popover.onOpen}
           sx={{ cursor: 'pointer', width: 48, height: 48 }}
         >
-          {user?.fullName?.charAt(0).toUpperCase()}
+          {user?.full_name?.charAt(0).toUpperCase()}
         </Avatar>
       </Badge>
 
@@ -57,8 +57,8 @@ export function ChatNavAccount() {
       >
         <Stack direction="row" alignItems="center" spacing={2} sx={{ py: 2, pr: 1, pl: 2 }}>
           <ListItemText
-            primary={user?.fullName}
-            // secondary={user?.email}
+            primary={user?.full_name}
+            secondary={user?.email}
             secondaryTypographyProps={{ component: 'span' }}
           />
 
