@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
@@ -90,8 +90,24 @@ export function ChatNav({
     [user]
   );
 
+  const websocketRef = useRef<WebSocket | null>(null);
+
   useEffect(() => {
-    if (!user?.accessToken) return;
+    if (!user?.accessToken) {
+      if (websocketRef.current) {
+        console.log("Closing existing connection due to missing dependencies.");
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+      return;
+    }
+
+    // Close any existing connection before opening a new one
+    if (websocketRef.current) {
+      console.log(`Closing old connection for conversations subscription`);
+      websocketRef.current.close();
+      websocketRef.current = null; // Clear the ref
+    }
 
     const connection = new WebSocket(CONFIG.websocketUrl);
 
@@ -125,6 +141,9 @@ export function ChatNav({
     };
 
     const handleOpen = () => {
+      websocketRef.current = connection;
+
+      console.log(`WebSocket connection opened for conversations subscription`);
       sendAuth();
       sendSubscribeConversations();
     };
@@ -133,6 +152,7 @@ export function ChatNav({
       const data = JSON.parse(message.data) as websocketMessage;
 
       if (data.event === "create" || data.event === "update") {
+        console.log(`[${data.event}] New conversation created or updated!`);
         mutate(getConversationsURL());
       }
 
@@ -141,17 +161,34 @@ export function ChatNav({
       }
     };
 
-    connection.addEventListener("open", () => {
-      console.log({ event: "onopen" });
-      handleOpen();
-    });
+    const handleClose = () => {
+      console.log(`WebSocket connection closed for conversations subscription`);
+      websocketRef.current = null;
+    };
+
+    const handleError = (error: Event) => {
+      console.error({
+        event: "onerror",
+        error,
+        message: `WebSocket error for conversations subscription`,
+      });
+      websocketRef.current = null;
+    };
+
+    connection.addEventListener("open", handleOpen);
     connection.addEventListener("message", handleMessage);
-    connection.addEventListener("close", function () {
-      console.log({ event: "onclose" });
-    });
-    connection.addEventListener("error", function (error) {
-      console.log({ event: "onerror", error });
-    });
+    connection.addEventListener("close", handleClose);
+    connection.addEventListener("error", handleError);
+
+    return () => {
+      if (websocketRef.current) {
+        console.log(
+          `Cleaning up: Closing WebSocket connection for conversations subscription`
+        );
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+    };
   }, [user?.accessToken]);
 
   useEffect(() => {

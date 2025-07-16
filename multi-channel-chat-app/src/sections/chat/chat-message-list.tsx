@@ -37,6 +37,7 @@ export function ChatMessageList({
   const lightbox = useLightBox(slides);
 
   const { user } = useAuthContext();
+  
   const websocketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -85,9 +86,9 @@ export function ChatMessageList({
               conversation: {
                 _eq: selectConversationId,
               },
-              sender_id:{
-                _neq: "$CURRENT_USER"
-              }
+              // sender_id:{
+              //   _neq: "$CURRENT_USER"
+              // }
             },
           },
         })
