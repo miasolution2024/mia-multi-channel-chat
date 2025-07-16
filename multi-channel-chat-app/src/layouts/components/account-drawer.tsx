@@ -75,7 +75,7 @@ export function AccountDrawer({ data = [], sx, ...other }: any) {
       <AccountButton
         onClick={handleOpenDrawer}
         photoURL={user?.avatar}
-        fullName={user?.full_name}
+        displayName={user?.full_name}
         sx={sx}
         {...other}
       />

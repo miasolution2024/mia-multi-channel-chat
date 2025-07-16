@@ -37,7 +37,9 @@ export default function AuthProvider({
             ...user,
             accessToken,
             full_name: `${user.first_name} ${user.last_name}`,
-            avatar:`${CONFIG.serverUrl}/assets/${user.avatar}`
+            avatar: !!user.avatar
+              ? `${CONFIG.serverUrl}/assets/${user.avatar}`
+              : "",
           },
           loading: false,
         });

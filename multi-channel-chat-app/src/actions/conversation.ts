@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import useSWR from "swr";
 
-import axios, { fetcher, endpoints } from "@/utils/axios";
+import axios, { fetcher, endpoints, swrConfig } from "@/utils/axios";
 import {
   Conversation,
   ConversationCreateRequest,
@@ -31,9 +31,8 @@ export function getConversationsURL() {
 export function useGetConversations() {
   const url = getConversationsURL();
 
-  const { data, isLoading, error, isValidating } = useSWR(url, fetcher);
+  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrConfig);
   const memoizedValue = useMemo(() => {
-
     return {
       conversations: (data?.data as Conversation[]) || [],
       conversationsLoading: isLoading,
@@ -56,7 +55,7 @@ export function getConversationDetailURL(conversationId: string) {
 export function useGetConversation(conversationId: string) {
   const url = getConversationDetailURL(conversationId);
 
-  const { data, isLoading, error, isValidating } = useSWR(url, fetcher);
+  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrConfig);
 
   const memoizedValue = useMemo(
     () => ({

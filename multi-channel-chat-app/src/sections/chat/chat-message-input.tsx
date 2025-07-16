@@ -15,6 +15,7 @@ import { mutate } from "swr";
 import { paths } from "@/routes/path";
 import {
   createConversationAsync,
+  getConversationDetailURL,
   getConversationsURL,
   updateConversationLastMessageDataAsync,
 } from "@/actions/conversation";
@@ -75,7 +76,7 @@ export function ChatMessageInput({
           selectedConversationId,
           message
         );
-        mutate(getConversationsURL());
+        mutate(getConversationDetailURL(selectedConversationId));
       } else {
         // If the conversation does not exist
         const res = await createConversationAsync(conversationData);

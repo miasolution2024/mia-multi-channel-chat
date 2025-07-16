@@ -5,6 +5,11 @@ import https from "https";
 // ----------------------------------------------------------------------
 
 import { CONFIG } from "@/config-global";
+import { SWRConfiguration } from "swr";
+
+export const swrConfig: SWRConfiguration = {
+  revalidateOnFocus: false,
+};
 
 const agent = new https.Agent({
   rejectUnauthorized: false,

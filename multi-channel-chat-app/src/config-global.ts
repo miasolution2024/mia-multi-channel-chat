@@ -7,6 +7,6 @@ export const CONFIG = {
   STORAGE_KEY: "jwt_access_token",
   auth: {
     skip: false,
-    redirectPath: "/dashboard",
+    redirectPath: "/dashboard/chat",
   },
 };

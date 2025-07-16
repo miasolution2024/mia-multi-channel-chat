@@ -49,11 +49,11 @@ export const navData = [
   {
     subheader: "Overview",
     items: [
-      {
-        title: "Dashboard",
-        path: paths.dashboard.root,
-        icon: ICONS.dashboard,
-      },
+      // {
+      //   title: "Dashboard",
+      //   path: paths.dashboard.root,
+      //   icon: ICONS.dashboard,
+      // },
       // {
       //   title: "Customer",
       //   path: paths.dashboard.customer.root,

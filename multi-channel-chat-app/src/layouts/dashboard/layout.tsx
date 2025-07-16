@@ -21,13 +21,12 @@ import { useBoolean } from "@/hooks/use-boolean";
 import { useSettingsContext } from "@/components/settings/context";
 import { navData as dashboardNavData } from "../config-nav-dashboard";
 import { Logo } from "@/components/logo";
-import { NotificationsDrawer } from "../components/notifications-drawer";
+// import { NotificationsDrawer } from "../components/notifications-drawer";
 import { SettingsButton } from "../components/settings-button";
-import { Searchbar } from "../components/searchbar";
+// import { Searchbar } from "../components/searchbar";
 import { LanguagePopover } from "../components/language-popover";
 import { allLangs } from "@/locales";
 
-const _notifications: any[] = [];
 // ----------------------------------------------------------------------
 
 export function DashboardLayout({ sx, children, header, data }: any) {
@@ -132,11 +131,11 @@ export function DashboardLayout({ sx, children, header, data }: any) {
             rightArea: (
               <Box display="flex" alignItems="center" gap={{ xs: 0, sm: 0.75 }}>
                 {/* -- Searchbar -- */}
-                <Searchbar data={navData} />
+                {/* <Searchbar data={navData} /> */}
                 {/* -- Language popover -- */}
                 <LanguagePopover data={allLangs} />
                 {/* -- Notifications popover -- */}
-                <NotificationsDrawer data={_notifications} />
+                {/* <NotificationsDrawer data={_notifications} /> */}
                 {/* -- Settings button -- */}
                 <SettingsButton />
                 {/* -- Account drawer -- */}

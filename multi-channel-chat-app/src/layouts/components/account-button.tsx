@@ -15,12 +15,14 @@ export function AccountButton({ photoURL, displayName, sx, ...other }: any) {
   const renderFallback = (
     <Avatar
       src={photoURL}
+      alt={displayName}
       sx={{
         width: 40,
         height: 40,
         border: `solid 2px ${theme.vars.palette.background.default}`,
       }}
-    ></Avatar>
+    >
+    </Avatar>
   );
 
   return (

@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { endpoints, fetcher } from "@/utils/axios";
+import { endpoints, fetcher, swrConfig } from "@/utils/axios";
 import { useMemo } from "react";
 import { User } from "@/models/auth/user";
 
@@ -8,7 +8,7 @@ import { User } from "@/models/auth/user";
 export function useGetUsers() {
   const url = endpoints.user.list;
 
-  const { data, isLoading, error, isValidating } = useSWR(url, fetcher);
+  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrConfig);
 
   const memoizedValue = useMemo(
     () => ({

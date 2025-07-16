@@ -8,7 +8,7 @@ import { ChatMessageItem } from "./chat-message-item";
 import { useMessagesScroll } from "./hooks/use-messages-scroll";
 import { Message, MessageType } from "@/models/message/message";
 import { Participant } from "@/models/participants/participant";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { getConversationDetailURL } from "@/actions/conversation";
 import { mutate } from "swr";
@@ -37,8 +37,30 @@ export function ChatMessageList({
   const lightbox = useLightBox(slides);
 
   const { user } = useAuthContext();
+  const websocketRef = useRef<WebSocket | null>(null);
+
   useEffect(() => {
-    if (!user?.accessToken || !selectConversationId) return;
+    if (!user?.accessToken || !selectConversationId) {
+      if (websocketRef.current) {
+        console.log("Closing existing connection due to missing dependencies.");
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+      return;
+    }
+
+    console.log(
+      `Attempting to subscribe to conversation ${selectConversationId}`
+    );
+
+    // Close any existing connection before opening a new one
+    if (websocketRef.current) {
+      console.log(
+        `Closing old connection for conversation ${selectConversationId}`
+      );
+      websocketRef.current.close();
+      websocketRef.current = null; // Clear the ref
+    }
 
     const connection = new WebSocket(CONFIG.websocketUrl);
 
@@ -63,6 +85,9 @@ export function ChatMessageList({
               conversation: {
                 _eq: selectConversationId,
               },
+              sender_id:{
+                _neq: "$CURRENT_USER"
+              }
             },
           },
         })
@@ -70,6 +95,11 @@ export function ChatMessageList({
     };
 
     const handleOpen = () => {
+      websocketRef.current = connection;
+
+      console.log(
+        `WebSocket connection opened for conversation ${selectConversationId}`
+      );
       sendAuth();
       sendSubscribeMessages();
     };
@@ -77,6 +107,9 @@ export function ChatMessageList({
     const handleMessage = (message: MessageEvent) => {
       const data = JSON.parse(message.data) as websocketMessage;
       if (data.event === "create") {
+        console.log(
+          "New message received, potentially refetching conversation details."
+        );
         mutate(getConversationDetailURL(selectConversationId));
       }
       if (data.type === "ping") {
@@ -84,18 +117,36 @@ export function ChatMessageList({
       }
     };
 
-    connection.addEventListener("open", () => {
-      console.log(`Subscribe to conversation ${selectConversationId}`);
-      handleOpen();
-    });
+    const handleClose = () => {
+      console.log(
+        `WebSocket connection closed for conversation ${selectConversationId}`
+      );
+      websocketRef.current = null; // Clear the ref when connection closes
+    };
 
+    const handleError = (error: Event) => {
+      console.error({
+        event: "onerror",
+        error,
+        message: `WebSocket error for conversation ${selectConversationId}`,
+      });
+      websocketRef.current = null; // Clear the ref on error
+    };
+
+    connection.addEventListener("open", handleOpen);
     connection.addEventListener("message", handleMessage);
-    connection.addEventListener("close", function () {
-      console.log({ event: "onclose" });
-    });
-    connection.addEventListener("error", function (error) {
-      console.log({ event: "onerror", error });
-    });
+    connection.addEventListener("close", handleClose);
+    connection.addEventListener("error", handleError);
+
+    return () => {
+      if (websocketRef.current) {
+        console.log(
+          `Cleaning up: Closing WebSocket connection for conversation ${selectConversationId}`
+        );
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+    };
   }, [user?.accessToken, selectConversationId]);
 
   if (loading) {
