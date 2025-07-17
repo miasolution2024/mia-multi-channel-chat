@@ -16,10 +16,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const lang = CONFIG.isStaticExport ? "vi" : await detectLanguage();
+  const lang = CONFIG.isStaticExport ? "en" : await detectLanguage();
 
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body>
         <I18nProvider lang={CONFIG.isStaticExport ? undefined : lang}>
           <LocalizationProvider>

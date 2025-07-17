@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const fallbackLng = "vi";
+export const fallbackLng = "en";
 export const languages = ["en", "fr", "vi", "cn", "ar"];
 export const defaultNS = "common";
 export const cookieName = "i18next";

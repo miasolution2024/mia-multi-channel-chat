@@ -8,12 +8,13 @@ import { ChatMessageItem } from "./chat-message-item";
 import { useMessagesScroll } from "./hooks/use-messages-scroll";
 import { Message, MessageType } from "@/models/message/message";
 import { Participant } from "@/models/participants/participant";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { getConversationDetailURL } from "@/actions/conversation";
 import { mutate } from "swr";
 import { websocketMessage } from "@/models/websocket-message";
 import { CONFIG } from "@/config-global";
+import NotificationSound from "@/components/notification-sound/notification-sound";
 
 // ----------------------------------------------------------------------
 
@@ -37,8 +38,19 @@ export function ChatMessageList({
   const lightbox = useLightBox(slides);
 
   const { user } = useAuthContext();
-  
+
   const websocketRef = useRef<WebSocket | null>(null);
+
+  const [playNotification, setPlayNotification] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (playNotification) {
+      const timer = setTimeout(() => {
+        setPlayNotification(false);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [playNotification]);
 
   useEffect(() => {
     if (!user?.accessToken || !selectConversationId) {
@@ -81,7 +93,7 @@ export function ChatMessageList({
           action: "read",
           collection: "mc_messages",
           query: {
-            fields: ["id,conversation"],
+            fields: ["id,conversation,sender_id"],
             filter: {
               conversation: {
                 _eq: selectConversationId,
@@ -111,6 +123,10 @@ export function ChatMessageList({
         console.log(
           "New message received, potentially refetching conversation details."
         );
+        
+        if (data.data.length > 0 && data.data[0].sender_id !== user?.id)
+          setPlayNotification(true);
+
         mutate(getConversationDetailURL(selectConversationId));
       }
       if (data.type === "ping") {
@@ -148,7 +164,7 @@ export function ChatMessageList({
         websocketRef.current = null;
       }
     };
-  }, [user?.accessToken, selectConversationId]);
+  }, [user?.accessToken, selectConversationId, user?.id]);
 
   if (loading) {
     return (
@@ -190,6 +206,7 @@ export function ChatMessageList({
         close={lightbox.onClose}
         index={lightbox.selected}
       />
+      <NotificationSound play={playNotification} />
     </>
   );
 }

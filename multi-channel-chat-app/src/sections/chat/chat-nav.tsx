@@ -33,6 +33,7 @@ import {
 import { websocketMessage } from "@/models/websocket-message";
 import { mutate } from "swr";
 import { CONFIG } from "@/config-global";
+import NotificationSound from "@/components/notification-sound/notification-sound";
 
 // ----------------------------------------------------------------------
 
@@ -91,6 +92,16 @@ export function ChatNav({
   );
 
   const websocketRef = useRef<WebSocket | null>(null);
+
+  const [playNotification, setPlayNotification] = useState<boolean>(false);
+  useEffect(() => {
+    if (playNotification) {
+      const timer = setTimeout(() => {
+        setPlayNotification(false);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [playNotification]);
 
   useEffect(() => {
     if (!user?.accessToken) {
@@ -151,8 +162,12 @@ export function ChatNav({
     const handleMessage = (message: MessageEvent) => {
       const data = JSON.parse(message.data) as websocketMessage;
 
-      if (data.event === "create" || data.event === "update") {
-        console.log(`[${data.event}] New conversation created or updated!`);
+      if (data.event === "create") {
+        console.log(`New conversation created`);
+        setPlayNotification(true);
+        mutate(getConversationsURL(user?.id));
+      } else if (data.event === "update") {
+        console.log(`Conversation updated updated!`);
         mutate(getConversationsURL(user?.id));
       }
 
@@ -396,6 +411,7 @@ export function ChatNav({
       >
         {renderContent}
       </Drawer>
+      <NotificationSound play={playNotification} />
     </>
   );
 }
