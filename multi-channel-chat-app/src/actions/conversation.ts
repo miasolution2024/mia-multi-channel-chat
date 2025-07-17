@@ -9,9 +9,10 @@ import {
 
 // ----------------------------------------------------------------------
 
-export function getConversationsURL() {
+export function getConversationsURL(userId?: string) {
+  if (!userId) return "";
   const queryParams = new URLSearchParams({
-    "filter[participants][_some][participant_id][_eq]": "$CURRENT_USER",
+    "filter[participants][_some][participant_id][_eq]": userId,
     sort: "-last_message_at",
     fields: [
       "*",
@@ -28,10 +29,14 @@ export function getConversationsURL() {
   return `${endpoints.conversations.list}?${queryParams}`;
 }
 
-export function useGetConversations() {
-  const url = getConversationsURL();
+export function useGetConversations(userId?: string) {
+  const url = getConversationsURL(userId);
 
-  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrConfig);
+  const { data, isLoading, error, isValidating } = useSWR(
+    url,
+    fetcher,
+    swrConfig
+  );
   const memoizedValue = useMemo(() => {
     return {
       conversations: (data?.data as Conversation[]) || [],
@@ -55,7 +60,11 @@ export function getConversationDetailURL(conversationId: string) {
 export function useGetConversation(conversationId: string) {
   const url = getConversationDetailURL(conversationId);
 
-  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrConfig);
+  const { data, isLoading, error, isValidating } = useSWR(
+    url,
+    fetcher,
+    swrConfig
+  );
 
   const memoizedValue = useMemo(
     () => ({

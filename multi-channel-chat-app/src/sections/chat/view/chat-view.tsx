@@ -48,7 +48,7 @@ export function ChatView() {
 
   const [recipients, setRecipients] = useState<Participant[]>([]);
 
-  const { conversations, conversationsLoading } = useGetConversations();
+  const { conversations, conversationsLoading } = useGetConversations(user?.id);
 
   const { conversation, conversationError, conversationLoading } =
     useGetConversation(`${selectedConversationId}`);

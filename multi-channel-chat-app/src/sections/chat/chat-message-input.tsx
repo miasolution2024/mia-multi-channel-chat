@@ -15,7 +15,7 @@ import { mutate } from "swr";
 import { paths } from "@/routes/path";
 import {
   createConversationAsync,
-  getConversationDetailURL,
+  // getConversationDetailURL,
   getConversationsURL,
   updateConversationLastMessageDataAsync,
 } from "@/actions/conversation";
@@ -76,11 +76,11 @@ export function ChatMessageInput({
           selectedConversationId,
           message
         );
-        mutate(getConversationDetailURL(selectedConversationId));
+        // mutate(getConversationDetailURL(selectedConversationId));
       } else {
         // If the conversation does not exist
         const res = await createConversationAsync(conversationData);
-        mutate(getConversationsURL());
+        mutate(getConversationsURL(user?.id));
         router.push(`${paths.dashboard.chat}?id=${res.data.id}`);
         onAddRecipients([]);
       }
@@ -96,6 +96,7 @@ export function ChatMessageInput({
     onAddRecipients,
     router,
     selectedConversationId,
+    user?.id
   ]);
 
   return (

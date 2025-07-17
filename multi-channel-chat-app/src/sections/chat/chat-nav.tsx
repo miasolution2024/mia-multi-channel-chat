@@ -131,7 +131,7 @@ export function ChatNav({
             filter: {
               participants: {
                 participant_id: {
-                  _eq: "$CURRENT_USER",
+                  _eq: user?.id,
                 },
               },
             },
@@ -153,7 +153,7 @@ export function ChatNav({
 
       if (data.event === "create" || data.event === "update") {
         console.log(`[${data.event}] New conversation created or updated!`);
-        mutate(getConversationsURL());
+        mutate(getConversationsURL(user?.id));
       }
 
       if (data.type === "ping") {
@@ -189,7 +189,7 @@ export function ChatNav({
         websocketRef.current = null;
       }
     };
-  }, [user?.accessToken]);
+  }, [user?.accessToken, user?.id]);
 
   useEffect(() => {
     if (!mdUp) {
