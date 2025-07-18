@@ -34,6 +34,7 @@ import { websocketMessage } from "@/models/websocket-message";
 import { mutate } from "swr";
 import { CONFIG } from "@/config-global";
 import NotificationSound from "@/components/notification-sound/notification-sound";
+import { uuidv4 } from "@/utils/uuidv4";
 
 // ----------------------------------------------------------------------
 
@@ -137,15 +138,16 @@ export function ChatNav({
           type: "subscribe",
           action: "read",
           collection: "mc_conversations",
+          uid: uuidv4(),
           query: {
             fields: ["id,participants.participant_id"],
-            // filter: {
-            //   participants: {
-            //     participant_id: {
-            //       _eq: user?.id,
-            //     },
-            //   },
-            // },
+            filter: {
+              participants: {
+                participant_id: {
+                  _eq: user?.id,
+                },
+              },
+            },
           },
         })
       );
@@ -156,11 +158,14 @@ export function ChatNav({
 
       console.log(`WebSocket connection opened for conversations subscription`);
       sendAuth();
-      sendSubscribeConversations();
     };
 
     const handleMessage = (message: MessageEvent) => {
       const data = JSON.parse(message.data) as websocketMessage;
+
+      if (data.type == "auth" && data.status == "ok") {
+        sendSubscribeConversations();
+      }
 
       if (data.event === "create") {
         console.log(`New conversation created`);

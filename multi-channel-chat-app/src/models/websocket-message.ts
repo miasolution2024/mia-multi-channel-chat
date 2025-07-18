@@ -3,5 +3,6 @@ export type websocketMessage = {
   event: string;
   type: string;
   collection: string;
+  status: string;
   data: any[];
 };
