@@ -104,7 +104,7 @@ export function ChatNav({
   }, [playNotification]);
 
   useEffect(() => {
-    if (!user?.accessToken) {
+    if (!user?.accessToken || !user?.id) {
       if (websocketRef.current) {
         console.log("Closing existing connection due to missing dependencies.");
         websocketRef.current.close();
@@ -139,13 +139,13 @@ export function ChatNav({
           collection: "mc_conversations",
           query: {
             fields: ["id,participants.participant_id"],
-            filter: {
-              participants: {
-                participant_id: {
-                  _eq: user?.id,
-                },
-              },
-            },
+            // filter: {
+            //   participants: {
+            //     participant_id: {
+            //       _eq: user?.id,
+            //     },
+            //   },
+            // },
           },
         })
       );

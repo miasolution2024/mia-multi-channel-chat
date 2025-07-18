@@ -94,14 +94,14 @@ export function ChatMessageList({
           collection: "mc_messages",
           query: {
             fields: ["id,conversation,sender_id"],
-            filter: {
-              conversation: {
-                _eq: selectConversationId,
-              },
-              // sender_id:{
-              //   _neq: "$CURRENT_USER"
-              // }
-            },
+            // filter: {
+            //   conversation: {
+            //     _eq: selectConversationId,
+            //   },
+            //   sender_id:{
+            //     _neq: "$CURRENT_USER"
+            //   }
+            // },
           },
         })
       );
@@ -123,6 +123,7 @@ export function ChatMessageList({
         console.log(
           "New message received, potentially refetching conversation details."
         );
+        console.log(data.data[0].sender_id, user?.id);
         
         if (data.data.length > 0 && data.data[0].sender_id !== user?.id)
           setPlayNotification(true);
