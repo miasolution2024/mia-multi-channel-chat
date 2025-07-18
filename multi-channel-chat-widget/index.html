@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Host Website with Embedded Chat Widget</title>
+    <style>
+      /* Basic host website styles */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding-bottom: 100px; /* Space for the widget */
+      }
+      h1 {
+        color: #333;
+      }
+      p {
+        line-height: 1.6;
+      }
+      .content-block {
+        background-color: #f9f9f9;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+      }
+    </style>
+
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+
+    <link rel="stylesheet" href="./dist/multi-channel-chat-widget.css" />
+
+    <script src="./dist/my-chat-widget.umd.js"></script>
+  </head>
+  <body>
+    <h1>Welcome to My Awesome Website!</h1>
+    <div class="content-block">
+      <p>
+        This is some content on your main website. Lorem ipsum dolor sit amet,
+        consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore
+        et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+      </p>
+      <p>
+        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+        dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+        proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+      </p>
+    </div>
+
+    <div id="chat-widget-root"></div>
+
+    <script>
+      // Initialize your chat widget after the DOM is loaded
+      document.addEventListener("DOMContentLoaded", () => {
+        // Check if the global variable exposed by your library exists
+        if (window.MyChatWidget && window.MyChatWidget.initChatWidget) {
+          window.MyChatWidget.initChatWidget("chat-widget-root", {
+            // You can pass props to your widget here, e.g.,
+            // initialOpen: true, // Optionally open the chat on page load
+            webhookUrl: "YOUR_N8N_CHAT_WEBHOOK_URL_HERE", // Replace with your actual n8n chat webhook URL
+          });
+        } else {
+          console.error(
+            "MyChatWidget not found. Ensure my-chat-widget.umd.js is loaded correctly."
+          );
+        }
+      });
+    </script>
+  </body>
+</html>
