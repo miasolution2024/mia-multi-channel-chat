@@ -1,49 +1,59 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import PreChatForm from "./components/PreChatForm";
 import ChatWindow from "./components/ChatWindow";
 import "./index.css";
-import type { UserInfo } from "./model";
+
+interface UserData {
+  name: string;
+  email: string;
+  phone: string;
+}
 
 interface AppProps {
   initialOpen?: boolean;
   webhookUrl: string;
 }
 
-function App({ initialOpen = false }: AppProps) {
-  const [isOpen, setIsOpen] = useState<boolean>(initialOpen);
-  const [isChatStarted, setIsChatStarted] = useState<boolean>(false);
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+type ChatState = "form" | "chat";
 
-  const handleStartChat = (userInfo: UserInfo) => {
-    setUserInfo(userInfo);
-    setIsChatStarted(true);
+const App: React.FC<AppProps> = ({ initialOpen = false, webhookUrl }) => {
+  const [chatState, setChatState] = useState<ChatState>("form");
+  const [isChatBoxOpen, setIsChatBoxOpen] = useState<boolean>(initialOpen);
+  const [userData, setUserData] = useState<UserData | undefined>(undefined);
+
+  // Log webhook URL for future use
+  console.log("Webhook URL:", webhookUrl);
+
+  const handleFormSuccess = (data: UserData) => {
+    setUserData(data);
+    setChatState("chat");
+    setIsChatBoxOpen(true);
   };
+
+  const handleChatBoxToggle = () => {
+    setIsChatBoxOpen(!isChatBoxOpen);
+  };
+
+  const handleBackToForm = () => {
+    setChatState("form");
+    setUserData(undefined);
+    setIsChatBoxOpen(true);
+  };
+
   return (
-    <>
-      <div
-        className={`my-chat-widget-container ${isOpen ? "is-open" : ""}`}
-        id="my-chat-widget"
-      >
-        <button
-          className="my-chat-widget-close-button"
-          onClick={() => setIsOpen(false)}
-        >
-          ×
-        </button>
-        {isChatStarted ? (
-          <ChatWindow userInfo={userInfo}/>
-        ) : (
-          <PreChatForm onStartChat={handleStartChat} />
-        )}
-      </div>
-      <div
-        className="my-chat-widget-launcher"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        💬
-      </div>
-    </>
+    <div className="min-h-screen bg-neutral-50 font-sans">
+      {chatState === "form" && <PreChatForm onSuccess={handleFormSuccess} />}
+
+      {chatState === "chat" && (
+        <ChatWindow
+          isOpen={isChatBoxOpen}
+          onToggle={handleChatBoxToggle}
+          onBackToForm={handleBackToForm}
+          userData={userData}
+        />
+      )}
+    </div>
   );
-}
+};
 
 export default App;
