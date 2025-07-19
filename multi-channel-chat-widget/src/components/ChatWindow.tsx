@@ -12,7 +12,12 @@ import type {
   websocketMessage,
 } from "../model";
 import { CONFIG } from "../config-global";
-import { getConversationById, sendMessage } from "../actions/conversation";
+import {
+  getConversationById,
+  sendCustomerMessage,
+  sendWelcomeMessage,
+  updateConversationLastMessageDataAsync,
+} from "../actions/conversation";
 
 interface ChatWindowProps {
   isOpen: boolean;
@@ -56,8 +61,28 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
     try {
       const response = await getConversationById(userData?.conversation_id);
+      if (!response.messages || response.messages.length === 0) {
+        const message = await sendWelcomeMessage({
+          content: `Hello ${
+            userData?.customer_name || "you"
+          }! 👋 What can A Dong Silk do for you today?`,
+          sender_type: "CHATBOT",
+          sender_id: "369f20d5-7c17-4217-a718-75133fb1f78b",
+          type: "TEXT",
+          conversation: userData?.conversation_id || "",
+        });
 
-      setMessages(response.messages || []);
+        await updateConversationLastMessageDataAsync(
+          userData?.conversation_id || "",
+          `Hello ${
+            userData?.customer_name || "you"
+          }! 👋 What can A Dong Silk do for you today?`
+        );
+
+        setMessages([message]);
+      } else {
+        setMessages(response.messages);
+      }
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
@@ -108,7 +133,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       setMessages((prev) => [...prev, userMessage]);
       setNewMessage("");
 
-      await sendMessage(userMessage);
+      await sendCustomerMessage(userMessage);
     }
   };
 

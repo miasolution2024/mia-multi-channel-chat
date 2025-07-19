@@ -85,9 +85,9 @@ export type MessageCreateRequest = {
   conversation: string;
   sender_id: string;
   sender_type: ParticipantType;
-  sender_name: string;
-  sender_email: string;
-  sender_phone: string;
+  sender_name?: string;
+  sender_email?: string;
+  sender_phone?: string;
   content: string;
   type: MessageType;
   external_message_id?: string;
