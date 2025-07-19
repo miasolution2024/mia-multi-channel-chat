@@ -1,27 +1,28 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+  },
   build: {
     lib: {
-      // Entry point for the library
-      entry: path.resolve(__dirname, 'src/main.tsx'),
-      name: 'MyChatWidget',
-      fileName: (format) => `my-chat-widget.${format}.js`
+      entry: path.resolve(__dirname, "src/main.tsx"),
+      name: "MyChatWidget",
+      fileName: (format) => `my-chat-widget.${format}.js`,
+      formats: ["umd"],
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
+      external: ["react", "react-dom"],
       output: {
-        // Provide global variables to use in the UMD build for externalized deps
         globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM',
+          react: "React",
+          "react-dom": "ReactDOM",
         },
       },
     },
-    outDir: 'dist',
-  }
-})
+    outDir: "dist",
+  },
+});

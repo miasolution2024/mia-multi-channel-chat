@@ -60,6 +60,13 @@
     <script>
       // Initialize your chat widget after the DOM is loaded
       document.addEventListener("DOMContentLoaded", () => {
+        console.log(MyChatWidget);
+        
+        MyChatWidget.initChatWidget("chat-widget-root", {
+            // You can pass props to your widget here, e.g.,
+            // initialOpen: true, // Optionally open the chat on page load
+            webhookUrl: "YOUR_N8N_CHAT_WEBHOOK_URL_HERE", // Replace with your actual n8n chat webhook URL
+          });
         // Check if the global variable exposed by your library exists
         if (window.MyChatWidget && window.MyChatWidget.initChatWidget) {
           window.MyChatWidget.initChatWidget("chat-widget-root", {
