@@ -60,12 +60,13 @@ export type Participant = {
 // ----------------------------------------------------------------------
 
 export interface UserInfo {
-  name: string;
-  email: string;
-  phone: string;
-  customerId?: string;
-  conversationId?: string;
-  accessToken?: string;
+  customer_id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  conversation_id?: string;
+  access_token?: string;
+  is_chatbot_active?: boolean;
 }
 
 // ----------------------------------------------------------------------
@@ -76,4 +77,19 @@ export type websocketMessage = {
   collection: string;
   status: string;
   data: any[];
+};
+
+// ----------------------------------------------------------------------
+
+export type MessageCreateRequest = {
+  conversation: string;
+  sender_id: string;
+  sender_type: ParticipantType;
+  sender_name: string;
+  sender_email: string;
+  sender_phone: string;
+  content: string;
+  type: MessageType;
+  external_message_id?: string;
+  attachments?: number[];
 };

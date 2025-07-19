@@ -1,21 +1,29 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { CONFIG } from "../config-global";
+import type { UserInfo } from "../model";
 import axiosInstance from "./axios";
 
-export const startNewChatAsync = async (request: {
+export const startChatSessionAsync = async (request: {
   name: string;
   email: string;
   phone: string;
-}): Promise<any> => {
+}): Promise<UserInfo> => {
   try {
-    const response = await axiosInstance.post("", request);
+    const response = await axiosInstance.post(CONFIG.startChatSessionWebhookUrl, request);
 
-    const { access_token: token } = response.data.data;
+    if (response.status !== 200) {
+      throw new Error("Failed to start chat session");
+    }
 
-    if (!token) {
+    const { access_token } = response.data;
+
+    if (!access_token) {
       delete axiosInstance.defaults.headers.common.Authorization;
       throw new Error("Access token not found in response");
     }
-    axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
+
+    axiosInstance.defaults.headers.common.Authorization = `Bearer ${access_token}`;
+
+    return response.data;
   } catch (error) {
     console.error("Error during sign in:", error);
     throw error;

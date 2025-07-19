@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { ChatBubbleLeftIcon, XMarkIcon } from "./icons";
 import SimpleInput from "./SimpleInput";
 import type { UserInfo } from "../model";
-import { startNewChatAsync } from "../actions/auth";
+import { startChatSessionAsync } from "../actions/auth";
 
 interface FormData {
   name: string;
@@ -87,8 +87,6 @@ const PreChatForm: React.FC<PreChatFormProps> = ({ onSuccess }) => {
     setIsSubmitting(true);
 
     try {
-      console.log("Form Data:", formData);
-
       setFormData({ name: "", email: "", phone: "" });
       setErrors({});
       setIsFormOpen(false);
@@ -102,20 +100,8 @@ const PreChatForm: React.FC<PreChatFormProps> = ({ onSuccess }) => {
   };
 
   const handleStartChat = async (data: FormData) => {
-    console.log("User Info collected:", data);
-    const response = await startNewChatAsync(data);
-
-    console.log(response);
-
-    const userInfo: UserInfo = {
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      conversationId: response.data?.conversationId,
-      accessToken: response.data?.token,
-    };
-
-    onSuccess(userInfo);
+    const response = await startChatSessionAsync(data);
+    onSuccess(response);
   };
 
   return (

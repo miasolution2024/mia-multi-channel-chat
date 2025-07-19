@@ -5,9 +5,9 @@ import {
   ChevronDownIcon,
   PaperAirplaneIcon,
 } from "./icons";
-import type { Message, UserInfo, websocketMessage } from "../model";
+import type { Message, MessageCreateRequest, UserInfo, websocketMessage } from "../model";
 import { CONFIG } from "../config-global";
-import { getConversationById } from "../actions/conversation";
+import { getConversationById, sendMessage } from "../actions/conversation";
 
 interface ChatWindowProps {
   isOpen: boolean;
@@ -26,12 +26,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     {
       id: "1",
       content: `Hello ${
-        userData?.name || "you"
+        userData?.customer_name || "you"
       }! 👋 What can A Dong Silk do for you today?`,
       sender_type: "CHATBOT",
-      sender_id: userData?.customerId || "chatbot",
+      sender_id: userData?.customer_id || "chatbot",
       type: "TEXT",
-      date_created: new Date().toLocaleTimeString(),
     },
   ]);
   const [newMessage, setNewMessage] = useState("");
@@ -46,27 +45,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   const handleGetMessages = async () => {
-    if (!userData?.accessToken || !userData.conversationId) {
+    if (!userData?.access_token || !userData?.conversation_id) {
       console.error("Missing access token or conversation ID");
       return;
     }
     try {
-      const response = await getConversationById(userData.conversationId);
-      if (!response.ok) {
-        throw new Error("Failed to fetch messages");
-      }
-      const data = await response.json();
-      setMessages(data.messages);
+      const response = await getConversationById(userData?.conversation_id);
+
+      setMessages(response.messages || []);
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
   };
 
   useEffect(() => {
-    if (userData?.conversationId) {
-      handleGetMessages();
-    }
-  }, [userData?.conversationId]);
+    handleGetMessages();
+  }, [userData?.conversation_id, userData?.access_token]);
 
   useEffect(() => {
     scrollToBottom();
@@ -93,33 +87,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     autoResize();
   }, [newMessage]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (newMessage.trim()) {
-      const userMessage: Message = {
-        id: (messages.length + 1).toString(),
+      const userMessage: MessageCreateRequest = {
         content: newMessage,
-        sender_id: userData?.customerId || "user",
+        sender_id: userData?.customer_id || "user",
+        sender_email: userData?.customer_email || "",
+        sender_name: userData?.customer_name || "User",
+        sender_phone: userData?.customer_phone || "",
         sender_type: "CUSTOMER",
         type: "TEXT",
-        date_created: new Date().toLocaleTimeString(),
+        conversation: userData?.conversation_id || "",
       };
 
       setMessages((prev) => [...prev, userMessage]);
       setNewMessage("");
-
-      // Auto reply after 1 second
-      setTimeout(() => {
-        const botReply: Message = {
-          id: (messages.length + 2).toString(),
-          content:
-            "Thank you for your message! We will get back to you shortly.",
-          sender_id: "chatbot",
-          sender_type: "CHATBOT",
-          type: "TEXT",
-          date_created: new Date().toLocaleTimeString(),
-        };
-        setMessages((prev) => [...prev, botReply]);
-      }, 1000);
+      
+      await sendMessage(userMessage);
     }
   };
 
@@ -140,7 +124,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   console.log(onBackToForm);
 
   useEffect(() => {
-    if (!userData?.accessToken || !userData.conversationId) {
+    if (!userData?.access_token || !userData?.conversation_id) {
       if (websocketRef.current) {
         console.log("Closing existing connection due to missing dependencies.");
         websocketRef.current.close();
@@ -150,13 +134,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
 
     console.log(
-      `Attempting to subscribe to conversation ${userData.conversationId}`
+      `Attempting to subscribe to conversation ${userData.conversation_id}`
     );
 
     // Close any existing connection before opening a new one
     if (websocketRef.current) {
       console.log(
-        `Closing old connection for conversation ${userData.conversationId}`
+        `Closing old connection for conversation ${userData.conversation_id}`
       );
       websocketRef.current.close();
       websocketRef.current = null; // Clear the ref
@@ -168,7 +152,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       connection.send(
         JSON.stringify({
           type: "auth",
-          access_token: userData?.accessToken,
+          access_token: userData?.access_token,
         })
       );
     };
@@ -183,10 +167,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             fields: ["id,conversation,sender_id"],
             filter: {
               conversation: {
-                _eq: userData.conversationId,
+                _eq: userData.conversation_id,
               },
               sender_id: {
-                _neq: userData.customerId,
+                _neq: userData.customer_id,
               },
             },
           },
@@ -198,7 +182,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       websocketRef.current = connection;
 
       console.log(
-        `WebSocket connection opened for conversation ${userData.conversationId}`
+        `WebSocket connection opened for conversation ${userData.conversation_id}`
       );
       sendAuth();
     };
@@ -223,7 +207,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     const handleClose = () => {
       console.log(
-        `WebSocket connection closed for conversation ${userData.conversationId}`
+        `WebSocket connection closed for conversation ${userData.conversation_id}`
       );
       websocketRef.current = null; // Clear the ref when connection closes
     };
@@ -232,7 +216,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       console.error({
         event: "onerror",
         error,
-        message: `WebSocket error for conversation ${userData.conversationId}`,
+        message: `WebSocket error for conversation ${userData.conversation_id}`,
       });
       websocketRef.current = null; // Clear the ref on error
     };
@@ -245,13 +229,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => {
       if (websocketRef.current) {
         console.log(
-          `Cleaning up: Closing WebSocket connection for conversation ${userData.conversationId}`
+          `Cleaning up: Closing WebSocket connection for conversation ${userData.conversation_id}`
         );
         websocketRef.current.close();
         websocketRef.current = null;
       }
     };
-  }, [userData?.accessToken, userData?.conversationId, userData?.customerId]);
+  }, [
+    userData?.access_token,
+    userData?.conversation_id,
+    userData?.customer_id,
+  ]);
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -294,7 +282,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
                 <div>
                   <h3 className="text-lg font-bold">
-                    Hello {userData?.name || "you"}!
+                    Hello {userData?.customer_name || "you"}!
                   </h3>
                   <p className="text-sm font-semibold">
                     A Dong Silk is ready to support you 24/7.
@@ -322,15 +310,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     }`}
                   >
                     <p className="text-sm break-words">{message.content}</p>
-                    <p
-                      className={`text-xs mt-1 ${
-                        message.sender_type === "STAFF"
-                          ? "text-primary-100"
-                          : "text-neutral-500"
-                      }`}
-                    >
-                      {message.date_created}
-                    </p>
                   </div>
                 </div>
               ))}

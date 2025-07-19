@@ -6,17 +6,14 @@ import type { UserInfo } from "./model";
 
 interface AppProps {
   initialOpen?: boolean;
-  webhookUrl: string;
 }
 
 type ChatState = "form" | "chat";
 
-const App: React.FC<AppProps> = ({ initialOpen = false, webhookUrl }) => {
+const App: React.FC<AppProps> = ({ initialOpen = false }) => {
   const [chatState, setChatState] = useState<ChatState>("form");
   const [isChatBoxOpen, setIsChatBoxOpen] = useState<boolean>(initialOpen);
   const [userData, setUserData] = useState<UserInfo | undefined>(undefined);
-
-  console.log("Webhook URL:", webhookUrl);
 
   const handleFormSuccess = (data: UserInfo) => {
     setUserData(data);

@@ -35,9 +35,9 @@
       src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
     ></script>
 
-    <link rel="stylesheet" href="./dist/multi-channel-chat-widget.css" />
+    <link rel="stylesheet" href="https://storage.googleapis.com/mia-multi-channel-chat-widget/multi-channel-chat-widget.css" />
 
-    <script src="./dist/my-chat-widget.umd.js"></script>
+    <script src="https://storage.googleapis.com/mia-multi-channel-chat-widget/my-chat-widget.umd.js"></script>
   </head>
   <body>
     <div id="chat-widget-root"></div>
@@ -45,25 +45,8 @@
     <script>
       // Initialize your chat widget after the DOM is loaded
       document.addEventListener("DOMContentLoaded", () => {
-        console.log(MyChatWidget);
         
-        MyChatWidget.initChatWidget("chat-widget-root", {
-            // You can pass props to your widget here, e.g.,
-            // initialOpen: true, // Optionally open the chat on page load
-            webhookUrl: "YOUR_N8N_CHAT_WEBHOOK_URL_HERE", // Replace with your actual n8n chat webhook URL
-          });
-        // Check if the global variable exposed by your library exists
-        if (window.MyChatWidget && window.MyChatWidget.initChatWidget) {
-          window.MyChatWidget.initChatWidget("chat-widget-root", {
-            // You can pass props to your widget here, e.g.,
-            // initialOpen: true, // Optionally open the chat on page load
-            webhookUrl: "YOUR_N8N_CHAT_WEBHOOK_URL_HERE", // Replace with your actual n8n chat webhook URL
-          });
-        } else {
-          console.error(
-            "MyChatWidget not found. Ensure my-chat-widget.umd.js is loaded correctly."
-          );
-        }
+        MyChatWidget.initChatWidget("chat-widget-root");
       });
     </script>
   </body>
