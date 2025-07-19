@@ -105,7 +105,7 @@ const PreChatForm: React.FC<PreChatFormProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="relative m-6">
       <div className="animate-shake hover:animate-none">
         <button
           onClick={() => setIsFormOpen(!isFormOpen)}

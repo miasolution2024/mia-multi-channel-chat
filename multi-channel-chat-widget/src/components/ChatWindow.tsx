@@ -5,7 +5,12 @@ import {
   ChevronDownIcon,
   PaperAirplaneIcon,
 } from "./icons";
-import type { Message, MessageCreateRequest, UserInfo, websocketMessage } from "../model";
+import type {
+  Message,
+  MessageCreateRequest,
+  UserInfo,
+  websocketMessage,
+} from "../model";
 import { CONFIG } from "../config-global";
 import { getConversationById, sendMessage } from "../actions/conversation";
 
@@ -102,7 +107,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       setMessages((prev) => [...prev, userMessage]);
       setNewMessage("");
-      
+
       await sendMessage(userMessage);
     }
   };
@@ -242,7 +247,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   ]);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="relative m-6">
       {/* Chat Icon */}
       <div className={isOpen ? "" : "animate-shake hover:animate-none"}>
         <button

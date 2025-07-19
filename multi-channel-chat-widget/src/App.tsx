@@ -32,7 +32,7 @@ const App: React.FC<AppProps> = ({ initialOpen = false }) => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 font-sans">
+    <div className="chat-widget-container">
       {chatState === "form" && <PreChatForm onSuccess={handleFormSuccess} />}
 
       {chatState === "chat" && (

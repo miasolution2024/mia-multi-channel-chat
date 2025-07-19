@@ -28,6 +28,7 @@ export default defineConfig({
           react: "React",
           "react-dom": "ReactDOM",
         },
+        exports: "named",
       },
     },
     outDir: "dist",
