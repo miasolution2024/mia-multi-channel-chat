@@ -7,6 +7,13 @@ export default defineConfig({
   define: {
     "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
   },
+  server: {
+    port: 3000,
+    open: true,
+    hmr: {
+      overlay: true,
+    },
+  },
   build: {
     lib: {
       entry: path.resolve(__dirname, "src/main.tsx"),
@@ -24,5 +31,9 @@ export default defineConfig({
       },
     },
     outDir: "dist",
+    cssCodeSplit: false,
+  },
+  css: {
+    devSourcemap: true,
   },
 });
