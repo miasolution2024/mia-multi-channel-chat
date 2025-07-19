@@ -311,7 +311,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold">
+                  <h3 className="text-lg text-white font-bold">
                     Hello {userData?.customer_name || "you"}!
                   </h3>
                   <p className="text-sm font-semibold">
