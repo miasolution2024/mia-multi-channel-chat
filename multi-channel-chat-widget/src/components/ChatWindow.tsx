@@ -1,35 +1,19 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useRef, useEffect } from "react";
 import {
   ChatBubbleOvalLeftEllipsisIcon,
   ChevronDownIcon,
   PaperAirplaneIcon,
 } from "./icons";
-
-const senderType = {
-  USER: "USER",
-  BOT: "BOT",
-} as const;
-
-type SenderType = (typeof senderType)[keyof typeof senderType];
-
-interface Message {
-  id: number;
-  text: string;
-  sender: SenderType;
-  timestamp: string;
-}
-
-interface UserData {
-  name?: string;
-  email?: string;
-  phone?: string;
-}
+import type { Message, UserInfo, websocketMessage } from "../model";
+import { CONFIG } from "../config-global";
+import { getConversationById } from "../actions/conversation";
 
 interface ChatWindowProps {
   isOpen: boolean;
   onToggle: () => void;
   onBackToForm?: () => void;
-  userData?: UserData;
+  userData?: UserInfo;
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({
@@ -40,23 +24,49 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: 1,
-      text: `Hello ${
+      id: "1",
+      content: `Hello ${
         userData?.name || "you"
       }! 👋 What can A Dong Silk do for you today?`,
-      sender: senderType.BOT,
-      timestamp: new Date().toLocaleTimeString(),
+      sender_type: "CHATBOT",
+      sender_id: userData?.customerId || "chatbot",
+      type: "TEXT",
+      date_created: new Date().toLocaleTimeString(),
     },
   ]);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const websocketRef = useRef<WebSocket | null>(null);
 
   // Scroll to bottom when new message added
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const handleGetMessages = async () => {
+    if (!userData?.accessToken || !userData.conversationId) {
+      console.error("Missing access token or conversation ID");
+      return;
+    }
+    try {
+      const response = await getConversationById(userData.conversationId);
+      if (!response.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+      const data = await response.json();
+      setMessages(data.messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (userData?.conversationId) {
+      handleGetMessages();
+    }
+  }, [userData?.conversationId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -86,10 +96,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const handleSendMessage = () => {
     if (newMessage.trim()) {
       const userMessage: Message = {
-        id: messages.length + 1,
-        text: newMessage,
-        sender: senderType.USER,
-        timestamp: new Date().toLocaleTimeString(),
+        id: (messages.length + 1).toString(),
+        content: newMessage,
+        sender_id: userData?.customerId || "user",
+        sender_type: "CUSTOMER",
+        type: "TEXT",
+        date_created: new Date().toLocaleTimeString(),
       };
 
       setMessages((prev) => [...prev, userMessage]);
@@ -98,10 +110,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       // Auto reply after 1 second
       setTimeout(() => {
         const botReply: Message = {
-          id: messages.length + 2,
-          text: "Thank you for contacting us! We will respond as soon as possible.",
-          sender: senderType.BOT,
-          timestamp: new Date().toLocaleTimeString(),
+          id: (messages.length + 2).toString(),
+          content:
+            "Thank you for your message! We will get back to you shortly.",
+          sender_id: "chatbot",
+          sender_type: "CHATBOT",
+          type: "TEXT",
+          date_created: new Date().toLocaleTimeString(),
         };
         setMessages((prev) => [...prev, botReply]);
       }, 1000);
@@ -123,6 +138,120 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // Suppress unused parameter warning
   console.log(onBackToForm);
+
+  useEffect(() => {
+    if (!userData?.accessToken || !userData.conversationId) {
+      if (websocketRef.current) {
+        console.log("Closing existing connection due to missing dependencies.");
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+      return;
+    }
+
+    console.log(
+      `Attempting to subscribe to conversation ${userData.conversationId}`
+    );
+
+    // Close any existing connection before opening a new one
+    if (websocketRef.current) {
+      console.log(
+        `Closing old connection for conversation ${userData.conversationId}`
+      );
+      websocketRef.current.close();
+      websocketRef.current = null; // Clear the ref
+    }
+
+    const connection = new WebSocket(CONFIG.websocketUrl);
+
+    const sendAuth = () => {
+      connection.send(
+        JSON.stringify({
+          type: "auth",
+          access_token: userData?.accessToken,
+        })
+      );
+    };
+
+    const sendSubscribeMessages = () => {
+      connection.send(
+        JSON.stringify({
+          type: "subscribe",
+          event: "create",
+          collection: "mc_messages",
+          query: {
+            fields: ["id,conversation,sender_id"],
+            filter: {
+              conversation: {
+                _eq: userData.conversationId,
+              },
+              sender_id: {
+                _neq: userData.customerId,
+              },
+            },
+          },
+        })
+      );
+    };
+
+    const handleOpen = () => {
+      websocketRef.current = connection;
+
+      console.log(
+        `WebSocket connection opened for conversation ${userData.conversationId}`
+      );
+      sendAuth();
+    };
+
+    const handleMessage = (message: MessageEvent) => {
+      const data = JSON.parse(message.data) as websocketMessage;
+
+      if (data.type == "auth" && data.status == "ok") {
+        sendSubscribeMessages();
+      }
+
+      if (data.event === "create") {
+        console.log(
+          "New message received, potentially refetching conversation details."
+        );
+        handleGetMessages();
+      }
+      if (data.type === "ping") {
+        connection.send(JSON.stringify({ type: "pong" }));
+      }
+    };
+
+    const handleClose = () => {
+      console.log(
+        `WebSocket connection closed for conversation ${userData.conversationId}`
+      );
+      websocketRef.current = null; // Clear the ref when connection closes
+    };
+
+    const handleError = (error: Event) => {
+      console.error({
+        event: "onerror",
+        error,
+        message: `WebSocket error for conversation ${userData.conversationId}`,
+      });
+      websocketRef.current = null; // Clear the ref on error
+    };
+
+    connection.addEventListener("open", handleOpen);
+    connection.addEventListener("message", handleMessage);
+    connection.addEventListener("close", handleClose);
+    connection.addEventListener("error", handleError);
+
+    return () => {
+      if (websocketRef.current) {
+        console.log(
+          `Cleaning up: Closing WebSocket connection for conversation ${userData.conversationId}`
+        );
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+    };
+  }, [userData?.accessToken, userData?.conversationId, userData?.customerId]);
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -180,27 +309,27 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 <div
                   key={message.id}
                   className={`flex ${
-                    message.sender === senderType.USER
+                    message.sender_type === "CUSTOMER"
                       ? "justify-end"
                       : "justify-start"
                   }`}
                 >
                   <div
                     className={`max-w-xs px-4 py-2 rounded-2xl ${
-                      message.sender === senderType.USER
+                      message.sender_type === "CUSTOMER"
                         ? "bg-primary-500 text-white"
                         : "bg-white text-neutral-800 border border-neutral-200"
                     }`}
                   >
-                    <p className="text-sm break-words">{message.text}</p>
+                    <p className="text-sm break-words">{message.content}</p>
                     <p
                       className={`text-xs mt-1 ${
-                        message.sender === senderType.USER
+                        message.sender_type === "STAFF"
                           ? "text-primary-100"
                           : "text-neutral-500"
                       }`}
                     >
-                      {message.timestamp}
+                      {message.date_created}
                     </p>
                   </div>
                 </div>

@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { UserInfo } from "../model";
 import axiosInstance from "./axios";
 
-export const startNewChatAsync = async (request: UserInfo): Promise<any> => {
+export const startNewChatAsync = async (request: {
+  name: string;
+  email: string;
+  phone: string;
+}): Promise<any> => {
   try {
     const response = await axiosInstance.post("", request);
 

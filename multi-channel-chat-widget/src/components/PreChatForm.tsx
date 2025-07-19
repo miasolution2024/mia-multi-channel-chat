@@ -1,6 +1,8 @@
 import React, { useState, useRef } from "react";
 import { ChatBubbleLeftIcon, XMarkIcon } from "./icons";
 import SimpleInput from "./SimpleInput";
+import type { UserInfo } from "../model";
+import { startNewChatAsync } from "../actions/auth";
 
 interface FormData {
   name: string;
@@ -15,7 +17,7 @@ interface FormErrors {
 }
 
 interface PreChatFormProps {
-  onSuccess: (data: FormData) => void;
+  onSuccess: (data: UserInfo) => void;
 }
 
 const PreChatForm: React.FC<PreChatFormProps> = ({ onSuccess }) => {
@@ -87,15 +89,11 @@ const PreChatForm: React.FC<PreChatFormProps> = ({ onSuccess }) => {
     try {
       console.log("Form Data:", formData);
 
-      // Reset form
       setFormData({ name: "", email: "", phone: "" });
       setErrors({});
       setIsFormOpen(false);
 
-      if (onSuccess) {
-        onSuccess(formData);
-      }
-          handleStartChat({ name, email, whatsapp });
+      handleStartChat(formData);
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {
@@ -103,7 +101,7 @@ const PreChatForm: React.FC<PreChatFormProps> = ({ onSuccess }) => {
     }
   };
 
-  const handleStartChat = async (data: UserInfo) => {
+  const handleStartChat = async (data: FormData) => {
     console.log("User Info collected:", data);
     const response = await startNewChatAsync(data);
 
@@ -112,22 +110,13 @@ const PreChatForm: React.FC<PreChatFormProps> = ({ onSuccess }) => {
     const userInfo: UserInfo = {
       name: data.name,
       email: data.email,
-      whatsapp: data.whatsapp,
+      phone: data.phone,
       conversationId: response.data?.conversationId,
-      token: response.data?.token,
+      accessToken: response.data?.token,
     };
-    onStartChat(userInfo);
-  };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!name || !whatsapp) {
-      alert("Please enter your Name and WhatsApp Number.");
-      return;
-    }
-    handleStartChat({ name, email, whatsapp });
+    onSuccess(userInfo);
   };
-
 
   return (
     <div className="fixed bottom-6 right-6 z-50">

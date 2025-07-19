@@ -2,12 +2,7 @@ import React, { useState } from "react";
 import PreChatForm from "./components/PreChatForm";
 import ChatWindow from "./components/ChatWindow";
 import "./index.css";
-
-interface UserData {
-  name: string;
-  email: string;
-  phone: string;
-}
+import type { UserInfo } from "./model";
 
 interface AppProps {
   initialOpen?: boolean;
@@ -19,12 +14,11 @@ type ChatState = "form" | "chat";
 const App: React.FC<AppProps> = ({ initialOpen = false, webhookUrl }) => {
   const [chatState, setChatState] = useState<ChatState>("form");
   const [isChatBoxOpen, setIsChatBoxOpen] = useState<boolean>(initialOpen);
-  const [userData, setUserData] = useState<UserData | undefined>(undefined);
+  const [userData, setUserData] = useState<UserInfo | undefined>(undefined);
 
-  // Log webhook URL for future use
   console.log("Webhook URL:", webhookUrl);
 
-  const handleFormSuccess = (data: UserData) => {
+  const handleFormSuccess = (data: UserInfo) => {
     setUserData(data);
     setChatState("chat");
     setIsChatBoxOpen(true);

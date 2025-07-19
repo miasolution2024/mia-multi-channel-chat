@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type ConversationType = "GROUP" | "ONE_TO_ONE";
 
 export type ConversationChannel = "ZALO" | "FACEBOOK" | "WHATAPP" | "WEBSITE";
@@ -61,8 +62,18 @@ export type Participant = {
 export interface UserInfo {
   name: string;
   email: string;
-  whatsapp: string;
+  phone: string;
   customerId?: string;
   conversationId?: string;
-  token?: string;
+  accessToken?: string;
 }
+
+// ----------------------------------------------------------------------
+
+export type websocketMessage = {
+  event: string;
+  type: string;
+  collection: string;
+  status: string;
+  data: any[];
+};
