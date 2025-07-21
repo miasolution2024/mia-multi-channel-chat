@@ -56,7 +56,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const handleGetMessages = async () => {
     if (!userData?.access_token || !userData?.conversation_id) {
-      console.error("Missing access token or conversation ID");
       return;
     }
     try {
@@ -67,7 +66,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             userData?.customer_name || "you"
           }! 👋 What can A Dong Silk do for you today?`,
           sender_type: "CHATBOT",
-          sender_id: "369f20d5-7c17-4217-a718-75133fb1f78b",
+          sender_id: "84740371-b814-4752-82af-6eea916d0b4f",
           type: "TEXT",
           conversation: userData?.conversation_id || "",
         });

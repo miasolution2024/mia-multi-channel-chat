@@ -17,10 +17,14 @@ interface FormErrors {
 }
 
 interface PreChatFormProps {
+  openChatWindow: () => void;
   onSuccess: (data: UserInfo) => void;
 }
 
-const PreChatForm: React.FC<PreChatFormProps> = ({ onSuccess }) => {
+const PreChatForm: React.FC<PreChatFormProps> = ({
+  onSuccess,
+  openChatWindow,
+}) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -100,6 +104,7 @@ const PreChatForm: React.FC<PreChatFormProps> = ({ onSuccess }) => {
   };
 
   const handleStartChat = async (data: FormData) => {
+    openChatWindow();
     const response = await startChatSessionAsync(data);
     onSuccess(response);
   };

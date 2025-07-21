@@ -17,8 +17,11 @@ const App: React.FC<AppProps> = ({ initialOpen = false }) => {
 
   const handleFormSuccess = (data: UserInfo) => {
     setUserData(data);
-    setChatState("chat");
+  };
+
+  const handleOpenChatWindow = () => {
     setIsChatBoxOpen(true);
+    setChatState("chat");
   };
 
   const handleChatBoxToggle = () => {
@@ -33,7 +36,12 @@ const App: React.FC<AppProps> = ({ initialOpen = false }) => {
 
   return (
     <div className="chat-widget-container">
-      {chatState === "form" && <PreChatForm onSuccess={handleFormSuccess} />}
+      {chatState === "form" && (
+        <PreChatForm
+          onSuccess={handleFormSuccess}
+          openChatWindow={handleOpenChatWindow}
+        />
+      )}
 
       {chatState === "chat" && (
         <ChatWindow
