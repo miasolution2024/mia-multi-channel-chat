@@ -266,7 +266,7 @@ export function ChatNav({
         );
         // Check if the conversation already exists
         if (!!conversation?.id) {
-          linkTo(conversation.id);
+          // linkTo(conversation.id);
           return;
         }
 
@@ -283,6 +283,7 @@ export function ChatNav({
         const { conversationData } = initialConversation({
           recipients: [recipient],
           me: myContact,
+          selectedChannel: channel,
         });
 
         // Create a new conversation

@@ -20,6 +20,7 @@ export function getConversationsURL(channel: ConversationChannel,userId?: string
       "*",
       "participants.participant_id",
       "participants.participant_name",
+      "participants.participant_avatar",
       "messages.id",
       "messages.sender_id",
       "messages.type",

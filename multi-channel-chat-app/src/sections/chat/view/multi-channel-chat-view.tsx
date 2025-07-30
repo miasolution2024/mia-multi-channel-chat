@@ -2,16 +2,35 @@
 "use client";
 
 import { DashboardContent } from "@/layouts/dashboard";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Layout } from "../layout";
 import { ChatChannels } from "../chat-channels";
 import { ChatView } from "./chat-view";
 import { ConversationChannel } from "@/models/conversation/conversations";
+import { paths } from "@/routes/path";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export function MultiChannelChatView() {
   const [selectedChannel, setSelectedChannel] = useState<ConversationChannel>(
     ConversationChannel.WEBSITE
   );
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const newSearchParams = new URLSearchParams();
+    for (const key of searchParams.keys()) {
+      if (key !== "id") {
+        newSearchParams.append(key, searchParams.get(key) || "");
+      }
+    }
+    newSearchParams.set("channel", selectedChannel);
+    const newQueryString = newSearchParams.toString();
+    console.log(newQueryString);
+    
+    router.push(`${paths.dashboard.chat}?${newQueryString}`);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChannel]);
+
   return (
     <DashboardContent
       maxWidth={false}
@@ -37,7 +56,7 @@ export function MultiChannelChatView() {
               handleSelectChannel={setSelectedChannel}
             />
           ),
-          main: <ChatView channel={selectedChannel}/>,
+          main: <ChatView channel={selectedChannel} />,
         }}
       />
     </DashboardContent>

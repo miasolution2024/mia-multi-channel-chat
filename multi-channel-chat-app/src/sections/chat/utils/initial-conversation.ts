@@ -19,11 +19,13 @@ export function initialConversation({
   me,
   selectedConversationId,
   conversation,
+  selectedChannel
 }: {
   message?: string;
   recipients: Participant[];
   me: User;
   selectedConversationId?: string;
+  selectedChannel: ConversationChannel;
   conversation?: Conversation;
 }): {
   messageData: MessageCreateRequest;
@@ -40,6 +42,7 @@ export function initialConversation({
   );
 
   const messageData: MessageCreateRequest = {
+    channel: selectedChannel,
     conversation: selectedConversationId ?? "",
     attachments: [],
     content: message,

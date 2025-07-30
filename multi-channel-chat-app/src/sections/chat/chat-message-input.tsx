@@ -15,11 +15,9 @@ import { mutate } from "swr";
 import { paths } from "@/routes/path";
 import {
   createConversationAsync,
-  // getConversationDetailURL,
   getConversationsURL,
-  updateConversationLastMessageDataAsync,
 } from "@/actions/conversation";
-import { sendFacebookMessage, sendMessage } from "@/actions/message";
+import { sendMessage } from "@/actions/message";
 import {
   Conversation,
   ConversationChannel,
@@ -62,13 +60,13 @@ export function ChatMessageInput({
     [user]
   );
 
-
   const { messageData, conversationData } = initialConversation({
     message,
     recipients,
     me: myContact,
     selectedConversationId,
-    conversation
+    conversation,
+    selectedChannel,
   });
 
   // const handleAttach = useCallback(() => {
@@ -86,16 +84,7 @@ export function ChatMessageInput({
       if (!message) return;
 
       if (selectedConversationId) {
-        // If the conversation already exists
-        if (selectedChannel === ConversationChannel.FACEBOOK) {
-          await sendFacebookMessage(messageData);
-        } else {
-          await sendMessage(messageData);
-        }
-        await updateConversationLastMessageDataAsync(
-          selectedConversationId,
-          message
-        );
+        await sendMessage(messageData);
         // mutate(getConversationDetailURL(selectedConversationId));
       } else {
         // If the conversation does not exist

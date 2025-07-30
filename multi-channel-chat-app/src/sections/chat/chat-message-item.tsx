@@ -34,7 +34,7 @@ export function ChatMessageItem({
     currentUserId: `${user?.id}`,
   });
 
-  const { firstName } = senderDetails;
+  const { firstName, participant_avatar } = senderDetails;
 
   const { content, date_created, sender_type } = message;
 
@@ -137,7 +137,7 @@ export function ChatMessageItem({
       justifyContent={me ? "flex-end" : "unset"}
       sx={{ mb: 5 }}
     >
-      {!me && <Avatar alt={firstName} sx={{ width: 32, height: 32, mr: 2 }} />}
+      {!me && <Avatar alt={firstName} src={participant_avatar} sx={{ width: 32, height: 32, mr: 2 }} />}
 
       <Stack alignItems={me ? "flex-end" : "flex-start"}>
         {renderInfo}

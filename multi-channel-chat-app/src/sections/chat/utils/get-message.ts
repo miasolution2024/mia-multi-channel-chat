@@ -22,6 +22,7 @@ export function getMessage({
       : {
           firstName: sender?.participant_name,
           participant_type: sender?.participant_type,
+          participant_avatar: sender?.participant_avatar,
         };
 
   const me = senderDetails.type === "me";

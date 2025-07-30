@@ -1,4 +1,5 @@
 import { Common } from "../common";
+import { ConversationChannel } from "../conversation/conversations";
 import { ParticipantType } from "../participants/participant";
 
 export enum MessageType {
@@ -19,6 +20,7 @@ export type Message = Common & {
 };
 
 export type MessageCreateRequest = {
+  channel: ConversationChannel;
   conversation: string;
   sender_id: string;
   sender_type: ParticipantType;

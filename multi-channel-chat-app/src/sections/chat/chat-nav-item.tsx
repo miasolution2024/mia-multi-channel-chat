@@ -13,7 +13,7 @@ import { useResponsive } from "@/hooks/use-responsive";
 
 import { getNavItem } from "./utils/get-nav-item";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { fToNow } from "@/utils/format-time";
 import { paths } from "@/routes/path";
 
@@ -27,6 +27,8 @@ export function ChatNavItem({
 }: any) {
   const { user } = useAuthContext();
 
+  const searchParams = useSearchParams();
+
   const mdUp = useResponsive("up", "md");
 
   const router = useRouter();
@@ -38,27 +40,41 @@ export function ChatNavItem({
 
   const singleParticipant = participants[0];
 
-  const { participant_name } = singleParticipant;
+  const { participant_name, participant_avatar } = singleParticipant;
 
   const handleClickConversation = useCallback(async () => {
     try {
       if (!mdUp) {
         onCloseMobile();
       }
-      // await clickConversation(conversation.id);
-      router.push(`${paths.dashboard.chat}?id=${conversation.id}`);
+      const newSearchParams = new URLSearchParams();
+      for (const key of searchParams.keys()) {
+        if (key !== "id") {
+          newSearchParams.append(key, searchParams.get(key) || "");
+        }
+      }
+      newSearchParams.set("id", conversation.id);
+
+      const newQueryString = newSearchParams.toString();
+
+      router.push(`${paths.dashboard.chat}?${newQueryString}`);
     } catch (error) {
       console.error(error);
     }
-  }, [conversation.id, mdUp, onCloseMobile, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation.id, mdUp, onCloseMobile]);
 
   const renderSingle = (
     <Badge
       key={status}
-      variant='standard'
+      variant="standard"
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
     >
-      <Avatar alt={participant_name} sx={{ width: 48, height: 48 }} />
+      <Avatar
+        alt={participant_name}
+        src={participant_avatar}
+        sx={{ width: 48, height: 48 }}
+      />
     </Badge>
   );
 
@@ -78,7 +94,7 @@ export function ChatNavItem({
           overlap="circular"
           badgeContent={collapse ? conversation.unreadCount : 0}
         >
-          {renderSingle }
+          {renderSingle}
         </Badge>
 
         {!collapse && (
