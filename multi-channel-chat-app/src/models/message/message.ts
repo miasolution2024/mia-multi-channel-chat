@@ -18,13 +18,14 @@ export type Message = Common & {
   attachments: number[];
 };
 
-export type MessageCreateRequest ={
-  conversation: string,
+export type MessageCreateRequest = {
+  conversation: string;
   sender_id: string;
   sender_type: ParticipantType;
   content: string;
   type: MessageType;
   external_message_id?: string;
   attachments: number[];
+  external_receive_id?: string;
+  external_sender_id?: string;
 };
-

@@ -1,5 +1,6 @@
 import { User } from "@/models/auth/user";
 import {
+  Conversation,
   ConversationChannel,
   ConversationCreateRequest,
   ConversationType,
@@ -17,16 +18,26 @@ export function initialConversation({
   recipients,
   me,
   selectedConversationId,
+  conversation,
 }: {
   message?: string;
   recipients: Participant[];
   me: User;
   selectedConversationId?: string;
+  conversation?: Conversation;
 }): {
   messageData: MessageCreateRequest;
   conversationData: ConversationCreateRequest;
 } {
   const isGroup = recipients.length > 1;
+
+  const sender = conversation?.participants.find(
+    (participant: Participant) => participant.participant_id === me.id
+  );
+
+  const recipient = conversation?.participants.find(
+    (participant: Participant) => participant.participant_id !== me.id
+  );
 
   const messageData: MessageCreateRequest = {
     conversation: selectedConversationId ?? "",
@@ -34,7 +45,9 @@ export function initialConversation({
     content: message,
     type: MessageType.TEXT,
     sender_id: me.id,
-    sender_type: ParticipantType.STAFF
+    sender_type: ParticipantType.STAFF,
+    external_receive_id: sender?.external_user_id,
+    external_sender_id: recipient?.external_user_id,
   };
 
   const conversationData: ConversationCreateRequest = {

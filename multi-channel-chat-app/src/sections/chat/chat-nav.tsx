@@ -24,7 +24,7 @@ import { today } from "@/utils/format-time";
 import { paths } from "@/routes/path";
 import { useRouter } from "next/navigation";
 import { Participant } from "@/models/participants/participant";
-import { Conversation } from "@/models/conversation/conversations";
+import { Conversation, ConversationChannel } from "@/models/conversation/conversations";
 import { initialConversation } from "./utils/initial-conversation";
 import {
   createConversationAsync,
@@ -48,12 +48,14 @@ export function ChatNav({
   collapseNav,
   conversations,
   selectedConversationId,
+  channel
 }: {
   loading: boolean;
   contacts: Participant[];
   collapseNav: any;
   conversations: Conversation[];
   selectedConversationId: string;
+  channel: ConversationChannel;
 }) {
   const router = useRouter();
 
@@ -170,10 +172,10 @@ export function ChatNav({
       if (data.event === "create") {
         console.log(`New conversation created`);
         setPlayNotification(true);
-        mutate(getConversationsURL(user?.id));
+        mutate(getConversationsURL(channel, user?.id));
       } else if (data.event === "update") {
         console.log(`Conversation updated updated!`);
-        mutate(getConversationsURL(user?.id));
+        mutate(getConversationsURL(channel, user?.id));
       }
 
       if (data.type === "ping") {

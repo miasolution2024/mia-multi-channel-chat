@@ -15,7 +15,6 @@ import { ChatHeaderCompose } from "../chat-header-compose";
 import { useCollapseNav } from "../hooks/use-collapse-nav";
 import { useRouter, useSearchParams } from "next/navigation";
 import { paths } from "@/routes/path";
-import { DashboardContent } from "@/layouts/dashboard";
 import { CONFIG } from "@/config-global";
 import { useGetCustomers } from "@/actions/customer";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
@@ -28,10 +27,15 @@ import {
   useGetConversation,
   useGetConversations,
 } from "@/actions/conversation";
+import { ConversationChannel } from "@/models/conversation/conversations";
 
 // ----------------------------------------------------------------------
 
-export function ChatView() {
+export function ChatView({
+  channel = ConversationChannel.WEBSITE,
+}: {
+  channel?: ConversationChannel;
+}) {
   const router = useRouter();
 
   const { user } = useAuthContext();
@@ -48,7 +52,10 @@ export function ChatView() {
 
   const [recipients, setRecipients] = useState<Participant[]>([]);
 
-  const { conversations, conversationsLoading } = useGetConversations(user?.id);
+  const { conversations, conversationsLoading } = useGetConversations(
+    channel,
+    user?.id
+  );
 
   const { conversation, conversationError, conversationLoading } =
     useGetConversation(`${selectedConversationId}`);
@@ -100,78 +107,74 @@ export function ChatView() {
   }, []);
 
   return (
-    <DashboardContent
-      maxWidth={false}
-      sx={{ display: "flex", flex: "1 1 auto", flexDirection: "column" }}
-    >
-      <Layout
-        sx={{
-          minHeight: 0,
-          flex: "1 1 0",
-          borderRadius: 2,
-          position: "relative",
-          bgcolor: "background.paper",
-          boxShadow: (theme: any) => theme.customShadows.card,
-        }}
-        slots={{
-          header: selectedConversationId ? (
-            <ChatHeaderDetail
-              collapseNav={roomNav}
-              participants={participants}
-              loading={conversationLoading}
-              is_chatbot_active={conversation?.is_chatbot_active ?? false}
-              selectedConversationId={selectedConversationId}
-            />
-          ) : (
-            <ChatHeaderCompose
-              contacts={contacts}
-              onAddRecipients={handleAddRecipients}
-            />
-          ),
-          nav: (
-            <ChatNav
-              contacts={contacts}
-              conversations={conversations}
-              loading={conversationsLoading}
-              selectedConversationId={selectedConversationId}
-              collapseNav={conversationsNav}
-            />
-          ),
-          main: (
-            <>
-              {selectedConversationId ? (
-                <ChatMessageList
-                  messages={conversation?.messages ?? []}
-                  participants={participants}
-                  loading={conversationLoading}
-                  selectConversationId={selectedConversationId}
-                />
-              ) : (
-                <EmptyContent
-                  imgUrl={`${CONFIG.assetsDir}/assets/icons/empty/ic-chat-active.svg`}
-                  title="Good morning!"
-                  description="Write something awesome..."
-                />
-              )}
-
-              <ChatMessageInput
-                recipients={recipients}
-                onAddRecipients={handleAddRecipients}
-                selectedConversationId={selectedConversationId}
-                disabled={!recipients.length && !selectedConversationId}
+    <Layout
+      sx={{
+        minHeight: 0,
+        flex: "1 1 0",
+        borderRadius: 0,
+        position: "relative",
+      }}
+      slots={{
+        header: selectedConversationId ? (
+          <ChatHeaderDetail
+            collapseNav={roomNav}
+            participants={participants}
+            loading={conversationLoading}
+            is_chatbot_active={conversation?.is_chatbot_active ?? false}
+            selectedConversationId={selectedConversationId}
+          />
+        ) : (
+          <ChatHeaderCompose
+            contacts={contacts}
+            onAddRecipients={handleAddRecipients}
+          />
+        ),
+        nav: (
+          <ChatNav
+            contacts={contacts}
+            conversations={conversations}
+            loading={conversationsLoading}
+            selectedConversationId={selectedConversationId}
+            collapseNav={conversationsNav}
+            channel={channel}
+          />
+        ),
+        main: (
+          <>
+            {selectedConversationId ? (
+              <ChatMessageList
+                messages={conversation?.messages ?? []}
+                participants={participants}
+                loading={conversationLoading}
+                selectConversationId={selectedConversationId}
               />
-            </>
-          ),
-          details: selectedConversationId && (
-            <ChatRoom
-              collapseNav={roomNav}
-              participants={participants}
-              loading={conversationLoading}
-              messages={conversation?.messages ?? []}
+            ) : (
+              <EmptyContent
+                imgUrl={`${CONFIG.assetsDir}/assets/icons/empty/ic-chat-active.svg`}
+                title="Good morning!"
+                description="Write something awesome..."
+              />
+            )}
+
+            <ChatMessageInput
+              recipients={recipients}
+              onAddRecipients={handleAddRecipients}
+              selectedConversationId={selectedConversationId}
+              disabled={!recipients.length && !selectedConversationId}
+              selectedChannel={channel}
+              conversation={conversation}
             />
-          ),
-        }}
-      />
-    </DashboardContent>
+          </>
+        ),
+        details: selectedConversationId && (
+          <ChatRoom
+            collapseNav={roomNav}
+            participants={participants}
+            loading={conversationLoading}
+            messages={conversation?.messages ?? []}
+          />
+        ),
+      }}
+    />
   );
 }

@@ -37,7 +37,7 @@ export function Layout({ slots, sx, ...other }: any) {
       {renderNav}
 
       <Stack sx={{ flex: '1 1 auto', minWidth: 0 }}>
-        {renderHeader}
+        {slots.header && renderHeader}
 
         <Stack direction="row" sx={{ flex: '1 1 auto', minHeight: 0 }}>
           {renderMain}

@@ -19,7 +19,12 @@ import {
   getConversationsURL,
   updateConversationLastMessageDataAsync,
 } from "@/actions/conversation";
-import { sendMessage } from "@/actions/message";
+import { sendFacebookMessage, sendMessage } from "@/actions/message";
+import {
+  Conversation,
+  ConversationChannel,
+} from "@/models/conversation/conversations";
+import { Participant } from "@/models/participants/participant";
 
 // ----------------------------------------------------------------------
 
@@ -28,7 +33,16 @@ export function ChatMessageInput({
   recipients,
   onAddRecipients,
   selectedConversationId,
-}: any) {
+  selectedChannel,
+  conversation,
+}: {
+  disabled: boolean;
+  recipients: Participant[];
+  onAddRecipients: (recipients: Participant[]) => void;
+  selectedConversationId?: string;
+  selectedChannel: ConversationChannel;
+  conversation?: Conversation;
+}) {
   const router = useRouter();
 
   const { user } = useAuthContext();
@@ -48,11 +62,13 @@ export function ChatMessageInput({
     [user]
   );
 
+
   const { messageData, conversationData } = initialConversation({
     message,
     recipients,
     me: myContact,
     selectedConversationId,
+    conversation
   });
 
   // const handleAttach = useCallback(() => {
@@ -71,7 +87,11 @@ export function ChatMessageInput({
 
       if (selectedConversationId) {
         // If the conversation already exists
-        await sendMessage(messageData);
+        if (selectedChannel === ConversationChannel.FACEBOOK) {
+          await sendFacebookMessage(messageData);
+        } else {
+          await sendMessage(messageData);
+        }
         await updateConversationLastMessageDataAsync(
           selectedConversationId,
           message
@@ -80,7 +100,7 @@ export function ChatMessageInput({
       } else {
         // If the conversation does not exist
         const res = await createConversationAsync(conversationData);
-        mutate(getConversationsURL(user?.id));
+        mutate(getConversationsURL(selectedChannel, user?.id));
         router.push(`${paths.dashboard.chat}?id=${res.data.id}`);
         onAddRecipients([]);
       }
@@ -96,7 +116,8 @@ export function ChatMessageInput({
     onAddRecipients,
     router,
     selectedConversationId,
-    user?.id
+    selectedChannel,
+    user?.id,
   ]);
 
   return (

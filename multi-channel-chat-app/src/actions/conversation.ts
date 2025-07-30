@@ -4,15 +4,17 @@ import useSWR from "swr";
 import axios, { fetcher, endpoints, swrConfig } from "@/utils/axios";
 import {
   Conversation,
+  ConversationChannel,
   ConversationCreateRequest,
 } from "@/models/conversation/conversations";
 
 // ----------------------------------------------------------------------
 
-export function getConversationsURL(userId?: string) {
+export function getConversationsURL(channel: ConversationChannel,userId?: string) {
   if (!userId) return "";
   const queryParams = new URLSearchParams({
     "filter[participants][_some][participant_id][_eq]": userId,
+    "filter[channel][_eq]": channel,
     sort: "-last_message_at",
     fields: [
       "*",
@@ -29,8 +31,8 @@ export function getConversationsURL(userId?: string) {
   return `${endpoints.conversations.list}?${queryParams}`;
 }
 
-export function useGetConversations(userId?: string) {
-  const url = getConversationsURL(userId);
+export function useGetConversations(channel: ConversationChannel, userId?: string) {
+  const url = getConversationsURL(channel, userId);
 
   const { data, isLoading, error, isValidating } = useSWR(
     url,
