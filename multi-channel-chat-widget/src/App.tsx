@@ -3,6 +3,7 @@ import PreChatForm from "./components/PreChatForm";
 import ChatWindow from "./components/ChatWindow";
 import "./index.css";
 import type { UserInfo } from "./model";
+import { uuidv4 } from "./uuidv4";
 
 interface AppProps {
   initialOpen?: boolean;
@@ -16,7 +17,7 @@ const App: React.FC<AppProps> = ({ initialOpen = false }) => {
   const [userData, setUserData] = useState<UserInfo | undefined>(undefined);
 
   const handleFormSuccess = (data: UserInfo) => {
-    setUserData(data);
+    setUserData({...data, session_id: uuidv4() });
   };
 
   const handleOpenChatWindow = () => {

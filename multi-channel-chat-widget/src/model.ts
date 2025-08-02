@@ -66,6 +66,7 @@ export interface UserInfo {
   customer_phone: string;
   conversation_id?: string;
   access_token?: string;
+  session_id?: string;
   is_chatbot_active?: boolean;
 }
 
@@ -88,6 +89,7 @@ export type MessageCreateRequest = {
   sender_name?: string;
   sender_email?: string;
   sender_phone?: string;
+  session_id?: string;
   content: string;
   type: MessageType;
   external_message_id?: string;

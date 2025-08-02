@@ -125,6 +125,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         sender_name: userData?.customer_name || "User",
         sender_phone: userData?.customer_phone || "",
         sender_type: "CUSTOMER",
+        session_id: userData?.session_id || "",
         type: "TEXT",
         conversation: userData?.conversation_id || "",
       };
