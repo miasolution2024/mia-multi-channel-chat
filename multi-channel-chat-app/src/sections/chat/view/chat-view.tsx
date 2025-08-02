@@ -32,6 +32,7 @@ import {
 // ----------------------------------------------------------------------
 
 export function ChatView() {
+  
   const router = useRouter();
 
   const { user } = useAuthContext();
