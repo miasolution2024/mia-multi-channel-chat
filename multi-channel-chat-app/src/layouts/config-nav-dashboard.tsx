@@ -38,6 +38,7 @@ const ICONS = {
   suppier: icon("ic-suppier"),
   category: icon("ic-category"),
   inventory: icon("ic-inventory"),
+  channel: icon("ic-channel"),
 };
 
 // ----------------------------------------------------------------------
@@ -84,11 +85,11 @@ export const navData = [
       //   path: paths.dashboard.salesOrder.root,
       //   icon: ICONS.invoice,
       // },
-      // {
-      //   title: "Inventory",
-      //   path: paths.dashboard.inventoryTransaction.root,
-      //   icon: ICONS.inventory,
-      // },
+      {
+        title: "Omni Channels",
+        path: paths.dashboard.omniChannels.root,
+        icon: ICONS.channel,
+      },
       {
         title: "Chat",
         path: paths.dashboard.chat,

@@ -123,6 +123,11 @@ export const endpoints = {
     create: "items/mc_conversations",
     update: "items/mc_conversations",
   },
+  omniChannels: {
+    list: "items/omni_channels",
+    create: "items/omni_channels",
+    update: "items/omni_channels",
+  },
   messages: {
     list: "items/mc_messages",
     create: "items/mc_messages",

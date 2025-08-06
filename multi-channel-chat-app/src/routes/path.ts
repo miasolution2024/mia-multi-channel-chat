@@ -21,6 +21,12 @@ export const paths = {
   dashboard: {
     root: `${ROOTS.DASHBOARD}`,
     chat: `${ROOTS.DASHBOARD}/chat`,
+    omniChannels: {
+      root: `${ROOTS.DASHBOARD}/omni-channels`,
+      new: `${ROOTS.DASHBOARD}/,omni-channelsnew`,
+      edit: (id: string | number) => `${ROOTS.DASHBOARD}/omni-channels/${id}/edit`,
+      details: (id: string) => `${ROOTS.DASHBOARD}/omni-channels/${id}`,
+    },
     customer: {
       root: `${ROOTS.DASHBOARD}/customer`,
     },
