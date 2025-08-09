@@ -1,4 +1,3 @@
-
 export interface AppSettings {
   facebook_app_id: string;
   facebook_app_secret: string;
@@ -22,7 +21,8 @@ export interface IntegrationLog {
 export interface OmnichannelCreateRequest {
   page_id: string;
   page_name: string;
-  token: string;
+  access_token: string;
+  refresh_token?: string;
   is_enabled: boolean;
   expired_date: Date;
   source: OmnichannelSource;
@@ -31,7 +31,8 @@ export interface OmnichannelCreateRequest {
 export interface OmnichannelUpdateRequest {
   page_name: string;
   is_enabled: boolean;
-  token: string;
+  access_token: string;
+  refresh_token?: string;
 }
 
 export enum OmnichannelSource {
@@ -164,7 +165,7 @@ export async function UpdateOmnichannel(
   try {
     const updateOmnichannel: OmnichannelUpdateRequest = {
       page_name: page.name,
-      token: page.access_token,
+      access_token: page.access_token,
       is_enabled: isEnabled,
     };
     await OmnichannelsService.updateOne(directusPageId, updateOmnichannel);
@@ -181,7 +182,7 @@ export async function AddFacebookNewOmnichannel(
     const newOmichannel: OmnichannelCreateRequest = {
       page_id: page.id,
       page_name: page.name,
-      token: page.access_token,
+      access_token: page.access_token,
       is_enabled: false,
       expired_date: page.expires_in,
       source: OmnichannelSource.Facebook,
@@ -206,7 +207,7 @@ export async function LogIntegrationEvent(
     );
 
     const dataId = await integrationLogsService.createOne(logEntry);
-    
+
     return dataId;
   } catch (error: any) {
     throw new Error(

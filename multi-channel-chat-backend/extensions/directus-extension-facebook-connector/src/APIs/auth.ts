@@ -9,7 +9,10 @@ export async function handleAuthRequest(
   res: any,
   services: any,
   getSchema: any,
+  env: any
 ) {
+  console.log('Environment variable', env);
+  
   const integrationSettingsData = await GetintegrationSettingsData(services, req, getSchema);
   
   try {
