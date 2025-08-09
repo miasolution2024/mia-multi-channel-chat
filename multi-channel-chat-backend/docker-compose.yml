@@ -70,7 +70,3 @@ services:
 
         User-agent: Meta
         Allow: /assets/
-volumes:
-  extensions:
-  database:
-  migrations:
