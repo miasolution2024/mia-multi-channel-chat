@@ -17,7 +17,7 @@ services:
     volumes:
       - ./extensions:/directus/extensions
       - ./migrations:/directus/migrations
-      
+      - ../files/directus/key.json:/directus/key.json
     depends_on:
       cache:
         condition: service_healthy
