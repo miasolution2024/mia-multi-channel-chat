@@ -58,6 +58,8 @@ services:
 
       WEBSOCKETS_ENABLED: true
 
+      EXTENSIONS_AUTO_RELOAD: true
+      
       FILES_MAX_UPLOAD_SIZE: "20mb"
 
       ROBOTS_TXT: |
