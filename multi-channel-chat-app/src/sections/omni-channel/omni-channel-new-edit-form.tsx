@@ -65,7 +65,7 @@ export function OmniChannelNewEditForm({
     }
   }, [currentOmniChannel, defaultValues, reset]);
 
-  const onSubmit = handleSubmit(async (data) => {
+  const onSubmit = handleSubmit(async () => {
     try {
       // await (currentOmniChannel
       //   ? updateOmniChannelAsync(currentOmniChannel.id, data)
