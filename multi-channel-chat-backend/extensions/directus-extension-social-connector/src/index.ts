@@ -9,6 +9,7 @@ export default defineEndpoint((router, { services, getSchema, env }) => {
   router.get("/api/facebook/auth", (req, res) =>
     handleFacebookAuthRequest(req, res, services, getSchema, env)
   );
+  
   router.get("/api/instagram/auth", (req, res) =>
     handleInstagramAuthRequest(req, res, services, getSchema, env)
   );
