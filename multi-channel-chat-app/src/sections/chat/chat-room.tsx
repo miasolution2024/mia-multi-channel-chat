@@ -22,11 +22,13 @@ export function ChatRoom({
   participants,
   messages,
   loading,
+  omni_channel_name
 }: {
   collapseNav: any;
   participants: Participant[];
   messages: Message[];
   loading: boolean;
+  omni_channel_name: string;
 }) {
   
   const { collapseDesktop, openMobile, onCloseMobile } = collapseNav;
@@ -43,7 +45,7 @@ export function ChatRoom({
         {isGroup ? (
           <ChatRoomGroup participants={participants} />
         ) : (
-          <ChatRoomSingle participant={participants[0]} />
+          <ChatRoomSingle omni_channel_name={omni_channel_name} participant={participants[0]} />
         )}
 
         <ChatRoomAttachments attachments={attachments} />

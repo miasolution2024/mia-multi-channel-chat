@@ -12,7 +12,13 @@ import { Participant } from "@/models/participants/participant";
 
 // ----------------------------------------------------------------------
 
-export function ChatRoomSingle({ participant }: { participant: Participant }) {
+export function ChatRoomSingle({
+  participant,
+  omni_channel_name
+}: {
+  participant: Participant;
+  omni_channel_name: string;
+}) {
   const collapse = useBoolean(true);
 
   const renderInfo = (
@@ -22,31 +28,45 @@ export function ChatRoomSingle({ participant }: { participant: Participant }) {
         src={participant?.participant_avatar}
         sx={{ width: 96, height: 96, mb: 2 }}
       />
-      <Typography variant="subtitle1">{participant?.participant_name}</Typography>
+      <Typography variant="subtitle1">
+        {participant?.participant_name}
+      </Typography>
     </Stack>
   );
 
   const renderContact = (
     <Stack spacing={2} sx={{ px: 2, py: 2.5 }}>
       {[
-        { icon: "mingcute:location-fill", value: participant?.participant_address },
+        {
+          icon: "mingcute:location-fill",
+          value: participant?.participant_address,
+        },
         { icon: "solar:phone-bold", value: participant?.participant_phone },
-        { icon: "fluent:mail-24-filled", value: participant?.participant_email },
-      ].map((item) => (
-        item.value &&
-        <Stack
-          key={item.icon}
-          spacing={1}
-          direction="row"
-          sx={{ typography: "body2", wordBreak: "break-all" }}
-        >
-          <Iconify
-            icon={item.icon}
-            sx={{ flexShrink: 0, color: "text.disabled" }}
-          />
-          { item.value}
-        </Stack>
-      ))}
+        {
+          icon: "fluent:mail-24-filled",
+          value: participant?.participant_email,
+        },
+        {
+          icon: "uil:channel",
+          value:omni_channel_name,
+        },
+      ].map(
+        (item) =>
+          item.value && (
+            <Stack
+              key={item.icon}
+              spacing={1}
+              direction="row"
+              sx={{ typography: "body2", wordBreak: "break-all" }}
+            >
+              <Iconify
+                icon={item.icon}
+                sx={{ flexShrink: 0, color: "text.disabled" }}
+              />
+              {item.value}
+            </Stack>
+          )
+      )}
     </Stack>
   );
 

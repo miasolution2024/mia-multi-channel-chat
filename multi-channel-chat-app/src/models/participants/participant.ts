@@ -18,6 +18,7 @@ export type Participant = Common & {
   external_user_id?: string;
   external_user_name?: string;
   status?: string;
+
 };
 
 
