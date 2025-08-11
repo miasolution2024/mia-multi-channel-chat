@@ -1,10 +1,13 @@
 export interface AppSettings {
   facebook_app_id: string;
   facebook_app_secret: string;
+  instagram_app_id: string;
+  instagram_app_secret: string;
   public_directus_url: string;
   webhook_verify_token: string;
   n8n_webhook_url: string;
   scopes: string[];
+  instagram_scopes: string[];
 }
 
 export interface IntegrationLog {

@@ -55,7 +55,7 @@ export async function handleFacebookCallback(
   );
 
 
-  const redirectUri = `${integrationSettingsData.public_directus_url}/directus-extension-facebook-connector/api/facebook/auth/callback`;
+  const redirectUri = `${integrationSettingsData.public_directus_url}/directus-extension-social-connector/api/facebook/auth/callback`;
 
   try {
     const shortLivedUserAccessToken = await GetShortLiveToken(
