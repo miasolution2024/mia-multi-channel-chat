@@ -145,7 +145,7 @@ export async function AddOrUpdateOmnichannel(
         isEnabled
       );
     } else {
-      await AddFacebookNewOmnichannel(OmnichannelsService, page);
+      await AddFacebookNewOmnichannel(OmnichannelsService, page, isEnabled);
     }
   } catch (error: any) {
     console.error(
@@ -176,14 +176,15 @@ export async function UpdateOmnichannel(
 
 export async function AddFacebookNewOmnichannel(
   OmnichannelsService: any,
-  page: any
+  page: any,
+  isEnabled: boolean
 ) {
   try {
     const newOmichannel: OmnichannelCreateRequest = {
       page_id: page.id,
       page_name: page.name,
       access_token: page.access_token,
-      is_enabled: false,
+      is_enabled: isEnabled,
       expired_date: page.expires_in,
       source: OmnichannelSource.Facebook,
     };
