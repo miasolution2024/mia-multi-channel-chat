@@ -1,3 +1,5 @@
+import { IGUser } from "./instagram.service";
+
 export interface AppSettings {
   facebook_app_id: string;
   facebook_app_secret: string;
@@ -201,21 +203,21 @@ export async function AddNewFBOmnichannel(
 
 export async function AddOrUpdateIGOmnichannel(
   OmnichannelsService: any,
-  user: any,
+  user: IGUser,
   userAccessToken: string,
   expiresIn: number,
   isEnabled: boolean = false
 ) {
   try {
     console.log(
-      `Adding or updating omini channel for user: ${user.username} (${user.id})`
+      `Adding or updating omini channel for user: ${user.username} (${user.user_id})`
     );
     const currentDate = new Date();
     const millisecondsToAdd = expiresIn * 1000;
     const newTimestamp = currentDate.getTime() + millisecondsToAdd;
 
     const existingPage = await OmnichannelsService.readByQuery({
-      filter: { page_id: { _eq: user.id } },
+      filter: { page_id: { _eq: user.user_id } },
       sort: ["page_id"],
       limit: 1,
     });
@@ -241,7 +243,7 @@ export async function AddOrUpdateIGOmnichannel(
     }
   } catch (error: any) {
     console.error(
-      `Error adding or updating omini channel for user ${user.username} (${user.id}):`,
+      `Error adding or updating omini channel for user ${user.username} (${user.user_id}):`,
       error
     );
     throw error;
@@ -251,7 +253,7 @@ export async function AddOrUpdateIGOmnichannel(
 export async function UpdateIGOmnichannel(
   directusPageId: string,
   OmnichannelsService: any,
-  user: any,
+  user: IGUser,
   userAccessToken: string,
   expiredDate: Date,
   isEnabled: boolean = false
@@ -271,14 +273,14 @@ export async function UpdateIGOmnichannel(
 
 export async function AddNewIGOmnichannel(
   OmnichannelsService: any,
-  user: any,
+  user: IGUser,
   userAccessToken: string,
   expiredDate: Date,
   isEnabled: boolean
 ) {
   try {
     const newOmichannel: OmnichannelCreateRequest = {
-      page_id: user.id,
+      page_id: user.user_id,
       page_name: user.username,
       access_token: userAccessToken,
       is_enabled: isEnabled,

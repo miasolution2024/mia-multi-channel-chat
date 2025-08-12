@@ -6,6 +6,15 @@ import {
   LogInformationEvent,
 } from "./directus.service";
 
+export type IGUser = {
+  id: string;
+  user_id: string;
+  name: string;
+  username: string;
+  account_type: string;
+  profile_picture_url: string;
+};
+
 export async function GetIGShortLiveToken(
   integrationSettingsData: AppSettings,
   redirectUri: string,
@@ -89,9 +98,11 @@ export async function SubscribeIGWebhook(
 
 export async function GetIGAuthenticatedUser(
   userAccessToken: string
-): Promise<any[]> {
+): Promise<IGUser> {
   try {
-    const url = `https://graph.instagram.com/v23.0/me?access_token=${userAccessToken}&fields=biography,name,profile_picture_url,username`;
+    const url =
+      `https://graph.instagram.com/v23.0/me?access_token=${userAccessToken}` +
+      `&fields=user_id,account_type,name,profile_picture_url,username`;
     const userResponse = await IGAxiosInstance.get(url);
     return userResponse.data;
   } catch (error: any) {
@@ -103,7 +114,7 @@ export async function SubscribeIGAccountWebhook(
   req: any,
   services: any,
   getSchema: any,
-  user: any,
+  user: IGUser,
   userAccessToken: string,
   expiresIn: number
 ) {
@@ -114,7 +125,7 @@ export async function SubscribeIGAccountWebhook(
   );
 
   try {
-    await SubscribeIGWebhook(user.id, userAccessToken);
+    await SubscribeIGWebhook(user.user_id, userAccessToken);
 
     await AddOrUpdateIGOmnichannel(
       OmnichannelsService,
@@ -128,7 +139,7 @@ export async function SubscribeIGAccountWebhook(
       req,
       services,
       getSchema,
-      `Subscribed to webhook for user ${user.username} (${user.id}) successfully`,
+      `Subscribed to webhook for user ${user.username} (${user.user_id}) successfully`,
       JSON.stringify(user),
       "SubscribeIGAccountWebhook"
     );
