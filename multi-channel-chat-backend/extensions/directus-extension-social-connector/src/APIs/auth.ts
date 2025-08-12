@@ -60,7 +60,6 @@ export async function handleInstagramAuthRequest(
     getSchema
   );
 
-  console.log(env);
   
   try {
     const redirectUri = `${integrationSettingsData.public_directus_url}/directus-extension-social-connector/api/instagram/auth/callback`;
@@ -71,7 +70,9 @@ export async function handleInstagramAuthRequest(
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `scope=${integrationSettingsData.instagram_scopes.join(",")}&` +
       `response_type=code`;
-
+      
+       console.log(instagramAuthUrl);
+ 
     res.redirect(instagramAuthUrl);
   } catch (directusError: any) {
     const logId = await LogIntegrationEvent(services, req, getSchema, {
