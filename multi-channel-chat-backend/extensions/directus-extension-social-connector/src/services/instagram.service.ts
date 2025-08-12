@@ -20,7 +20,7 @@ export async function GetIGShortLiveToken(
       integrationSettingsData.instagram_app_secret
     );
     formData.append("grant_type", "authorization_code");
-    formData.append("redirect_uri", encodeURIComponent(redirectUri));
+    formData.append("redirect_uri", redirectUri);
     formData.append("code", code);
     const tokenResponse = await IGAxiosInstance.post(
       tokenExchangeUrl,

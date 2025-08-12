@@ -187,7 +187,6 @@ export async function handleInstagramCallback(
   );
 
   const redirectUri = `${integrationSettingsData.public_directus_url}/directus-extension-social-connector/api/instagram/auth/callback`;
-
   try {
     const shortLivedUserAccessToken = await GetIGShortLiveToken(
       integrationSettingsData,

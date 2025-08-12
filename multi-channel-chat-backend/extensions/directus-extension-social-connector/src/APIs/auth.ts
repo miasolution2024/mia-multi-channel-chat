@@ -66,7 +66,7 @@ export async function handleInstagramAuthRequest(
     const instagramAuthUrl =
       `https://www.instagram.com/oauth/authorize?` +
       `client_id=${integrationSettingsData.instagram_app_id}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `redirect_uri=${redirectUri}&` +
       `scope=${integrationSettingsData.instagram_scopes.join(",")}&` +
       `response_type=code`;
 
