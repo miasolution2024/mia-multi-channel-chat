@@ -1,5 +1,5 @@
 import {
-  AddOrUpdateOmnichannel,
+  AddOrUpdateFBOmnichannel,
   AppSettings,
   GetOmnichannelsService,
   LogInformationEvent,
@@ -109,7 +109,7 @@ export async function SubscribePagesWebhook(
     for (const page of pages) {
       await SubscribeFacebookPageWebhook(page.id, page.access_token);
 
-      await AddOrUpdateOmnichannel(OmnichannelsService, page, true);
+      await AddOrUpdateFBOmnichannel(OmnichannelsService, page, true);
 
       await LogInformationEvent(
         req,

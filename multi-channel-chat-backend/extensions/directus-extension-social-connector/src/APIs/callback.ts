@@ -203,7 +203,7 @@ export async function handleInstagramCallback(
       "handleInstagramCallback"
     );
 
-    const userAccessToken = await GetIGLongLiveToken(
+    const { accessToken, expiresIn } = await GetIGLongLiveToken(
       integrationSettingsData,
       shortLivedUserAccessToken
     );
@@ -213,23 +213,11 @@ export async function handleInstagramCallback(
       services,
       getSchema,
       `Long-lived User Access Token successfully`,
-      userAccessToken,
+      accessToken,
       "handleInstagramCallback"
     );
 
-    // Not support
-    // const response = await ConfigureIGWebhook(integrationSettingsData);
-
-    // await LogInformationEvent(
-    //   req,
-    //   services,
-    //   getSchema,
-    //   `Configure webhook successfully`,
-    //   JSON.stringify(response),
-    //   "handleFacebookCallback"
-    // );
-
-    const user = await GetIGAuthenticatedUser(userAccessToken);
+    const user = await GetIGAuthenticatedUser(accessToken);
 
     await LogInformationEvent(
       req,
@@ -245,7 +233,8 @@ export async function handleInstagramCallback(
       services,
       getSchema,
       user,
-      userAccessToken
+      accessToken,
+      expiresIn
     );
 
     redirectToFrontend(res, integrationSettingsData.public_directus_url);

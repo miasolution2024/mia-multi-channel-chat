@@ -69,8 +69,6 @@ export async function handleInstagramAuthRequest(
       `redirect_uri=${redirectUri}&` +
       `scope=${integrationSettingsData.instagram_scopes.join(",")}&` +
       `response_type=code`;
-
-       console.log(instagramAuthUrl);
  
     res.redirect(instagramAuthUrl);
   } catch (directusError: any) {

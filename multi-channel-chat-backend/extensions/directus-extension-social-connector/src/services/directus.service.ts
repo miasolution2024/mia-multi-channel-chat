@@ -35,6 +35,7 @@ export interface OmnichannelUpdateRequest {
   page_name: string;
   is_enabled: boolean;
   access_token: string;
+  expired_date?: Date;
   refresh_token?: string;
 }
 
@@ -42,6 +43,7 @@ export enum OmnichannelSource {
   Facebook = "Facebook",
   Tiktok = "Tiktok",
   Zalo = "Zalo",
+  Instagram = "Instagram",
 }
 
 export async function GetintegrationSettingsData(
@@ -124,42 +126,42 @@ export async function GetOmnichannelsService(
   }
 }
 
-export async function AddOrUpdateOmnichannel(
+export async function AddOrUpdateFBOmnichannel(
   OmnichannelsService: any,
-  user: any,
+  page: any,
   isEnabled: boolean = false
 ) {
   try {
     console.log(
-      `Adding or updating omini channel for user: ${user.username} (${user.id})`
+      `Adding or updating omini channel for page: ${page.name} (${page.id})`
     );
     const existingPage = await OmnichannelsService.readByQuery({
-      filter: { page_id: { _eq: user.id } },
+      filter: { page_id: { _eq: page.id } },
       sort: ["page_id"],
       limit: 1,
     });
 
     if (existingPage.length > 0) {
       const directusPageId = existingPage[0].id;
-      await UpdateOmnichannel(
+      await UpdateFBOmnichannel(
         directusPageId,
         OmnichannelsService,
-        user,
+        page,
         isEnabled
       );
     } else {
-      await AddNewOmnichannel(OmnichannelsService, user, isEnabled);
+      await AddNewFBOmnichannel(OmnichannelsService, page, isEnabled);
     }
   } catch (error: any) {
     console.error(
-      `Error adding or updating omini channel for user ${user.username} (${user.id}):`,
+      `Error adding or updating omini channel for page ${page.name} (${page.id}):`,
       error
     );
     throw error;
   }
 }
 
-export async function UpdateOmnichannel(
+export async function UpdateFBOmnichannel(
   directusPageId: string,
   OmnichannelsService: any,
   page: any,
@@ -177,7 +179,7 @@ export async function UpdateOmnichannel(
   }
 }
 
-export async function AddNewOmnichannel(
+export async function AddNewFBOmnichannel(
   OmnichannelsService: any,
   page: any,
   isEnabled: boolean
@@ -190,6 +192,98 @@ export async function AddNewOmnichannel(
       is_enabled: isEnabled,
       expired_date: page.expires_in,
       source: OmnichannelSource.Facebook,
+    };
+    await OmnichannelsService.createOne(newOmichannel);
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function AddOrUpdateIGOmnichannel(
+  OmnichannelsService: any,
+  user: any,
+  userAccessToken: string,
+  expiresIn: number,
+  isEnabled: boolean = false
+) {
+  try {
+    console.log(
+      `Adding or updating omini channel for user: ${user.username} (${user.id})`
+    );
+    const currentDate = new Date();
+    const millisecondsToAdd = expiresIn * 1000;
+    const newTimestamp = currentDate.getTime() + millisecondsToAdd;
+
+    const existingPage = await OmnichannelsService.readByQuery({
+      filter: { page_id: { _eq: user.id } },
+      sort: ["page_id"],
+      limit: 1,
+    });
+
+    if (existingPage.length > 0) {
+      const directusPageId = existingPage[0].id;
+      await UpdateIGOmnichannel(
+        directusPageId,
+        OmnichannelsService,
+        user,
+        userAccessToken,
+        new Date(newTimestamp),
+        isEnabled
+      );
+    } else {
+      await AddNewIGOmnichannel(
+        OmnichannelsService,
+        user,
+        userAccessToken,
+        new Date(newTimestamp),
+        isEnabled
+      );
+    }
+  } catch (error: any) {
+    console.error(
+      `Error adding or updating omini channel for user ${user.username} (${user.id}):`,
+      error
+    );
+    throw error;
+  }
+}
+
+export async function UpdateIGOmnichannel(
+  directusPageId: string,
+  OmnichannelsService: any,
+  user: any,
+  userAccessToken: string,
+  expiredDate: Date,
+  isEnabled: boolean = false
+) {
+  try {
+    const updateOmnichannel: OmnichannelUpdateRequest = {
+      page_name: user.username,
+      access_token: userAccessToken,
+      expired_date: expiredDate,
+      is_enabled: isEnabled,
+    };
+    await OmnichannelsService.updateOne(directusPageId, updateOmnichannel);
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function AddNewIGOmnichannel(
+  OmnichannelsService: any,
+  user: any,
+  userAccessToken: string,
+  expiredDate: Date,
+  isEnabled: boolean
+) {
+  try {
+    const newOmichannel: OmnichannelCreateRequest = {
+      page_id: user.id,
+      page_name: user.username,
+      access_token: userAccessToken,
+      is_enabled: isEnabled,
+      expired_date: expiredDate,
+      source: OmnichannelSource.Instagram,
     };
     await OmnichannelsService.createOne(newOmichannel);
   } catch (error: any) {

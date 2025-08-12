@@ -1,6 +1,6 @@
 import { IGAxiosInstance } from "../axios";
 import {
-  AddOrUpdateOmnichannel,
+  AddOrUpdateIGOmnichannel,
   AppSettings,
   GetOmnichannelsService,
   LogInformationEvent,
@@ -41,7 +41,7 @@ export async function GetIGShortLiveToken(
 export async function GetIGLongLiveToken(
   integrationSettingsData: AppSettings,
   shortLivedUserAccessToken: string
-): Promise<string> {
+): Promise<any> {
   try {
     const longLivedTokenExchangeUrl =
       `https://graph.instagram.com/access_token?` +
@@ -57,9 +57,11 @@ export async function GetIGLongLiveToken(
         `Error get long live token token: ${longLivedTokenResponse.data.error}`
       );
     }
-    return (
-      longLivedTokenResponse.data.access_token || shortLivedUserAccessToken
-    );
+    return {
+      accessToken:
+        longLivedTokenResponse.data.access_token || shortLivedUserAccessToken,
+      expiresIn: longLivedTokenResponse.data.expires_in,
+    };
   } catch (error: any) {
     throw error;
   }
@@ -102,7 +104,8 @@ export async function SubscribeIGAccountWebhook(
   services: any,
   getSchema: any,
   user: any,
-  userAccessToken: string
+  userAccessToken: string,
+  expiresIn: number
 ) {
   const OmnichannelsService = await GetOmnichannelsService(
     services,
@@ -113,7 +116,13 @@ export async function SubscribeIGAccountWebhook(
   try {
     await SubscribeIGWebhook(user.id, userAccessToken);
 
-    await AddOrUpdateOmnichannel(OmnichannelsService, user, true);
+    await AddOrUpdateIGOmnichannel(
+      OmnichannelsService,
+      user,
+      userAccessToken,
+      expiresIn,
+      true
+    );
 
     await LogInformationEvent(
       req,
