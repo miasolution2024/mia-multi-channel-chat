@@ -65,13 +65,11 @@ export async function handleInstagramAuthRequest(
   try {
     const redirectUri = `${integrationSettingsData.public_directus_url}/directus-extension-social-connector/api/instagram/auth/callback`;
     const instagramAuthUrl =
-      `https://api.instagram.com/oauth/authorize?` +
+      `https://www.instagram.com/oauth/authorize?` +
       `client_id=${integrationSettingsData.instagram_app_id}&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `scope=${integrationSettingsData.instagram_scopes.join(",")}&` +
       `response_type=code`;
-
-    console.log(instagramAuthUrl);
 
     res.redirect(instagramAuthUrl);
   } catch (directusError: any) {
