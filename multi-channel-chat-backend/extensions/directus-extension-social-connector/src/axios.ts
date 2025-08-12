@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const axiosInstance = axios.create({ baseURL: 'https://graph.facebook.com/v23.0' });
+const axiosInstance = axios.create({
+  baseURL: "https://graph.facebook.com/v23.0",
+});
 
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -15,11 +17,13 @@ export const IGAxiosInstance = axios.create();
 
 IGAxiosInstance.interceptors.response.use(
   (response) => response,
-  (error) =>
-    Promise.reject(
+  (error) => {
+    console.log(error);
+    return Promise.reject(
       (error.response && error.response.data && error.response.data.error) ||
         "Something went wrong!"
-    )
+    );
+  }
 );
 
 export default axiosInstance;
