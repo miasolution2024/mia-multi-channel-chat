@@ -7,10 +7,16 @@ import {
 import {
   ConfigureWebhook,
   GetAuthenticatedUserPages,
-  GetGetLongLiveToken,
+  GetFBLongLiveToken,
   SubscribePagesWebhook,
-  GetShortLiveToken,
+  GetFBShortLiveToken,
 } from "../services/facebook-graph.service";
+import {
+  GetIGAuthenticatedUser,
+  GetIGLongLiveToken,
+  GetIGShortLiveToken,
+  SubscribeIGAccountWebhook,
+} from "../services/instagram.service";
 
 export async function handleFacebookCallback(
   req: any,
@@ -54,11 +60,10 @@ export async function handleFacebookCallback(
     "handleFacebookCallback"
   );
 
-
   const redirectUri = `${integrationSettingsData.public_directus_url}/directus-extension-social-connector/api/facebook/auth/callback`;
 
   try {
-    const shortLivedUserAccessToken = await GetShortLiveToken(
+    const shortLivedUserAccessToken = await GetFBShortLiveToken(
       integrationSettingsData,
       redirectUri,
       code
@@ -73,7 +78,7 @@ export async function handleFacebookCallback(
       "handleFacebookCallback"
     );
 
-    const userAccessToken = await GetGetLongLiveToken(
+    const userAccessToken = await GetFBLongLiveToken(
       integrationSettingsData,
       shortLivedUserAccessToken
     );
@@ -109,27 +114,154 @@ export async function handleFacebookCallback(
       "handleFacebookCallback"
     );
 
-    await SubscribePagesWebhook(
-      req,
-      services,
-      getSchema,
-      pages
-    );
+    await SubscribePagesWebhook(req, services, getSchema, pages);
 
     redirectToFrontend(res, integrationSettingsData.public_directus_url);
   } catch (error: any) {
-    
     const errorMessage =
       error instanceof Error
-      ? error.stack || error.message
-      : typeof error === "string"
-      ? error
-      : JSON.stringify(error);
+        ? error.stack || error.message
+        : typeof error === "string"
+        ? error
+        : JSON.stringify(error);
 
     const logId = await LogIntegrationEvent(services, req, getSchema, {
       level: "error",
       message: `An unexpected error occurred during Facebook connection:`,
       context: "handleFacebookCallback",
+      stack_trace: errorMessage,
+      user_id: req.accountability ? req.accountability.user : null,
+      request_string: "",
+      response_string: "",
+      timestamp: new Date(),
+    });
+
+    redirectToErrorPage(
+      res,
+      integrationSettingsData.public_directus_url,
+      logId
+    );
+  }
+}
+
+export async function handleInstagramCallback(
+  req: any,
+  res: any,
+  services: any,
+  getSchema: any
+) {
+  const code = req.query.code;
+  const integrationSettingsData = await GetintegrationSettingsData(
+    services,
+    req,
+    getSchema
+  );
+
+  if (!code) {
+    const logId = await LogIntegrationEvent(services, req, getSchema, {
+      level: "error",
+      message: `No authorization code received from Instagram.`,
+      context: "handleInstagramCallback",
+      stack_trace: "",
+      user_id: req.accountability ? req.accountability.user : null,
+      request_string: "",
+      response_string: "",
+      timestamp: new Date(),
+    });
+
+    redirectToErrorPage(
+      res,
+      integrationSettingsData.public_directus_url,
+      logId
+    );
+    return;
+  }
+
+  await LogInformationEvent(
+    req,
+    services,
+    getSchema,
+    `Redirect with authenticated code successfully`,
+    code,
+    "handleInstagramCallback"
+  );
+
+  const redirectUri = `${integrationSettingsData.public_directus_url}/directus-extension-social-connector/api/instagram/auth/callback`;
+
+  try {
+    const shortLivedUserAccessToken = await GetIGShortLiveToken(
+      integrationSettingsData,
+      redirectUri,
+      code
+    );
+
+    await LogInformationEvent(
+      req,
+      services,
+      getSchema,
+      `Short-lived User Access Token successfully`,
+      shortLivedUserAccessToken,
+      "handleInstagramCallback"
+    );
+
+    const userAccessToken = await GetIGLongLiveToken(
+      integrationSettingsData,
+      shortLivedUserAccessToken
+    );
+
+    await LogInformationEvent(
+      req,
+      services,
+      getSchema,
+      `Long-lived User Access Token successfully`,
+      userAccessToken,
+      "handleInstagramCallback"
+    );
+
+    // Not support
+    // const response = await ConfigureIGWebhook(integrationSettingsData);
+
+    // await LogInformationEvent(
+    //   req,
+    //   services,
+    //   getSchema,
+    //   `Configure webhook successfully`,
+    //   JSON.stringify(response),
+    //   "handleFacebookCallback"
+    // );
+
+    const user = await GetIGAuthenticatedUser(userAccessToken);
+
+    await LogInformationEvent(
+      req,
+      services,
+      getSchema,
+      `Get authenticated user successfully`,
+      JSON.stringify(user),
+      "handleInstagramCallback"
+    );
+
+    await SubscribeIGAccountWebhook(
+      req,
+      services,
+      getSchema,
+      user,
+      userAccessToken
+    );
+
+    redirectToFrontend(res, integrationSettingsData.public_directus_url);
+  } catch (error: any) {
+    const errorMessage =
+      error instanceof Error
+        ? error.stack || error.message
+        : typeof error === "string"
+        ? error
+        : JSON.stringify(error);
+
+    const logId = await LogIntegrationEvent(services, req, getSchema, {
+      level: "error",
+      message: `An unexpected error occurred during Facebook connection:`,
+      context: "handleInstagramCallback",
       stack_trace: errorMessage,
       user_id: req.accountability ? req.accountability.user : null,
       request_string: "",
