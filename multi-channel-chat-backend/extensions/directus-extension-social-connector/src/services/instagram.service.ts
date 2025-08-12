@@ -1,11 +1,10 @@
+import { IGAxiosInstance } from "../axios";
 import {
   AddOrUpdateOmnichannel,
   AppSettings,
   GetOmnichannelsService,
   LogInformationEvent,
 } from "./directus.service";
-import axiosInstance from "../axios";
-import axios from "axios";
 
 export async function GetIGShortLiveToken(
   integrationSettingsData: AppSettings,
@@ -14,22 +13,20 @@ export async function GetIGShortLiveToken(
 ): Promise<string> {
   try {
     const tokenExchangeUrl = `https://api.instagram.com/oauth/access_token`;
-    const formData = {
-      client_id: integrationSettingsData.instagram_app_id,
-      client_secret: integrationSettingsData.instagram_app_secret,
-      grant_type: "authorization_code",
-      redirect_uri: encodeURIComponent(redirectUri),
-      code: code,
-    };
-    const tokenResponse = await axios.post(
-      tokenExchangeUrl,
-      new URLSearchParams(formData).toString(),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
+    const formData = new FormData();
+    formData.append("client_id", integrationSettingsData.instagram_app_id);
+    formData.append(
+      "client_secret",
+      integrationSettingsData.instagram_app_secret
     );
+    formData.append("grant_type", "authorization_code");
+    formData.append("redirect_uri", encodeURIComponent(redirectUri));
+    formData.append("code", code);
+    const tokenResponse = await IGAxiosInstance.post(
+      tokenExchangeUrl,
+      formData
+    );
+
     if (tokenResponse.data.error) {
       throw new Error(
         `Error getting short lived token: ${tokenResponse.data.error.message}`
@@ -52,7 +49,7 @@ export async function GetIGLongLiveToken(
       `client_secret=${integrationSettingsData.instagram_app_secret}&` +
       `access_token=${shortLivedUserAccessToken}`;
 
-    const longLivedTokenResponse = await axiosInstance.get(
+    const longLivedTokenResponse = await IGAxiosInstance.get(
       longLivedTokenExchangeUrl
     );
     if (longLivedTokenResponse.data.error) {
@@ -75,7 +72,7 @@ export async function SubscribeIGWebhook(
   const subscribeUrl = `https://graph.instagram.com/v23.0/${userId}/subscribed_apps`;
   const fieldsToSubscribe = "messages";
   try {
-    const response = await axios.post(subscribeUrl, {
+    const response = await IGAxiosInstance.post(subscribeUrl, {
       access_token: userAccessToken,
       subscribed_fields: fieldsToSubscribe,
     });
@@ -93,7 +90,7 @@ export async function GetIGAuthenticatedUser(
 ): Promise<any[]> {
   try {
     const url = `https://graph.instagram.com/v23.0/me?access_token=${userAccessToken}&fields=biography,name,profile_picture_url,username`;
-    const userResponse = await axios.get(url);
+    const userResponse = await IGAxiosInstance.get(url);
     return userResponse.data;
   } catch (error: any) {
     throw error;
@@ -116,7 +113,7 @@ export async function SubscribeIGAccountWebhook(
   try {
     await SubscribeIGWebhook(user.id, userAccessToken);
 
-    await AddOrUpdateOmnichannel(OmnichannelsService, user.username, true);
+    await AddOrUpdateOmnichannel(OmnichannelsService, user, true);
 
     await LogInformationEvent(
       req,
@@ -136,7 +133,7 @@ export async function ConfigureIGWebhook(
 ): Promise<any> {
   try {
     const appAccessToken = await GetIGAppAccessToken(integrationSettingsData);
-    const response = await axios.post(
+    const response = await IGAxiosInstance.post(
       `https://graph.instagram.com/${integrationSettingsData.instagram_app_id}/subscriptions?access_token=${appAccessToken}`,
       {
         object: "page",
@@ -167,7 +164,7 @@ export async function GetIGAppAccessToken(
       `client_secret=${integrationSettingsData.instagram_app_secret}&` +
       `grant_type=client_credentials`;
 
-    const response = await axios.get(appAccessTokenUrl);
+    const response = await IGAxiosInstance.get(appAccessTokenUrl);
     if (response.data.error) {
       throw new Error(
         `Error getting app access token: ${response.data.error.message}`

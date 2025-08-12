@@ -11,4 +11,15 @@ axiosInstance.interceptors.response.use(
     )
 );
 
+export const IGAxiosInstance = axios.create();
+
+IGAxiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) =>
+    Promise.reject(
+      (error.response && error.response.data && error.response.data.error) ||
+        "Something went wrong!"
+    )
+);
+
 export default axiosInstance;

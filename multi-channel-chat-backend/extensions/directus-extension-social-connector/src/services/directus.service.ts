@@ -126,15 +126,15 @@ export async function GetOmnichannelsService(
 
 export async function AddOrUpdateOmnichannel(
   OmnichannelsService: any,
-  page: any,
+  user: any,
   isEnabled: boolean = false
 ) {
   try {
     console.log(
-      `Adding or updating omini channel for page: ${page.name} (${page.id})`
+      `Adding or updating omini channel for user: ${user.username} (${user.id})`
     );
     const existingPage = await OmnichannelsService.readByQuery({
-      filter: { page_id: { _eq: page.id } },
+      filter: { page_id: { _eq: user.id } },
       sort: ["page_id"],
       limit: 1,
     });
@@ -144,15 +144,15 @@ export async function AddOrUpdateOmnichannel(
       await UpdateOmnichannel(
         directusPageId,
         OmnichannelsService,
-        page,
+        user,
         isEnabled
       );
     } else {
-      await AddFacebookNewOmnichannel(OmnichannelsService, page, isEnabled);
+      await AddNewOmnichannel(OmnichannelsService, user, isEnabled);
     }
   } catch (error: any) {
     console.error(
-      `Error adding or updating omini channel for page ${page.name} (${page.id}):`,
+      `Error adding or updating omini channel for user ${user.username} (${user.id}):`,
       error
     );
     throw error;
@@ -177,7 +177,7 @@ export async function UpdateOmnichannel(
   }
 }
 
-export async function AddFacebookNewOmnichannel(
+export async function AddNewOmnichannel(
   OmnichannelsService: any,
   page: any,
   isEnabled: boolean
