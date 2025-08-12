@@ -13,14 +13,23 @@ export async function GetIGShortLiveToken(
   code: string
 ): Promise<string> {
   try {
-    const tokenExchangeUrl =
-      `https://api.instagram.com/oauth/access_token?` +
-      `client_id=${integrationSettingsData.instagram_app_id}&` +
-      `client_secret=${integrationSettingsData.instagram_app_secret}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `code=${code}`;
-
-    const tokenResponse = await axios.get(tokenExchangeUrl);
+    const tokenExchangeUrl = `https://api.instagram.com/oauth/access_token`;
+    const formData = {
+      client_id: integrationSettingsData.instagram_app_id,
+      client_secret: integrationSettingsData.instagram_app_secret,
+      grant_type: "authorization_code",
+      redirect_uri: encodeURIComponent(redirectUri),
+      code: code,
+    };
+    const tokenResponse = await axios.post(
+      tokenExchangeUrl,
+      new URLSearchParams(formData).toString(),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
     if (tokenResponse.data.error) {
       throw new Error(
         `Error getting short lived token: ${tokenResponse.data.error.message}`
@@ -83,7 +92,7 @@ export async function GetIGAuthenticatedUser(
   userAccessToken: string
 ): Promise<any[]> {
   try {
-    const url = `https://graph.instagram.com/v23.0/me?access_token=${userAccessToken}`;
+    const url = `https://graph.instagram.com/v23.0/me?access_token=${userAccessToken}&fields=biography,name,profile_picture_url,username`;
     const userResponse = await axios.get(url);
     return userResponse.data;
   } catch (error: any) {

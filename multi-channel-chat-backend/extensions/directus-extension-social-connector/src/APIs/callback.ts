@@ -260,7 +260,7 @@ export async function handleInstagramCallback(
 
     const logId = await LogIntegrationEvent(services, req, getSchema, {
       level: "error",
-      message: `An unexpected error occurred during Facebook connection:`,
+      message: `An unexpected error occurred during Instagram connection:`,
       context: "handleInstagramCallback",
       stack_trace: errorMessage,
       user_id: req.accountability ? req.accountability.user : null,
