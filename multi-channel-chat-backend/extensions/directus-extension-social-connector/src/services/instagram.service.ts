@@ -80,7 +80,10 @@ export async function SubscribeIGWebhook(
   userId: string,
   userAccessToken: string
 ): Promise<void> {
-  const subscribeUrl = `https://graph.instagram.com/v23.0/${userId}/subscribed_apps`;
+  const subscribeUrl =
+    `https://graph.instagram.com/v23.0/${userId}/subscribed_apps?` +
+    `subscribed_fields=messages&` +
+    `access_token=${userAccessToken}`;
   const fieldsToSubscribe = "messages";
   try {
     const response = await IGAxiosInstance.post(subscribeUrl, {

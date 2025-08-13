@@ -24,11 +24,19 @@ const CHANNELS = [
   },
   {
     name: ConversationChannel.ZALO,
-    src: `${CONFIG.assetsDir}/assets/images/logo/zalo.png`,
+    src: `${CONFIG.assetsDir}/assets/images/logo/zalo.webp`,
+  },
+    {
+    name: ConversationChannel.ZALO_OA,
+    src: `${CONFIG.assetsDir}/assets/images/logo/zalo-oa.png`,
   },
   {
     name: ConversationChannel.WHATSAPP,
     src: `${CONFIG.assetsDir}/assets/images/logo/whatsapp.png`,
+  },
+  {
+    name: ConversationChannel.INSTAGRAM,
+    src: `${CONFIG.assetsDir}/assets/images/logo/instagram.png`,
   },
 ];
 
