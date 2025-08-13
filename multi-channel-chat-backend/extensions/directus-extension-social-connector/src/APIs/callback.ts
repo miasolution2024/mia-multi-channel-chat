@@ -313,7 +313,7 @@ export async function handleZaloOACallback(
   );
 
   try {
-    const { accessToken, refreshToken } = await GetZaloAccessToken(
+    const { accessToken, refreshToken, expiresIn } = await GetZaloAccessToken(
       integrationSettingsData,
       code,
       code_verifier
@@ -350,6 +350,7 @@ export async function handleZaloOACallback(
       page,
       accessToken,
       refreshToken,
+      expiresIn,
       true
     );
 

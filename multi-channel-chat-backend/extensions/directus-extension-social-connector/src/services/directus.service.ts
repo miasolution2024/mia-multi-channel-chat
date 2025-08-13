@@ -302,9 +302,14 @@ export async function AddOrUpdateZaloOAOmnichannel(
   page: ZaloOAPage,
   accessToken: string,
   refreshToken: string,
+  expiresIn: number,
   isEnabled: boolean = false
 ) {
   try {
+    const currentDate = new Date();
+    const millisecondsToAdd = expiresIn * 1000;
+    const newTimestamp = currentDate.getTime() + millisecondsToAdd;
+
     const existingPage = await OmnichannelsService.readByQuery({
       filter: { page_id: { _eq: page.oa_id } },
       sort: ["page_id"],
@@ -319,6 +324,7 @@ export async function AddOrUpdateZaloOAOmnichannel(
         page,
         accessToken,
         refreshToken,
+        new Date(newTimestamp),
         isEnabled
       );
     } else {
@@ -326,7 +332,8 @@ export async function AddOrUpdateZaloOAOmnichannel(
         OmnichannelsService,
         page,
         accessToken,
-        refreshToken
+        refreshToken,
+        new Date(newTimestamp)
       );
     }
   } catch (error: any) {
@@ -344,6 +351,7 @@ export async function UpdateZaloOAOmnichannel(
   page: ZaloOAPage,
   accessToken: string,
   refreshToken: string,
+  expiredDate: Date,
   isEnabled: boolean = false
 ) {
   try {
@@ -352,6 +360,7 @@ export async function UpdateZaloOAOmnichannel(
       access_token: accessToken,
       refresh_token: refreshToken,
       is_enabled: isEnabled,
+      expired_date: expiredDate,
     };
     await OmnichannelsService.updateOne(directusPageId, updateOmnichannel);
   } catch (error: any) {
@@ -363,7 +372,8 @@ export async function AddZaloOANewOmnichannel(
   OmnichannelsService: any,
   page: ZaloOAPage,
   accessToken: string,
-  refreshToken: string
+  refreshToken: string,
+  expiredDate: Date
 ) {
   try {
     const newOmichannel: OmnichannelCreateRequest = {
@@ -372,7 +382,7 @@ export async function AddZaloOANewOmnichannel(
       access_token: accessToken,
       refresh_token: refreshToken,
       is_enabled: true,
-      expired_date: new Date(),
+      expired_date: expiredDate,
       source: OmnichannelSource.ZaloOA,
     };
     await OmnichannelsService.createOne(newOmichannel);
