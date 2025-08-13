@@ -19,10 +19,7 @@ export enum ZaloOAType {
   Enterprise = 2,
   Goverment = 4,
 }
-import {
-  AppSettings,
-} from "./directus.service";
-import axiosInstance from "../axios";
+import { AppSettings } from "./directus.service";
 import axios from "axios";
 
 export async function GetZaloAccessToken(
@@ -36,8 +33,8 @@ export async function GetZaloAccessToken(
     requestBody.append("app_id", integrationSettingsData.zalo_app_id);
     requestBody.append("grant_type", "authorization_code");
     requestBody.append("code_verifier", codeVerifier);
-    const tokenResponse = await axiosInstance.post(
-      "/access_token",
+    const tokenResponse = await axios.post(
+      "https://oauth.zaloapp.com/v4/oa/access_token",
       requestBody,
       {
         headers: {
@@ -55,6 +52,7 @@ export async function GetZaloAccessToken(
     return {
       accessToken: tokenResponse.data.access_token,
       refreshToken: tokenResponse.data.refresh_token,
+      expiresIn: tokenResponse.data.expires_in,
     };
   } catch (error: any) {
     throw error;
@@ -65,10 +63,10 @@ export async function SubscribeFacebookPageWebhook(
   pageId: string,
   pageAccessToken: string
 ): Promise<void> {
-  const subscribeUrl = `/${pageId}/subscribed_apps`;
+  const subscribeUrl = `https://oauth.zaloapp.com/v4/oa/${pageId}/subscribed_apps`;
   const fieldsToSubscribe = "messages";
   try {
-    const response = await axiosInstance.post(subscribeUrl, {
+    const response = await axios.post(subscribeUrl, {
       access_token: pageAccessToken,
       subscribed_fields: fieldsToSubscribe,
     });
@@ -108,8 +106,8 @@ export async function ConfigureWebhook(
 ): Promise<any> {
   try {
     const appAccessToken = await GetAppAccessToken(integrationSettingsData);
-    const response = await axiosInstance.post(
-      `/${integrationSettingsData.facebook_app_id}/subscriptions?access_token=${appAccessToken}`,
+    const response = await axios.post(
+      `https://oauth.zaloapp.com/v4/oa/${integrationSettingsData.facebook_app_id}/subscriptions?access_token=${appAccessToken}`,
       {
         object: "page",
         callback_url: integrationSettingsData.n8n_webhook_url,
@@ -134,12 +132,12 @@ export async function GetAppAccessToken(
 ): Promise<string> {
   try {
     const appAccessTokenUrl =
-      `/oauth/access_token?` +
+      `https://oauth.zaloapp.com/v4/oa/oauth/access_token?` +
       `client_id=${integrationSettingsData.facebook_app_id}&` +
       `client_secret=${integrationSettingsData.facebook_app_secret}&` +
       `grant_type=client_credentials`;
 
-    const response = await axiosInstance.get(appAccessTokenUrl);
+    const response = await axios.get(appAccessTokenUrl);
     if (response.data.error) {
       throw new Error(
         `Error getting app access token: ${response.data.error.message}`
