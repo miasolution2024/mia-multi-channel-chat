@@ -307,7 +307,7 @@ export async function handleZaloOACallback(
     req,
     services,
     getSchema,
-    `Redirect with authenticated code successfully`,
+    `Redirect with authenticated code and code_verifier: ${code_verifier} successfully`,
     code,
     "handleZaloCallback"
   );
@@ -374,7 +374,7 @@ export async function handleZaloOACallback(
     const logId = await LogIntegrationEvent(services, req, getSchema, {
       level: "error",
       message: `An unexpected error occurred during Facebook connection:`,
-      context: "handleFacebookCallback",
+      context: "handleZaloOACallback",
       stack_trace: errorMessage,
       user_id: req.accountability ? req.accountability.user : null,
       request_string: "",
