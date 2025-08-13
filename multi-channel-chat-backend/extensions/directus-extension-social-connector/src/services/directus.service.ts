@@ -1,15 +1,18 @@
 import { IGUser } from "./instagram.service";
+import { ZaloOAPage } from "./zalo.service";
 
 export interface AppSettings {
   facebook_app_id: string;
   facebook_app_secret: string;
-  instagram_app_id: string;
-  instagram_app_secret: string;
   public_directus_url: string;
   webhook_verify_token: string;
   n8n_webhook_url: string;
   scopes: string[];
+  instagram_app_id: string;
+  instagram_app_secret: string;
   instagram_scopes: string[];
+  zalo_app_id: string;
+  zalo_app_secret: string;
 }
 
 export interface IntegrationLog {
@@ -44,6 +47,7 @@ export interface OmnichannelUpdateRequest {
 export enum OmnichannelSource {
   Facebook = "Facebook",
   Tiktok = "Tiktok",
+  ZaloOA = "ZaloOA",
   Zalo = "Zalo",
   Instagram = "Instagram",
 }
@@ -286,6 +290,90 @@ export async function AddNewIGOmnichannel(
       is_enabled: isEnabled,
       expired_date: expiredDate,
       source: OmnichannelSource.Instagram,
+    };
+    await OmnichannelsService.createOne(newOmichannel);
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function AddOrUpdateZaloOAOmnichannel(
+  OmnichannelsService: any,
+  page: ZaloOAPage,
+  accessToken: string,
+  refreshToken: string,
+  isEnabled: boolean = false
+) {
+  try {
+    const existingPage = await OmnichannelsService.readByQuery({
+      filter: { page_id: { _eq: page.oa_id } },
+      sort: ["page_id"],
+      limit: 1,
+    });
+
+    if (existingPage.length > 0) {
+      const directusPageId = existingPage[0].id;
+      await UpdateZaloOAOmnichannel(
+        directusPageId,
+        OmnichannelsService,
+        page,
+        accessToken,
+        refreshToken,
+        isEnabled
+      );
+    } else {
+      await AddZaloOANewOmnichannel(
+        OmnichannelsService,
+        page,
+        accessToken,
+        refreshToken
+      );
+    }
+  } catch (error: any) {
+    console.error(
+      `Error adding or updating omini channel for page ${page.name} (${page.oa_id}):`,
+      error
+    );
+    throw error;
+  }
+}
+
+export async function UpdateZaloOAOmnichannel(
+  directusPageId: string,
+  OmnichannelsService: any,
+  page: ZaloOAPage,
+  accessToken: string,
+  refreshToken: string,
+  isEnabled: boolean = false
+) {
+  try {
+    const updateOmnichannel: OmnichannelUpdateRequest = {
+      page_name: page.name,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      is_enabled: isEnabled,
+    };
+    await OmnichannelsService.updateOne(directusPageId, updateOmnichannel);
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function AddZaloOANewOmnichannel(
+  OmnichannelsService: any,
+  page: ZaloOAPage,
+  accessToken: string,
+  refreshToken: string
+) {
+  try {
+    const newOmichannel: OmnichannelCreateRequest = {
+      page_id: page.oa_id,
+      page_name: page.name,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      is_enabled: true,
+      expired_date: new Date(),
+      source: OmnichannelSource.ZaloOA,
     };
     await OmnichannelsService.createOne(newOmichannel);
   } catch (error: any) {

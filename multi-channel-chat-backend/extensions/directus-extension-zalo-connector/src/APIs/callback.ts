@@ -55,8 +55,6 @@ export async function handleZaloOACallback(
     "handleZaloCallback"
   );
 
-  console.log(code, code_verifier);
-
   try {
     const { accessToken, refreshToken } = await GetZaloAccessToken(
       integrationSettingsData,
