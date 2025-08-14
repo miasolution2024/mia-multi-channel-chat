@@ -61,9 +61,14 @@ const MuiOutlinedInput = {
    *************************************** */
   styleOverrides: {
     root: ({ theme }: any) => ({
+      "&:hover": {
+        [`& .${outlinedInputClasses.notchedOutline}`]: {
+          borderColor: varAlpha(theme.vars.palette.grey["500Channel"], 0.4),
+        },
+      },
       [`&.${outlinedInputClasses.focused}`]: {
         [`& .${outlinedInputClasses.notchedOutline}`]: {
-          borderColor: theme.vars.palette.text.primary,
+          borderColor: varAlpha(theme.vars.palette.grey["500Channel"], 0.6),
         },
       },
       [`&.${outlinedInputClasses.error}`]: {

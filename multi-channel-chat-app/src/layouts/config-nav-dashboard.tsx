@@ -94,6 +94,21 @@ export const navData = [
         path: paths.dashboard.chat,
         icon: ICONS.chat,
       },
+      {
+        title: "Trợ lý nội dung",
+        path: paths.dashboard.contentAssistant.root,
+        icon: ICONS.blog,
+      },
+      {
+        title: "Văn phong AI",
+        path: paths.dashboard.contentTone.root,
+        icon: ICONS.file,
+      },
+      {
+        title: "Quy tắc AI",
+        path: paths.dashboard.aiRules.root,
+        icon: ICONS.menuItem,
+      },
     ],
   },
 ];

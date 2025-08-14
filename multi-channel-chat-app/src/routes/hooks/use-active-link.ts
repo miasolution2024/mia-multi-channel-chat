@@ -9,8 +9,13 @@ import {
 
 // ----------------------------------------------------------------------
 
-export function useActiveLink(itemPath: any, deep = true) {
+export function useActiveLink(itemPath: string | Record<string, unknown> | ((...args: unknown[]) => unknown) | unknown, deep = true) {
   const pathname = removeLastSlash(usePathname() ?? "/");
+
+  // Nếu itemPath không phải là string, trả về false
+  if (typeof itemPath !== 'string') {
+    return false;
+  }
 
   const pathHasParams = hasParams(itemPath);
 
