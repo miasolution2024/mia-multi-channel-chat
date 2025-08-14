@@ -19,7 +19,10 @@ import {
   GetIGShortLiveToken,
   SubscribeIGAccountWebhook,
 } from "../services/instagram.service";
-import { GetAuthenticatedZaloOAPage, GetZaloAccessToken } from "../services/zalo.service";
+import {
+  GetAuthenticatedZaloOAPage,
+  GetZaloAccessToken,
+} from "../services/zalo.service";
 
 export async function handleFacebookCallback(
   req: any,
@@ -268,7 +271,6 @@ export async function handleInstagramCallback(
   }
 }
 
-
 export async function handleZaloOACallback(
   req: any,
   res: any,
@@ -324,7 +326,7 @@ export async function handleZaloOACallback(
       services,
       getSchema,
       `Get Access Token successfully`,
-      accessToken,
+      JSON.stringify({ accessToken, refreshToken, expiresIn }),
       "handleZaloCallback"
     );
 
