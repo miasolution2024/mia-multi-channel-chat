@@ -10,7 +10,10 @@ import {
 
 // ----------------------------------------------------------------------
 
-export function getConversationsURL(channel: ConversationChannel,userId?: string) {
+export function getConversationsURL(
+  channel: ConversationChannel,
+  userId?: string
+) {
   if (!userId) return "";
   const queryParams = new URLSearchParams({
     "filter[participants][_some][participant_id][_eq]": userId,
@@ -32,7 +35,10 @@ export function getConversationsURL(channel: ConversationChannel,userId?: string
   return `${endpoints.conversations.list}?${queryParams}`;
 }
 
-export function useGetConversations(channel: ConversationChannel, userId?: string) {
+export function useGetConversations(
+  channel: ConversationChannel,
+  userId?: string
+) {
   const url = getConversationsURL(channel, userId);
 
   const { data, isLoading, error, isValidating } = useSWR(
@@ -40,6 +46,7 @@ export function useGetConversations(channel: ConversationChannel, userId?: strin
     fetcher,
     swrConfig
   );
+
   const memoizedValue = useMemo(() => {
     return {
       conversations: (data?.data as Conversation[]) || [],
@@ -55,8 +62,24 @@ export function useGetConversations(channel: ConversationChannel, userId?: strin
 // ----------------------------------------------------------------------
 
 export function getConversationDetailURL(conversationId: string) {
+  const queryParams = new URLSearchParams({
+    fields: [
+      "*",
+      "participants.*",
+      "messages.*",
+      "messages.attachments.*",
+      "messages.attachments.directus_files_id.id",
+      "messages.attachments.directus_files_id.type",
+      "messages.attachments.directus_files_id.modified_on",
+      "messages.attachments.directus_files_id.created_on",
+      "messages.attachments.directus_files_id.filename_download",
+      "omni_channel.id",
+      "omni_channel.page_name",
+    ].join(","),
+  }).toString();
+
   return conversationId
-    ? `${endpoints.conversations.list}/${conversationId}?fields=*,participants.*,messages.*`
+    ? `${endpoints.conversations.list}/${conversationId}?${queryParams}`
     : "";
 }
 

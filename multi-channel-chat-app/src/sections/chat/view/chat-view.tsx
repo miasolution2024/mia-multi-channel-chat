@@ -171,7 +171,7 @@ export function ChatView({
             collapseNav={roomNav}
             participants={participants}
             loading={conversationLoading}
-            omni_channel_name={conversation?.omni_channel_name}
+            omni_channel_name={conversation?.omni_channel?.page_name}
             messages={conversation?.messages ?? []}
           />
         ),

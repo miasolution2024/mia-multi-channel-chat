@@ -14,6 +14,7 @@ import {
   Participant,
   ParticipantType,
 } from "@/models/participants/participant";
+import { CONFIG } from "@/config-global";
 
 // ----------------------------------------------------------------------
 
@@ -36,7 +37,9 @@ export function ChatMessageItem({
 
   const { firstName, participant_avatar } = senderDetails;
 
-  const { content, date_created, sender_type } = message;
+  console.log(message);
+  
+  const { content, attachments, date_created, sender_type } = message;
 
   const renderInfo = (
     <Typography
@@ -67,7 +70,7 @@ export function ChatMessageItem({
         <Box
           component="img"
           alt="attachment"
-          src={content}
+          src={`${CONFIG.serverUrl}/assets/${attachments[0]?.directus_files_id.id}`}
           onClick={() => onOpenLightbox()}
           sx={{
             width: 400,
@@ -137,7 +140,13 @@ export function ChatMessageItem({
       justifyContent={me ? "flex-end" : "unset"}
       sx={{ mb: 5 }}
     >
-      {!me && <Avatar alt={firstName} src={participant_avatar} sx={{ width: 32, height: 32, mr: 2 }} />}
+      {!me && (
+        <Avatar
+          alt={firstName}
+          src={participant_avatar}
+          sx={{ width: 32, height: 32, mr: 2 }}
+        />
+      )}
 
       <Stack alignItems={me ? "flex-end" : "flex-start"}>
         {renderInfo}

@@ -16,7 +16,7 @@ export type Message = Common & {
   content: string;
   type: MessageType;
   external_message_id: string;
-  attachments: number[];
+  attachments: Attachment[];
 };
 
 export type MessageCreateRequest = {
@@ -27,7 +27,22 @@ export type MessageCreateRequest = {
   content: string;
   type: MessageType;
   external_message_id?: string;
-  attachments: number[];
+  attachments: Attachment[];
   external_receive_id?: string;
   external_sender_id?: string;
+};
+
+export type Attachment = {
+  id: number;
+  mc_messages_id: number;
+  directus_files_id: DirectusFile;
+};
+
+export type DirectusFile = {
+  id: string;
+  storage: string;
+  filename_download: string;
+  type: string;
+  created_on: Date;
+  modified_on: Date;
 };

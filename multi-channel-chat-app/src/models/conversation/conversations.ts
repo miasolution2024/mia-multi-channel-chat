@@ -30,8 +30,10 @@ export type Conversation = Common & {
   channel: ConversationChannel;
   messages: Message[];
   participants: Participant[];
-  omni_channel_id: string;
-  omni_channel_name: string;
+  omni_channel: {
+    id: string;
+    page_name: string;
+  };
 };
 
 export type ConversationCreateRequest = {
