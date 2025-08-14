@@ -56,13 +56,13 @@ export function tokenExpired(exp: number) {
   setTimeout(() => {
     try {
       alert("Token expired!");
-      sessionStorage.removeItem(CONFIG.STORAGE_KEY);
+      localStorage.removeItem(CONFIG.STORAGE_KEY);
       window.location.href = paths.auth.signIn;
     } catch (error) {
       console.error("Error during token expiration:", error);
       throw error;
     }
-  }, timeLeft);
+  }, 1000 * 60 * 60 * 24); // VAN CONFIG TO DEV
 }
 
 // ----------------------------------------------------------------------
@@ -70,7 +70,7 @@ export function tokenExpired(exp: number) {
 export async function setSession(accessToken: string) {
   try {
     if (accessToken) {
-      sessionStorage.setItem(CONFIG.STORAGE_KEY, accessToken);
+      localStorage.setItem(CONFIG.STORAGE_KEY, accessToken);
 
       axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
@@ -82,7 +82,7 @@ export async function setSession(accessToken: string) {
         throw new Error("Invalid access token!");
       }
     } else {
-      sessionStorage.removeItem(CONFIG.STORAGE_KEY);
+      localStorage.removeItem(CONFIG.STORAGE_KEY);
       delete axios.defaults.headers.common.Authorization;
     }
   } catch (error) {

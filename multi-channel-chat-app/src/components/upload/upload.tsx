@@ -31,6 +31,7 @@ export function Upload({
   onRemoveAll,
   className,
   multiple = false,
+  hidePreview = false,
   ...other
 }: any) {
   const {
@@ -143,7 +144,7 @@ export function Upload({
       <RejectionFiles files={fileRejections} />
 
       {/* Multi files */}
-      {renderMultiPreview}
+      {!hidePreview && renderMultiPreview}
     </Box>
   );
 }
