@@ -23,7 +23,7 @@ export default function AuthProvider({
   });
   const checkUserSession = useCallback(async () => {
     try {
-      const accessToken = sessionStorage.getItem(CONFIG.STORAGE_KEY);
+      const accessToken = localStorage.getItem(CONFIG.STORAGE_KEY);
 
       if (accessToken && isValidToken(accessToken)) {
         setSession(accessToken);

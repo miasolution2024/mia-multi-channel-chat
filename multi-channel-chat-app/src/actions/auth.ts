@@ -124,7 +124,7 @@ export const signUpAsync = async (request: SignUpRequest) => {
 
 export const signOut = () => {
   try {
-    sessionStorage.removeItem(CONFIG.STORAGE_KEY);
+    localStorage.removeItem(CONFIG.STORAGE_KEY);
     delete axios.defaults.headers.common.Authorization;
   } catch (error) {
     console.error("Error during sign out:", error);

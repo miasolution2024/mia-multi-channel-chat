@@ -27,6 +27,21 @@ export const paths = {
       edit: (id: string | number) => `${ROOTS.DASHBOARD}/omni-channels/${id}/edit`,
       details: (id: string) => `${ROOTS.DASHBOARD}/omni-channels/${id}`,
     },
+    contentAssistant: {
+      root: `${ROOTS.DASHBOARD}/content-assistant`,
+      new: `${ROOTS.DASHBOARD}/content-assistant/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/content-assistant/${id}/edit`,
+    },
+    contentTone: {
+    root: `${ROOTS.DASHBOARD}/content-tone`,
+    new: `${ROOTS.DASHBOARD}/content-tone/new`,
+    edit: (id: string) => `${ROOTS.DASHBOARD}/content-tone/${id}/edit`,
+  },
+  aiRules: {
+    root: `${ROOTS.DASHBOARD}/ai-rules`,
+    new: `${ROOTS.DASHBOARD}/ai-rules/new`,
+    edit: (id: string) => `${ROOTS.DASHBOARD}/ai-rules/${id}/edit`,
+  },
     customer: {
       root: `${ROOTS.DASHBOARD}/customer`,
     },

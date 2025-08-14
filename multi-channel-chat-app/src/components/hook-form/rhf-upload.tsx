@@ -60,7 +60,7 @@ export function RHFUploadBox({ name, ...other }: any) {
 }
 // ----------------------------------------------------------------------
 
-export function RHFUpload({ name, multiple, helperText, ...other }: any) {
+export function RHFUpload({ name, multiple, helperText, hidePreview, ...other }: any) {
   const { control, setValue } = useFormContext();
 
   return (
@@ -88,6 +88,7 @@ export function RHFUpload({ name, multiple, helperText, ...other }: any) {
             {...uploadProps}
             value={field.value}
             onDrop={onDrop}
+            hidePreview={hidePreview}
             {...other}
           />
         );

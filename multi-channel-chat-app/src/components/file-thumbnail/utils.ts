@@ -118,13 +118,13 @@ export function fileThumb(fileUrl: string) {
 // ----------------------------------------------------------------------
 
 export function fileTypeByUrl(fileUrl: string) {
-  return (fileUrl && fileUrl.split(".").pop()) || "";
+  return (fileUrl && fileUrl?.split(".").pop()) || "";
 }
 
 // ----------------------------------------------------------------------
 
 export function fileNameByUrl(fileUrl: string) {
-  return fileUrl.split("/").pop();
+  return fileUrl?.split("/").pop();
 }
 
 // ----------------------------------------------------------------------

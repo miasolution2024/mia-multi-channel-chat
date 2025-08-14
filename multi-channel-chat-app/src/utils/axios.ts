@@ -36,6 +36,28 @@ export default axiosInstance;
 
 // ----------------------------------------------------------------------
 
+// Auto MIA Solution axios instance
+const autoMiaAxiosInstance = axios.create({
+  baseURL: "https://auto.miasolution.vn/",
+  httpsAgent: process.env.NODE_ENV === "development" ? agent : undefined,
+});
+
+autoMiaAxiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    Promise.reject(
+      (error.response &&
+        error.response.data &&
+        error.response.data.errorMessage) ||
+        "Something went wrong!"
+    );
+  }
+);
+
+export { autoMiaAxiosInstance };
+
+// ----------------------------------------------------------------------
+
 export const fetcher = async (args: any) => {
   try {
     const [url, config] = Array.isArray(args) ? args : [args];
@@ -45,6 +67,20 @@ export const fetcher = async (args: any) => {
     return res.data;
   } catch (error) {
     console.error("Failed to fetch:", error);
+    throw error;
+  }
+};
+
+// Auto MIA Solution fetcher
+export const autoMiaFetcher = async (args: any) => {
+  try {
+    const [url, config] = Array.isArray(args) ? args : [args];
+
+    const res = await autoMiaAxiosInstance.get(url, { ...config });
+
+    return res.data;
+  } catch (error) {
+    console.error("Failed to fetch from Auto MIA:", error);
     throw error;
   }
 };
@@ -133,5 +169,33 @@ export const endpoints = {
     create: "items/mc_messages",
   },
   upload: "/api/upload",
+  files: "/files",
   chat: "/api/chat",
+  contentTones: {
+    list: "/api/content-tones",
+    create: "/api/content-tones",
+    update: "/api/content-tones",
+    delete: "/api/content-tones",
+  },
+  aiRules: {
+    list: "/items/ai_rule_based",
+    create: "/items/ai_rule_based",
+    update: "/items/ai_rule_based",
+    delete: "/items/ai_rule_based",
+  },
+  customerGroups: {
+    list: "/items/customer_group",
+    create: "/items/customer_group",
+    update: "/items/customer_group",
+    delete: "/items/customer_group",
+  },
+  customerJourneys: {
+    list: "/items/customer_journey",
+    create: "/items/customer_journey",
+    update: "/items/customer_journey",
+    delete: "/items/customer_journey",
+  },
+  omniChannels: {
+    list: "/items/omni_channels",
+  },
 };
