@@ -60,6 +60,8 @@ export function ChatView({
   const { conversation, conversationError, conversationLoading } =
     useGetConversation(`${selectedConversationId}`);
 
+
+
   const roomNav = useCollapseNav();
 
   const conversationsNav = useCollapseNav();

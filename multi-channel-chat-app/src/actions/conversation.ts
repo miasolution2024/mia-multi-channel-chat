@@ -29,6 +29,8 @@ export function getConversationsURL(
       "messages.type",
       "messages.content",
       "messages.date_created",
+      "omni_channel.id",
+      "omni_channel.page_name",
     ].join(","),
   }).toString();
 

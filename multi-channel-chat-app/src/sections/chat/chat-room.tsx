@@ -36,8 +36,6 @@ export function ChatRoom({
   const isGroup = participants.length > 1;
 
   const attachments = messages.map((msg: Message) => msg.attachments).flat(1) || [];
-
-  console.log(attachments);
   
   const renderContent = loading ? (
     <ChatRoomSkeleton />

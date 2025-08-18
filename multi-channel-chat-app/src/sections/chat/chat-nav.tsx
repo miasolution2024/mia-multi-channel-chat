@@ -5,7 +5,6 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Drawer from "@mui/material/Drawer";
 import TextField from "@mui/material/TextField";
-import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 
@@ -16,7 +15,7 @@ import { Scrollbar } from "@/components/scrollbar";
 
 import { ToggleButton } from "./styles";
 import { ChatNavItem } from "./chat-nav-item";
-import { ChatNavAccount } from "./chat-nav-account";
+import { ChatPageFilter } from "./chat-nav-page-filter";
 import { ChatNavItemSkeleton } from "./chat-skeleton";
 import { ChatNavSearchResults } from "./chat-nav-search-results";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
@@ -24,7 +23,10 @@ import { today } from "@/utils/format-time";
 import { paths } from "@/routes/path";
 import { useRouter } from "next/navigation";
 import { Participant } from "@/models/participants/participant";
-import { Conversation, ConversationChannel } from "@/models/conversation/conversations";
+import {
+  Conversation,
+  ConversationChannel,
+} from "@/models/conversation/conversations";
 import { initialConversation } from "./utils/initial-conversation";
 import {
   createConversationAsync,
@@ -48,7 +50,7 @@ export function ChatNav({
   collapseNav,
   conversations,
   selectedConversationId,
-  channel
+  channel,
 }: {
   loading: boolean;
   contacts: Participant[];
@@ -62,7 +64,33 @@ export function ChatNav({
   const mdUp = useResponsive("up", "md");
 
   const { user } = useAuthContext();
-  const allIds = conversations.map((c) => c.id);
+
+  const pages = useMemo(() => {
+    const pages = conversations.map((c) => ({
+      id: c.omni_channel?.id,
+      page_name: c.omni_channel?.page_name,
+    }));
+    
+    return pages.filter(
+      (obj, index, self) => index === self.findIndex((el) => el.id === obj.id)
+    );
+  }, [conversations]);
+
+  const [selectedPageId, setSelectedPageId] = useState<string>("");
+
+  useEffect(() => {
+    if (pages.length > 0) {
+      setSelectedPageId(pages[0].page_name);
+    }
+  }, [pages]);
+
+  const filteredConversations = useMemo(() => {
+    return conversations.filter(
+      (c) => c.omni_channel?.page_name === selectedPageId
+    );
+  }, [selectedPageId, conversations]);
+
+  const allIds = filteredConversations.map((c) => c.id);
 
   const {
     openMobile,
@@ -70,7 +98,6 @@ export function ChatNav({
     onCloseMobile,
     onCloseDesktop,
     collapseDesktop,
-    onCollapseDesktop,
   } = collapseNav;
 
   const [searchContacts, setSearchContacts] = useState<{
@@ -219,21 +246,6 @@ export function ChatNav({
     }
   }, [onCloseDesktop, mdUp]);
 
-  const handleToggleNav = useCallback(() => {
-    if (mdUp) {
-      onCollapseDesktop();
-    } else {
-      onCloseMobile();
-    }
-  }, [mdUp, onCloseMobile, onCollapseDesktop]);
-
-  const handleClickCompose = useCallback(() => {
-    if (!mdUp) {
-      onCloseMobile();
-    }
-    router.push(paths.dashboard.chat);
-  }, [mdUp, onCloseMobile, router]);
-
   const handleSearchContacts = useCallback(
     (inputValue: any) => {
       setSearchContacts((prevState) => ({ ...prevState, query: inputValue }));
@@ -301,7 +313,7 @@ export function ChatNav({
   const renderList = (
     <nav>
       <Box component="ul">
-        {conversations.map((c: Conversation) => (
+        {filteredConversations.map((c: Conversation) => (
           <ChatNavItem
             key={c.id}
             collapse={collapseDesktop}
@@ -351,25 +363,13 @@ export function ChatNav({
       >
         {!collapseDesktop && (
           <>
-            <ChatNavAccount />
+            <ChatPageFilter
+              pages={pages}
+              handleChange={(event) => setSelectedPageId(event.target.value)}
+              pageId={selectedPageId}
+            />
             <Box sx={{ flexGrow: 1 }} />
           </>
-        )}
-
-        <IconButton onClick={handleToggleNav}>
-          <Iconify
-            icon={
-              collapseDesktop
-                ? "eva:arrow-ios-forward-fill"
-                : "eva:arrow-ios-back-fill"
-            }
-          />
-        </IconButton>
-
-        {!collapseDesktop && (
-          <IconButton onClick={handleClickCompose}>
-            <Iconify width={24} icon="solar:user-plus-bold" />
-          </IconButton>
         )}
       </Stack>
 
