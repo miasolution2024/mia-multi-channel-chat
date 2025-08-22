@@ -74,6 +74,7 @@ export function getConversationDetailURL(conversationId: string) {
       "messages.attachments.directus_files_id.type",
       "messages.attachments.directus_files_id.modified_on",
       "messages.attachments.directus_files_id.created_on",
+      "messages.attachments.directus_files_id.filesize",
       "messages.attachments.directus_files_id.filename_download",
       "omni_channel.id",
       "omni_channel.page_name",

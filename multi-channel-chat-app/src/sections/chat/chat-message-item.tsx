@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Avatar from "@mui/material/Avatar";
@@ -8,13 +9,16 @@ import { Iconify } from "@/components/iconify";
 
 import { getMessage } from "./utils/get-message";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
-import { fToNow } from "@/utils/format-time";
-import { Message } from "@/models/message/message";
+import { fDateTime, fToNow } from "@/utils/format-time";
+import { Message, MessageType } from "@/models/message/message";
 import {
   Participant,
   ParticipantType,
 } from "@/models/participants/participant";
 import { CONFIG } from "@/config-global";
+import { FileThumbnail } from "@/components/file-thumbnail";
+import { ListItemText, Paper } from "@mui/material";
+import { fData } from "@/utils/format-number";
 
 // ----------------------------------------------------------------------
 
@@ -29,7 +33,7 @@ export function ChatMessageItem({
 }) {
   const { user } = useAuthContext();
 
-  const { me, senderDetails, hasImage } = getMessage({
+  const { me, senderDetails, type } = getMessage({
     message,
     participants,
     currentUserId: `${user?.id}`,
@@ -37,8 +41,6 @@ export function ChatMessageItem({
 
   const { firstName, participant_avatar } = senderDetails;
 
-  console.log(message);
-  
   const { content, attachments, date_created, sender_type } = message;
 
   const renderInfo = (
@@ -53,6 +55,77 @@ export function ChatMessageItem({
     </Typography>
   );
 
+  const renderAttachment = (
+    <Paper
+      variant="outlined"
+      sx={{
+        gap: 2,
+        borderRadius: 2,
+        display: "flex",
+        cursor: "pointer",
+        position: "relative",
+        bgcolor: "transparent",
+        p: { xs: 2.5, sm: 2 },
+        alignItems: { xs: "unset", sm: "center" },
+        flexDirection: { xs: "column", sm: "row" },
+        "&:hover": {
+          bgcolor: "background.paper",
+          boxShadow: (theme: any) => theme.customShadows.z20,
+        },
+      }}
+    >
+      <FileThumbnail
+        file={attachments[0]?.directus_files_id.filename_download}
+      />
+
+      <ListItemText
+        primary={attachments[0]?.directus_files_id.filename_download}
+        secondary={
+          <>
+            {fData(attachments[0]?.directus_files_id.filesize)}
+            <Box
+              sx={{
+                mx: 0.75,
+                width: 2,
+                height: 2,
+                borderRadius: "50%",
+                bgcolor: "currentColor",
+              }}
+            />
+            {fDateTime(attachments[0]?.directus_files_id.created_on)}
+          </>
+        }
+        primaryTypographyProps={{ noWrap: true, typography: "subtitle2" }}
+        secondaryTypographyProps={{
+          mt: 0.5,
+          component: "span",
+          alignItems: "center",
+          typography: "caption",
+          color: "text.disabled",
+          display: "inline-flex",
+        }}
+      />
+    </Paper>
+  );
+
+  const renderImage = (
+    <Box
+      component="img"
+      alt="attachment"
+      src={`${CONFIG.serverUrl}/assets/${attachments[0]?.directus_files_id.id}`}
+      onClick={() => onOpenLightbox()}
+      sx={{
+        width: 400,
+        height: "auto",
+        borderRadius: 1.5,
+        cursor: "pointer",
+        objectFit: "cover",
+        aspectRatio: "16/11",
+        "&:hover": { opacity: 0.9 },
+      }}
+    />
+  );
+
   const renderBody = (
     <Stack
       sx={{
@@ -63,26 +136,11 @@ export function ChatMessageItem({
         typography: "body2",
         bgcolor: "background.neutral",
         ...(me && { color: "grey.800", bgcolor: "primary.lighter" }),
-        ...(hasImage && { p: 0, bgcolor: "transparent" }),
+        ...(type !== MessageType.TEXT && { p: 0, bgcolor: "transparent" }),
       }}
     >
-      {hasImage ? (
-        <Box
-          component="img"
-          alt="attachment"
-          src={`${CONFIG.serverUrl}/assets/${attachments[0]?.directus_files_id.id}`}
-          onClick={() => onOpenLightbox()}
-          sx={{
-            width: 400,
-            height: "auto",
-            borderRadius: 1.5,
-            cursor: "pointer",
-            objectFit: "cover",
-            aspectRatio: "16/11",
-            "&:hover": { opacity: 0.9 },
-          }}
-        />
-      ) : (
+      {type === MessageType.IMAGE && renderImage}
+      {type === MessageType.TEXT && (
         <>
           {content}
           {sender_type === ParticipantType.CHATBOT && (
@@ -96,6 +154,7 @@ export function ChatMessageItem({
           )}
         </>
       )}
+      {type !== MessageType.TEXT && type !== MessageType.IMAGE && renderAttachment}
     </Stack>
   );
 
@@ -130,7 +189,7 @@ export function ChatMessageItem({
     </Stack>
   );
 
-  if (!message.content) {
+  if (!message.content && type === MessageType.TEXT) {
     return null;
   }
 

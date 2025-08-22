@@ -1,4 +1,4 @@
-import { Message, MessageType } from "@/models/message/message";
+import { Message} from "@/models/message/message";
 import { Participant } from "@/models/participants/participant";
 
 export function getMessage({
@@ -15,7 +15,6 @@ export function getMessage({
       participant.participant_id == message.sender_id
   );
 
-
   const senderDetails =
     message.sender_id === currentUserId
       ? { type: "me" }
@@ -27,7 +26,7 @@ export function getMessage({
 
   const me = senderDetails.type === "me";
 
-  const hasImage = message.type === MessageType.IMAGE;
+  const type = message.type;
 
-  return { hasImage, me, senderDetails };
+  return { type, me, senderDetails };
 }

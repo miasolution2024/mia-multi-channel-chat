@@ -9,14 +9,14 @@ import { FileThumbnail } from "@/components/file-thumbnail";
 
 import { CollapseButton } from "./styles";
 import { fDateTime } from "@/utils/format-time";
-import { Attachment } from "@/models/message/message";
-import { CONFIG } from "@/config-global";
+import { Attachment, MessageType } from "@/models/message/message";
 
 // ----------------------------------------------------------------------
 
 export function ChatRoomAttachments({
   attachments,
 }: {
+  type: MessageType,
   attachments: Attachment[];
 }) {
   const collapse = useBoolean(true);
@@ -31,8 +31,7 @@ export function ChatRoomAttachments({
       alignItems="center"
     >
       <FileThumbnail
-        imageView
-        file={`${CONFIG.serverUrl}/assets/${attachment.directus_files_id.id}`}
+        file={attachment.directus_files_id.filename_download}
         onDownload={() => console.info("DOWNLOAD")}
         slotProps={{ icon: { width: 24, height: 24 } }}
         sx={{ width: 40, height: 40, bgcolor: "background.neutral" }}

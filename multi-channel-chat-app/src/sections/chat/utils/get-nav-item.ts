@@ -28,7 +28,9 @@ export function getNavItem({
     const message =
       lastMessage.type === MessageType.IMAGE
         ? "Sent a photo"
-        : lastMessage.content;
+        : lastMessage.type === MessageType.TEXT
+        ? lastMessage.content
+        : "Sent an attachment";
 
     displayText = `${sender}${message}`;
   }

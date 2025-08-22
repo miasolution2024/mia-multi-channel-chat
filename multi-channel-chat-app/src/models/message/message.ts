@@ -7,6 +7,7 @@ export enum MessageType {
   IMAGE = "IMAGE",
   VIDEO = "VIDEO",
   FILE = "FILE",
+  AUDIO = "AUDIO",
 }
 
 export type Message = Common & {
@@ -43,6 +44,7 @@ export type DirectusFile = {
   storage: string;
   filename_download: string;
   type: string;
+  filesize: number;
   created_on: Date;
   modified_on: Date;
 };
