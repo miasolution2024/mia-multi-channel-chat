@@ -2,10 +2,8 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Avatar from "@mui/material/Avatar";
-import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 
-import { Iconify } from "@/components/iconify";
 
 import { getMessage } from "./utils/get-message";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
@@ -158,36 +156,36 @@ export function ChatMessageItem({
     </Stack>
   );
 
-  const renderActions = (
-    <Stack
-      direction="row"
-      className="message-actions"
-      sx={{
-        pt: 0.5,
-        left: 0,
-        opacity: 0,
-        top: "100%",
-        position: "absolute",
-        transition: (theme) =>
-          theme.transitions.create(["opacity"], {
-            duration: theme.transitions.duration.shorter,
-          }),
-        ...(me && { right: 0, left: "unset" }),
-      }}
-    >
-      <IconButton size="small">
-        <Iconify icon="solar:reply-bold" width={16} />
-      </IconButton>
+  // const renderActions = (
+  //   <Stack
+  //     direction="row"
+  //     className="message-actions"
+  //     sx={{
+  //       pt: 0.5,
+  //       left: 0,
+  //       opacity: 0,
+  //       top: "100%",
+  //       position: "absolute",
+  //       transition: (theme) =>
+  //         theme.transitions.create(["opacity"], {
+  //           duration: theme.transitions.duration.shorter,
+  //         }),
+  //       ...(me && { right: 0, left: "unset" }),
+  //     }}
+  //   >
+  //     <IconButton size="small">
+  //       <Iconify icon="solar:reply-bold" width={16} />
+  //     </IconButton>
 
-      <IconButton size="small">
-        <Iconify icon="eva:smiling-face-fill" width={16} />
-      </IconButton>
+  //     <IconButton size="small">
+  //       <Iconify icon="eva:smiling-face-fill" width={16} />
+  //     </IconButton>
 
-      <IconButton size="small">
-        <Iconify icon="solar:trash-bin-trash-bold" width={16} />
-      </IconButton>
-    </Stack>
-  );
+  //     <IconButton size="small">
+  //       <Iconify icon="solar:trash-bin-trash-bold" width={16} />
+  //     </IconButton>
+  //   </Stack>
+  // );
 
   if (!message.content && type === MessageType.TEXT) {
     return null;
@@ -219,7 +217,7 @@ export function ChatMessageItem({
           }}
         >
           {renderBody}
-          {renderActions}
+          {/* {renderActions} */}
         </Stack>
       </Stack>
     </Stack>

@@ -30,6 +30,7 @@ export type Conversation = Common & {
   channel: ConversationChannel;
   messages: Message[];
   participants: Participant[];
+  unread_count: number;
   omni_channel: {
     id: string;
     page_name: string;
@@ -47,4 +48,11 @@ export type ConversationCreateRequest = {
   channel: ConversationChannel;
   messages: MessageCreateRequest[];
   participants: ParticipantCreateRequest[];
+};
+
+export type ConversationSumUnreadCountByChannel = {
+  channel: string;
+  sum: {
+    unread_count: string;
+  };
 };

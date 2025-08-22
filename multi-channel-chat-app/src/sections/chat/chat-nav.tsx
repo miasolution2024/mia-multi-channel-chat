@@ -30,6 +30,7 @@ import {
 import { initialConversation } from "./utils/initial-conversation";
 import {
   createConversationAsync,
+  getConversationsUnreadCountURL,
   getConversationsURL,
 } from "@/actions/conversation";
 import { websocketMessage } from "@/models/websocket-message";
@@ -70,7 +71,7 @@ export function ChatNav({
       id: c.omni_channel?.id,
       page_name: c.omni_channel?.page_name,
     }));
-    
+
     return pages.filter(
       (obj, index, self) => index === self.findIndex((el) => el.id === obj.id)
     );
@@ -200,9 +201,11 @@ export function ChatNav({
         console.log(`New conversation created`);
         setPlayNotification(true);
         mutate(getConversationsURL(channel, user?.id));
+        mutate(getConversationsUnreadCountURL());
       } else if (data.event === "update") {
         console.log(`Conversation updated updated!`);
         mutate(getConversationsURL(channel, user?.id));
+        mutate(getConversationsUnreadCountURL());
       }
 
       if (data.type === "ping") {

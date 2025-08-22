@@ -6,6 +6,7 @@ import {
   Conversation,
   ConversationChannel,
   ConversationCreateRequest,
+  ConversationSumUnreadCountByChannel,
 } from "@/models/conversation/conversations";
 
 // ----------------------------------------------------------------------
@@ -161,6 +162,53 @@ export async function updateConversationChatbotActiveAsync(
     }
   } catch (error) {
     console.error("Error during update conversation:", error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function readConversationAsync(conversationId: string) {
+  try {
+    const url = `${endpoints.conversations.update}/${conversationId}`;
+    const response = await axios.patch(url, {
+      unread_count: 0,
+    });
+    if ((response.status = 200)) {
+      return response.data;
+    }
+  } catch (error) {
+    console.error("Error during update conversation:", error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+export function getConversationsUnreadCountURL() {
+  return `${endpoints.conversations.list}?aggregate[sum]=unread_count&groupBy[]=channel`;
+}
+
+export function useGetUnreadCountGroupByChannel() {
+  try {
+    const { data, isLoading, error, isValidating } = useSWR(
+      getConversationsUnreadCountURL(),
+      fetcher,
+      swrConfig
+    );
+
+    const memoizedValue = useMemo(
+      () => ({
+        conversationUnRead: data?.data as ConversationSumUnreadCountByChannel[],
+        conversationUnReadLoading: isLoading,
+        conversationUnReadError: error,
+        conversationUnReadValidating: isValidating,
+      }),
+      [data?.data, error, isLoading, isValidating]
+    );
+
+    return memoizedValue;
+  } catch (error) {
+    console.error("Error during get conversation unread:", error);
     throw error;
   }
 }

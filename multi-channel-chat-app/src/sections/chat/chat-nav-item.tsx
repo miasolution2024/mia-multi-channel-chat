@@ -16,6 +16,12 @@ import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fToNow } from "@/utils/format-time";
 import { paths } from "@/routes/path";
+import { Conversation } from "@/models/conversation/conversations";
+import {
+  getConversationsUnreadCountURL,
+  readConversationAsync,
+} from "@/actions/conversation";
+import { mutate } from "swr";
 
 // ----------------------------------------------------------------------
 
@@ -24,7 +30,12 @@ export function ChatNavItem({
   collapse,
   conversation,
   onCloseMobile,
-}: any) {
+}: {
+  selected?: boolean;
+  collapse?: boolean;
+  conversation: Conversation;
+  onCloseMobile: () => void;
+}) {
   const { user } = useAuthContext();
 
   const searchParams = useSearchParams();
@@ -57,6 +68,9 @@ export function ChatNavItem({
 
       const newQueryString = newSearchParams.toString();
 
+      await readConversationAsync(conversation.id);
+      mutate(getConversationsUnreadCountURL());
+      
       router.push(`${paths.dashboard.chat}?${newQueryString}`);
     } catch (error) {
       console.error(error);
@@ -66,9 +80,9 @@ export function ChatNavItem({
 
   const renderSingle = (
     <Badge
-      key={status}
-      variant="standard"
-      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      badgeContent={conversation?.unread_count}
+      color="error"
+      overlap="circular"
     >
       <Avatar
         alt={participant_name}
@@ -89,13 +103,7 @@ export function ChatNavItem({
           ...(selected && { bgcolor: "action.selected" }),
         }}
       >
-        <Badge
-          color="error"
-          overlap="circular"
-          badgeContent={collapse ? conversation.unreadCount : 0}
-        >
-          {renderSingle}
-        </Badge>
+        {renderSingle}
 
         {!collapse && (
           <>
@@ -110,8 +118,8 @@ export function ChatNavItem({
               secondaryTypographyProps={{
                 noWrap: true,
                 component: "span",
-                variant: conversation.unreadCount ? "subtitle2" : "body2",
-                color: conversation.unreadCount
+                variant: conversation.unread_count ? "subtitle2" : "body2",
+                color: conversation.unread_count
                   ? "text.primary"
                   : "text.secondary",
               }}
@@ -127,7 +135,7 @@ export function ChatNavItem({
                 {fToNow(lastActivity)}
               </Typography>
 
-              {!!conversation.unreadCount && (
+              {!!conversation.unread_count && (
                 <Box
                   sx={{
                     width: 8,
