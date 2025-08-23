@@ -18,17 +18,18 @@ export function ContentAssistantNewView() {
   const settings = useSettingsContext();
   const [isShowDraftButton, setIsShowDraftButton] = useState<boolean>(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [formData, setFormData] = useState<Record<string, unknown> | null>(
+  const [watchMethod, setWatchMethod] = useState<(() => Record<string, unknown>) | null>(
     null
   );
   const [activeStep, setActiveStep] = useState(0);
 
   const handleIdChange = (
-    formData: Record<string, unknown> | null,
+    watchMethod: () => Record<string, unknown>,
     activeStep: number
   ) => {
-    const id = formData?.id as number | null;
-    setFormData(formData);
+    const currentFormData = watchMethod();
+    const id = currentFormData?.id as number | null;
+    setWatchMethod(() => watchMethod);
     setActiveStep(activeStep);
     setIsShowDraftButton(!!id);
   };
@@ -45,18 +46,21 @@ export function ContentAssistantNewView() {
   };
 
   const handleSaveDraft = useCallback(async () => {
-    if (!formData?.id) return;
+    if (!watchMethod) return;
+    
+    const currentFormData = watchMethod();
+    if (!currentFormData?.id) return;
 
     setIsSavingDraft(true);
     console.log("activeStep", activeStep);
     try {
       const updateData = {
-        ...formData,
+        ...currentFormData,
         action: getActionByStep(activeStep),
         // Transform all RHFMultiSelect fields to correct format
         customer_group: {
-          create: Array.isArray(formData.customer_group)
-            ? formData.customer_group.map((groupId: number) => ({
+          create: Array.isArray(currentFormData.customer_group)
+            ? currentFormData.customer_group.map((groupId: number) => ({
                 ai_content_suggestions_id: "0", // Will be set by backend after creation
                 customer_group_id: { id: groupId },
               }))
@@ -65,8 +69,8 @@ export function ContentAssistantNewView() {
           delete: [],
         },
         customer_journey: {
-          create: Array.isArray(formData.customer_journey)
-            ? formData.customer_journey.map((journeyId: number) => ({
+          create: Array.isArray(currentFormData.customer_journey)
+            ? currentFormData.customer_journey.map((journeyId: number) => ({
                 ai_content_suggestions_id: "0", // Will be set by backend after creation
                 customer_journey_id: { id: journeyId },
               }))
@@ -75,8 +79,8 @@ export function ContentAssistantNewView() {
           delete: [],
         },
         ai_rule_based: {
-          create: Array.isArray(formData.ai_rule_based)
-            ? formData.ai_rule_based.map((ruleId: number) => ({
+          create: Array.isArray(currentFormData.ai_rule_based)
+            ? currentFormData.ai_rule_based.map((ruleId: number) => ({
                 ai_content_suggestions_id: "0", // Will be set by backend after creation
                 ai_rule_based_id: { id: ruleId },
               }))
@@ -85,8 +89,8 @@ export function ContentAssistantNewView() {
           delete: [],
         },
         content_tone: {
-          create: Array.isArray(formData.content_tone)
-            ? formData.content_tone.map((toneId: number) => ({
+          create: Array.isArray(currentFormData.content_tone)
+            ? currentFormData.content_tone.map((toneId: number) => ({
                 ai_content_suggestions_id: "0", // Will be set by backend after creation
                 content_tone_id: { id: toneId },
               }))
@@ -95,8 +99,8 @@ export function ContentAssistantNewView() {
           delete: [],
         },
         omni_channels: {
-          create: Array.isArray(formData.omni_channels)
-            ? formData.omni_channels.map((channelId: number) => ({
+          create: Array.isArray(currentFormData.omni_channels)
+            ? currentFormData.omni_channels.map((channelId: number) => ({
                 ai_content_suggestions_id: "0", // Will be set by backend after creation
                 omni_channels_id: { id: channelId },
               }))
@@ -105,7 +109,7 @@ export function ContentAssistantNewView() {
           delete: [],
         },
       };
-      await updateContentAssistant(formData.id as number, updateData);
+      await updateContentAssistant(currentFormData.id as number, updateData);
       toast.success("Lưu nháp thành công!");
     } catch (error) {
       console.error("Error saving draft:", error);
@@ -113,7 +117,7 @@ export function ContentAssistantNewView() {
     } finally {
       setIsSavingDraft(false);
     }
-  }, [formData, activeStep]);
+  }, [watchMethod, activeStep]);
 
   return (
     <Container maxWidth={settings.themeStretch ? false : "lg"}>
