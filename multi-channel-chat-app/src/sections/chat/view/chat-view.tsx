@@ -1,4 +1,3 @@
- 
 "use client";
 
 import { useEffect } from "react";
@@ -29,7 +28,8 @@ export function ChatView({
 
   const searchParams = useSearchParams();
 
-  const selectedConversationId = parseInt(searchParams.get("id") || "0");
+  const id = searchParams.get("id");
+  const selectedConversationId = id ? parseInt(id) : 0;
 
   const { conversation, conversationError, conversationLoading } =
     useGetConversation(selectedConversationId);
@@ -51,7 +51,6 @@ export function ChatView({
       router.push(paths.dashboard.chat);
     }
   }, [conversationError, router, selectedConversationId]);
-
 
   return (
     <Layout
@@ -105,7 +104,7 @@ export function ChatView({
             />
           </>
         ),
-        details: selectedConversationId && (
+        details: selectedConversationId !== 0 && (
           <ChatRoom
             collapseNav={roomNav}
             participants={allParticipants}

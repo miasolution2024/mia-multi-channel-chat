@@ -194,8 +194,5 @@ export const endpoints = {
     create: "/items/customer_journey",
     update: "/items/customer_journey",
     delete: "/items/customer_journey",
-  },
-  omniChannels: {
-    list: "/items/omni_channels",
-  },
+  }
 };

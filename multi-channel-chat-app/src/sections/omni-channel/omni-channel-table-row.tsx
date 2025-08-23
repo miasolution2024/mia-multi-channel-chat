@@ -47,7 +47,7 @@ export function OmniChannelsTableRow({
     <>
       <TableRow hover selected={selected} aria-checked={selected} tabIndex={-1}>
         <TableCell padding="checkbox">
-          <Checkbox id={row.id} checked={selected} onClick={onSelectRow} />
+          <Checkbox id={row.id.toString()} checked={selected} onClick={onSelectRow} />
         </TableCell>
 
         <TableCell sx={{ whiteSpace: "nowrap" }}>{row.id}</TableCell>
