@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
@@ -44,65 +44,66 @@ export function ContentAssistantNewView() {
     return actions[step] || "research_analysis";
   };
 
-  const handleSaveDraft = async () => {
+  const handleSaveDraft = useCallback(async () => {
     if (!formData?.id) return;
 
     setIsSavingDraft(true);
+    console.log("activeStep", activeStep);
     try {
       const updateData = {
         ...formData,
         action: getActionByStep(activeStep),
         // Transform all RHFMultiSelect fields to correct format
         customer_group: {
-          create: Array.isArray(formData.customer_group) 
+          create: Array.isArray(formData.customer_group)
             ? formData.customer_group.map((groupId: number) => ({
                 ai_content_suggestions_id: "0", // Will be set by backend after creation
-                customer_group_id: { id: groupId }
+                customer_group_id: { id: groupId },
               }))
             : [],
           update: [],
-          delete: []
+          delete: [],
         },
         customer_journey: {
-          create: Array.isArray(formData.customer_journey) 
+          create: Array.isArray(formData.customer_journey)
             ? formData.customer_journey.map((journeyId: number) => ({
                 ai_content_suggestions_id: "0", // Will be set by backend after creation
-                customer_journey_id: { id: journeyId }
+                customer_journey_id: { id: journeyId },
               }))
             : [],
           update: [],
-          delete: []
+          delete: [],
         },
         ai_rule_based: {
-          create: Array.isArray(formData.ai_rule_based) 
+          create: Array.isArray(formData.ai_rule_based)
             ? formData.ai_rule_based.map((ruleId: number) => ({
                 ai_content_suggestions_id: "0", // Will be set by backend after creation
-                ai_rule_based_id: { id: ruleId }
+                ai_rule_based_id: { id: ruleId },
               }))
             : [],
           update: [],
-          delete: []
+          delete: [],
         },
         content_tone: {
-          create: Array.isArray(formData.content_tone) 
+          create: Array.isArray(formData.content_tone)
             ? formData.content_tone.map((toneId: number) => ({
                 ai_content_suggestions_id: "0", // Will be set by backend after creation
-                content_tone_id: { id: toneId }
+                content_tone_id: { id: toneId },
               }))
             : [],
           update: [],
-          delete: []
+          delete: [],
         },
         omni_channels: {
-          create: Array.isArray(formData.omni_channels) 
+          create: Array.isArray(formData.omni_channels)
             ? formData.omni_channels.map((channelId: number) => ({
                 ai_content_suggestions_id: "0", // Will be set by backend after creation
-                omni_channels_id: { id: channelId }
+                omni_channels_id: { id: channelId },
               }))
             : [],
           update: [],
-          delete: []
-        }
+          delete: [],
+        },
       };
       await updateContentAssistant(formData.id as number, updateData);
       toast.success("Lưu nháp thành công!");
@@ -112,7 +113,7 @@ export function ContentAssistantNewView() {
     } finally {
       setIsSavingDraft(false);
     }
-  };
+  }, [formData, activeStep]);
 
   return (
     <Container maxWidth={settings.themeStretch ? false : "lg"}>

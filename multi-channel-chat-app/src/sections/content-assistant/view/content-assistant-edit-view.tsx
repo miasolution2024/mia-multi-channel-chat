@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
@@ -34,6 +34,20 @@ export function ContentAssistantEditView({ editData }: Props) {
     setFormData(formData);
     setActiveStep(activeStep);
   };
+  useEffect(() => {
+    if (editData && editData.action) {
+      const getStepByAction = (action: string) => {
+        const actions = [
+          "research_analysis", // Step 0
+          "make_outline", // Step 1
+          "write_article", // Step 2
+          "generate_image", // Step 3
+        ];
+        return actions.indexOf(action);
+      };
+      setActiveStep(getStepByAction(editData.action));
+    }
+  }, [editData]);
 
   const getActionByStep = (step: number): string => {
     const actions = [
@@ -46,67 +60,67 @@ export function ContentAssistantEditView({ editData }: Props) {
     return actions[step] || "research_analysis";
   };
 
-  const handleSaveDraft = async () => {
+  const handleSaveDraft = useCallback(async () => {
     if (!editData?.id || !formData) return;
 
     setIsSavingDraft(true);
+    console.log("activeStep", activeStep);
     try {
       const updateData = {
         ...formData,
         action: getActionByStep(activeStep),
         // Transform all RHFMultiSelect fields to correct format
         customer_group: {
-          create: Array.isArray(formData.customer_group) 
+          create: Array.isArray(formData.customer_group)
             ? formData.customer_group.map((groupId: number) => ({
                 ai_content_suggestions_id: editData.id.toString(),
-                customer_group_id: { id: groupId }
+                customer_group_id: { id: groupId },
               }))
             : [],
           update: [],
-          delete: []
+          delete: [],
         },
         customer_journey: {
-          create: Array.isArray(formData.customer_journey) 
+          create: Array.isArray(formData.customer_journey)
             ? formData.customer_journey.map((journeyId: number) => ({
                 ai_content_suggestions_id: editData.id.toString(),
-                customer_journey_id: { id: journeyId }
+                customer_journey_id: { id: journeyId },
               }))
             : [],
           update: [],
-          delete: []
+          delete: [],
         },
         ai_rule_based: {
-          create: Array.isArray(formData.ai_rule_based) 
+          create: Array.isArray(formData.ai_rule_based)
             ? formData.ai_rule_based.map((ruleId: number) => ({
                 ai_content_suggestions_id: editData.id.toString(),
-                ai_rule_based_id: { id: ruleId }
+                ai_rule_based_id: { id: ruleId },
               }))
             : [],
           update: [],
-          delete: []
+          delete: [],
         },
         content_tone: {
-          create: Array.isArray(formData.content_tone) 
+          create: Array.isArray(formData.content_tone)
             ? formData.content_tone.map((toneId: number) => ({
                 ai_content_suggestions_id: editData.id.toString(),
-                content_tone_id: { id: toneId }
+                content_tone_id: { id: toneId },
               }))
             : [],
           update: [],
-          delete: []
+          delete: [],
         },
         omni_channels: {
-          create: Array.isArray(formData.omni_channels) 
+          create: Array.isArray(formData.omni_channels)
             ? formData.omni_channels.map((channelId: number) => ({
                 ai_content_suggestions_id: editData.id.toString(),
-                omni_channels_id: { id: channelId }
+                omni_channels_id: { id: channelId },
               }))
             : [],
           update: [],
-          delete: []
-        }
+          delete: [],
+        },
       };
-      console.log("updateData", updateData);
       await updateContentAssistant(editData.id, updateData);
       toast.success("Cập nhật thành công!");
     } catch (error) {
@@ -115,7 +129,7 @@ export function ContentAssistantEditView({ editData }: Props) {
     } finally {
       setIsSavingDraft(false);
     }
-  };
+  }, [editData, formData, activeStep]);
 
   return (
     <Container maxWidth={settings.themeStretch ? false : "lg"}>
