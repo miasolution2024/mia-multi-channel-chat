@@ -58,6 +58,7 @@ export interface ContentAssistantApiResponse {
   media_generated_ai?: MediaGeneratedAiItem[];
   additional_notes_step_4?: string;
   post_html_format?: string;
+  action?: string;
 }
 
 export interface ContentAssistantListResponse {
@@ -72,6 +73,7 @@ export interface ContentAssistantFilters {
   status?: string[];
   page?: number;
   pageSize?: number;
+  id?: number;
 }
 
 // Lấy danh sách content assistant
@@ -101,7 +103,8 @@ export async function getContentAssistantList(
       'omni_channels.omni_channels_id',
       'ai_rule_based.ai_rule_based_id.id',
       'ai_rule_based.ai_rule_based_id.content',
-      'id'
+      'id',
+      'action'
     ];
     
     fields.forEach(field => {
@@ -109,7 +112,10 @@ export async function getContentAssistantList(
     });
     
     // Set sorting
-    params.append('sort[]', 'id');
+    params.append('sort[]', '-date_updated');
+    
+    // Set meta to get all metadata
+    params.append('meta', '*');
     
     // Set page
     if (filters.page !== undefined) {
@@ -120,6 +126,11 @@ export async function getContentAssistantList(
     
     // Set filter to exclude archived status
     params.append('filter[status][_neq]', 'archived');
+    
+    // Add id filter if provided
+    if (filters.id) {
+      params.append('filter[id][_eq]', filters.id.toString());
+    }
     
     // Add topic filter if provided
     if (filters.topic) {
@@ -208,10 +219,17 @@ export async function createContentAssistant(
 // Cập nhật content assistant
 export async function updateContentAssistant(
   id: string | number,
-  data: Partial<ContentAssistantApiResponse>
+  data: Record<string, unknown>
 ): Promise<ContentAssistantApiResponse> {
   try {
-    const response = await axiosInstance.put(
+    delete data.additional_notes_step_1;
+    delete data.additional_notes_step_2;
+    delete data.additional_notes_step_3;
+    delete data.additional_notes_step_4;
+    delete data.ai_notes_create_image_step_3;
+    delete data.id;
+
+    const response = await axiosInstance.patch(
       `/items/ai_content_suggestions/${id}`,
       data
     );

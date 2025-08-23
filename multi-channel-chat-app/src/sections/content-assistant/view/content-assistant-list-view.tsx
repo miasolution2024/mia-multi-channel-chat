@@ -28,7 +28,6 @@ import { usePopover } from "@/components/custom-popover";
 import {
   getContentAssistantList,
   deleteContentAssistant,
-  updateContentAssistantStatus,
   type ContentAssistantApiResponse,
   type MediaGeneratedAiItem,
 } from "@/actions/content-assistant";
@@ -102,10 +101,12 @@ export interface Content {
   media_generated_ai?: MediaGeneratedAiItem[];
   additional_notes_step_4?: string;
   post_html_format?: string;
+  action?: string;
   [key: string]: unknown; // Index signature for compatibility
 }
 
 const TABLE_CONFIG: ContentTableConfig[] = [
+  { key: "id", id: "id", label: "ID" },
   { key: "topic", id: "topic", label: "Chủ đề", align: "left" },
   {
     key: "post_type",
@@ -325,7 +326,10 @@ export function ContentAssistantListView() {
   const [pageSize, setPageSize] = useState(10);
   const [selected, setSelected] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [apiResponse, setApiResponse] = useState<{ data: ContentAssistantApiResponse[]; total: number } | null>(null);
+  const [apiResponse, setApiResponse] = useState<{
+    data: ContentAssistantApiResponse[];
+    total: number;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const filters = useSetState({ topic: "", status: [] });
@@ -342,8 +346,8 @@ export function ContentAssistantListView() {
       });
       setApiResponse(data);
     } catch (error) {
-      console.error('Error fetching content assistant:', error);
-      toast.error('Không thể tải danh sách trợ lý nội dung');
+      console.error("Error fetching content assistant:", error);
+      toast.error("Không thể tải danh sách trợ lý nội dung");
     } finally {
       setIsLoading(false);
     }
@@ -373,6 +377,7 @@ export function ContentAssistantListView() {
       created_at: item.created_at,
       status: item.status || "draft",
       description: item.description,
+      action: item.action,
     }));
   };
 
@@ -444,24 +449,24 @@ export function ContentAssistantListView() {
     confirm.onFalse();
   }, [selected, confirm, fetchData, setIsDeleting]);
 
-  const handleChangeStatus = useCallback(
-    async (id: string | number, newStatus: string) => {
-      try {
-        await updateContentAssistantStatus(id, newStatus);
-        // Refresh data
-        await fetchData();
-        toast.success("Đã cập nhật trạng thái!");
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Lỗi khi cập nhật trạng thái!";
-        toast.error(errorMessage);
-        console.log(error);
-      }
-    },
-    [fetchData]
-  );
+  // const handleChangeStatus = useCallback(
+  //   async (id: string | number, newStatus: string) => {
+  //     try {
+  //       await updateContentAssistantStatus(id, newStatus);
+  //       // Refresh data
+  //       await fetchData();
+  //       toast.success("Đã cập nhật trạng thái!");
+  //     } catch (error) {
+  //       const errorMessage =
+  //         error instanceof Error
+  //           ? error.message
+  //           : "Lỗi khi cập nhật trạng thái!";
+  //       toast.error(errorMessage);
+  //       console.log(error);
+  //     }
+  //   },
+  //   [fetchData]
+  // );
 
   return (
     <>
@@ -545,7 +550,7 @@ export function ContentAssistantListView() {
                   content={contentItem}
                   onEdit={handleEditRow}
                   onDelete={handleDeleteRow}
-                  onChangeStatus={handleChangeStatus}
+                  onChangeStatus={() => {}}
                 />
               );
             }}

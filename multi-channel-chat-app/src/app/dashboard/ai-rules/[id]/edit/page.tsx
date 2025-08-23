@@ -1,13 +1,13 @@
-import { AiRulesEditView } from '@/sections/ai-rules/view/ai-rules-edit-view';
+import { AiRulesEditView } from "@/sections/ai-rules/view/ai-rules-edit-view";
 
 // ----------------------------------------------------------------------
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export default function AiRulesEditPage({ params }: Props) {
-  const { id } = params;
+export default async function AiRulesEditPage({ params }: Props) {
+  const { id } = await params;
 
   return <AiRulesEditView ruleId={id} />;
 }
