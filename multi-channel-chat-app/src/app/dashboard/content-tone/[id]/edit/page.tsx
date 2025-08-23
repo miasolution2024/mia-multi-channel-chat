@@ -1,13 +1,11 @@
-'use client';
-
-import { ContentToneEditView } from '@/sections/content-tone/view/content-tone-edit-view';
+import { ContentToneEditView } from "@/sections/content-tone/view/content-tone-edit-view";
 
 type Props = {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 };
 
-export default function ContentToneEditPage({ params }: Props) {
-  return <ContentToneEditView toneId={params.id} />;
+export default async function ContentToneEditPage({ params }: Props) {
+  const { id } = await params;
+
+  return <ContentToneEditView toneId={id} />;
 }
