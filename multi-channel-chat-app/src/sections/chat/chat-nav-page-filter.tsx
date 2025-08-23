@@ -1,6 +1,8 @@
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import ListItemText from "@mui/material/ListItemText";
+import { sharedStyles } from "@/components/nav-section";
+import { OmniChannel } from "@/models/omni-channel/omni-channel";
 
 // ----------------------------------------------------------------------
 
@@ -9,10 +11,7 @@ export function ChatPageFilter({
   pageId,
   handleChange,
 }: {
-  pages: {
-    id: string;
-    page_name: string;
-  }[];
+  pages: OmniChannel[];
   pageId: string;
   handleChange: (event: SelectChangeEvent<string>) => void;
 }) {
@@ -25,8 +24,17 @@ export function ChatPageFilter({
         onChange={handleChange}
       >
         {pages.map((name, index) => (
-          <MenuItem key={index} value={name.page_name}>
-            <ListItemText primary={name.page_name} />
+          <MenuItem key={index} value={name.page_id}>
+            <ListItemText
+              primary={name.page_name}
+              slotProps={{
+                primary: {
+                  sx: {
+                    ...sharedStyles.noWrap,
+                  },
+                },
+              }}
+            />
           </MenuItem>
         ))}
       </Select>

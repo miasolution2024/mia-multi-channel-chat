@@ -11,8 +11,8 @@ export enum ConversationType {
 }
 
 export enum ConversationChannel {
-  ZALO = "ZALO",
-  FACEBOOK = "FACEBOOK",
+  ZALO = "Zalo",
+  FACEBOOK = "Facebook",
   WHATSAPP = "WHATSAPP",
   WEBSITE = "WEBSITE",
   INSTAGRAM = "INSTAGRAM",
@@ -32,7 +32,8 @@ export type Conversation = Common & {
   participants: Participant[];
   unread_count: number;
   omni_channel: {
-    id: string;
+    id: number;
+    page_id: string;
     page_name: string;
   };
 };
@@ -52,7 +53,7 @@ export type ConversationCreateRequest = {
 
 export type ConversationSumUnreadCountByChannel = {
   channel: string;
-  sum: {
+  count: {
     unread_count: string;
   };
 };

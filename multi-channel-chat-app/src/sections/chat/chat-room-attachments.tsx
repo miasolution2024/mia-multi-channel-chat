@@ -9,48 +9,49 @@ import { FileThumbnail } from "@/components/file-thumbnail";
 
 import { CollapseButton } from "./styles";
 import { fDateTime } from "@/utils/format-time";
-import { Attachment, MessageType } from "@/models/message/message";
+import { Attachment } from "@/models/message/message";
 
 // ----------------------------------------------------------------------
 
 export function ChatRoomAttachments({
   attachments,
 }: {
-  type: MessageType,
   attachments: Attachment[];
 }) {
   const collapse = useBoolean(true);
 
   const totalAttachments = attachments.length;
 
-  const renderList = attachments.map((attachment: Attachment) => (
-    <Stack
-      key={attachment.id}
-      spacing={1.5}
-      direction="row"
-      alignItems="center"
-    >
-      <FileThumbnail
-        file={attachment.directus_files_id.filename_download}
-        onDownload={() => console.info("DOWNLOAD")}
-        slotProps={{ icon: { width: 24, height: 24 } }}
-        sx={{ width: 40, height: 40, bgcolor: "background.neutral" }}
-      />
+  const renderList = attachments
+    .filter((a) => a.directus_files_id)
+    .map((attachment: Attachment) => (
+      <Stack
+        key={attachment.id}
+        spacing={1.5}
+        direction="row"
+        alignItems="center"
+      >
+        <FileThumbnail
+          file={attachment.directus_files_id?.filename_download}
+          onDownload={() => console.info("DOWNLOAD")}
+          slotProps={{ icon: { width: 24, height: 24 } }}
+          sx={{ width: 40, height: 40, bgcolor: "background.neutral" }}
+        />
 
-      <ListItemText
-        primary={attachment.directus_files_id.filename_download}
-        secondary={fDateTime(attachment.directus_files_id.created_on)}
-        primaryTypographyProps={{ noWrap: true, typography: "body2" }}
-        secondaryTypographyProps={{
-          mt: 0.25,
-          noWrap: true,
-          component: "span",
-          typography: "caption",
-          color: "text.disabled",
-        }}
-      />
-    </Stack>
-  ));
+        <ListItemText
+          primary={attachment.directus_files_id?.filename_download}
+          secondary={fDateTime(attachment.directus_files_id?.created_on)}
+          primaryTypographyProps={{ noWrap: true, typography: "body2" }}
+          secondaryTypographyProps={{
+            mt: 0.25,
+            noWrap: true,
+            component: "span",
+            typography: "caption",
+            color: "text.disabled",
+          }}
+        />
+      </Stack>
+    ));
 
   return (
     <>

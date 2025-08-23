@@ -5,10 +5,21 @@ import { Customer, CustomerRequest } from "@/models/customer/customer";
 
 // ----------------------------------------------------------------------
 
-export function useGetCustomers() {
-  const url = endpoints.customers.list;
+export function getCustomersByOmniChannelUrl(pageId: string) {
+  if (!pageId) return "";
+  const queryParams = new URLSearchParams({
+    "filter[omni_channel][page_id][_eq]": pageId,
+    fields: ["name", "phone_number", "email"].join(","),
+  }).toString();
+  return `${endpoints.customers.list}?${queryParams}`;
+}
 
-  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrConfig);
+export function useGetCustomersByOmniChannel(pageId: string) {
+  const { data, isLoading, error, isValidating } = useSWR(
+    getCustomersByOmniChannelUrl(pageId),
+    fetcher,
+    swrConfig
+  );
 
   const memoizedValue = useMemo(
     () => ({

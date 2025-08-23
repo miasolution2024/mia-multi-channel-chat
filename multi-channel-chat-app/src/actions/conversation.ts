@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo } from "react";
 import useSWR from "swr";
 
@@ -13,11 +14,13 @@ import {
 
 export function getConversationsURL(
   channel: ConversationChannel,
+  pageId: string,
   userId?: string
 ) {
-  if (!userId) return "";
+  if (!userId || !pageId) return "";
   const queryParams = new URLSearchParams({
     "filter[participants][_some][participant_id][_eq]": userId,
+    "filter[omni_channel][page_id][_eq]": pageId,
     "filter[channel][_eq]": channel,
     sort: "-last_message_at",
     fields: [
@@ -25,12 +28,15 @@ export function getConversationsURL(
       "participants.participant_id",
       "participants.participant_name",
       "participants.participant_avatar",
+      "participants.participant_type",
       "messages.id",
       "messages.sender_id",
+      "messages.sender_type",
       "messages.type",
       "messages.content",
       "messages.date_created",
       "omni_channel.id",
+      "omni_channel.page_id",
       "omni_channel.page_name",
     ].join(","),
   }).toString();
@@ -40,9 +46,10 @@ export function getConversationsURL(
 
 export function useGetConversations(
   channel: ConversationChannel,
+  pageId: string,
   userId?: string
 ) {
-  const url = getConversationsURL(channel, userId);
+  const url = getConversationsURL(channel, pageId, userId);
 
   const { data, isLoading, error, isValidating } = useSWR(
     url,
@@ -64,7 +71,7 @@ export function useGetConversations(
 }
 // ----------------------------------------------------------------------
 
-export function getConversationDetailURL(conversationId: string) {
+export function getConversationDetailURL(conversationId: number) {
   const queryParams = new URLSearchParams({
     fields: [
       "*",
@@ -87,7 +94,7 @@ export function getConversationDetailURL(conversationId: string) {
     : "";
 }
 
-export function useGetConversation(conversationId: string) {
+export function useGetConversation(conversationId: number) {
   const url = getConversationDetailURL(conversationId);
 
   const { data, isLoading, error, isValidating } = useSWR(
@@ -149,7 +156,7 @@ export async function updateConversationLastMessageDataAsync(
 // ----------------------------------------------------------------------
 
 export async function updateConversationChatbotActiveAsync(
-  conversationId: string,
+  conversationId: number,
   isChatbotActive: boolean
 ) {
   try {
@@ -168,7 +175,7 @@ export async function updateConversationChatbotActiveAsync(
 
 // ----------------------------------------------------------------------
 
-export async function readConversationAsync(conversationId: string) {
+export async function readConversationAsync(conversationId: number) {
   try {
     const url = `${endpoints.conversations.update}/${conversationId}`;
     const response = await axios.patch(url, {
@@ -185,7 +192,7 @@ export async function readConversationAsync(conversationId: string) {
 
 // ----------------------------------------------------------------------
 export function getConversationsUnreadCountURL() {
-  return `${endpoints.conversations.list}?aggregate[sum]=unread_count&groupBy[]=channel`;
+  return `${endpoints.conversations.list}?filter[unread_count][_gt]=0&aggregate[count]=unread_count&groupBy[]=channel`;
 }
 
 export function useGetUnreadCountGroupByChannel() {

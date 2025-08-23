@@ -64,7 +64,7 @@ export function ChatNavItem({
           newSearchParams.append(key, searchParams.get(key) || "");
         }
       }
-      newSearchParams.set("id", conversation.id);
+      newSearchParams.set("id", conversation.id.toString());
 
       const newQueryString = newSearchParams.toString();
 

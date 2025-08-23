@@ -4,14 +4,14 @@ import Typography from '@mui/material/Typography';
 import ListItemButton from '@mui/material/ListItemButton';
 
 import { SearchNotFound } from '@/components/search-not-found';
-import { Participant } from '@/models/participants/participant';
+import { Customer } from '@/models/customer/customer';
 
 // ----------------------------------------------------------------------
 
 export function ChatNavSearchResults({ query, results, onClickResult }:{
   query: string,
-  results: Participant[],
-  onClickResult: (result: Participant) => void
+  results: Customer[],
+  onClickResult: (result: Customer) => void
 } ) {
   const totalResults = results.length;
 
@@ -32,14 +32,14 @@ export function ChatNavSearchResults({ query, results, onClickResult }:{
   const renderResults = (
     <nav>
       <Box component="ul">
-        {results.map((result: Participant) => (
+        {results.map((result: Customer) => (
           <Box key={result.id} component="li" sx={{ display: 'flex' }}>
             <ListItemButton
               onClick={() => onClickResult(result)}
               sx={{ gap: 2, py: 1.5, px: 2.5, typography: 'subtitle2' }}
             >
-              <Avatar alt={result.participant_name} src={result.participant_avatar} />
-              {result.participant_name}
+              <Avatar alt={result.name} src={result.name} />
+              {result.name}
             </ListItemButton>
           </Box>
         ))}

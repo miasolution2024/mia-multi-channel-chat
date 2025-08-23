@@ -22,7 +22,7 @@ export type Message = Common & {
 
 export type MessageCreateRequest = {
   channel: ConversationChannel;
-  conversation: string;
+  conversation: number;
   sender_id: string;
   sender_type: ParticipantType;
   content: string;

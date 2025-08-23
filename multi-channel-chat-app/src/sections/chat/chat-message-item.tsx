@@ -4,7 +4,6 @@ import Stack from "@mui/material/Stack";
 import Avatar from "@mui/material/Avatar";
 import Typography from "@mui/material/Typography";
 
-
 import { getMessage } from "./utils/get-message";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { fDateTime, fToNow } from "@/utils/format-time";
@@ -41,6 +40,8 @@ export function ChatMessageItem({
 
   const { content, attachments, date_created, sender_type } = message;
 
+  const firstAttachment = attachments[0]?.directus_files_id;
+  
   const renderInfo = (
     <Typography
       noWrap
@@ -53,7 +54,7 @@ export function ChatMessageItem({
     </Typography>
   );
 
-  const renderAttachment = (
+  const renderAttachment = firstAttachment && (
     <Paper
       variant="outlined"
       sx={{
@@ -72,15 +73,13 @@ export function ChatMessageItem({
         },
       }}
     >
-      <FileThumbnail
-        file={attachments[0]?.directus_files_id.filename_download}
-      />
+      <FileThumbnail file={firstAttachment?.filename_download} />
 
       <ListItemText
-        primary={attachments[0]?.directus_files_id.filename_download}
+        primary={firstAttachment.filename_download}
         secondary={
           <>
-            {fData(attachments[0]?.directus_files_id.filesize)}
+            {fData(firstAttachment.filesize)}
             <Box
               sx={{
                 mx: 0.75,
@@ -90,7 +89,7 @@ export function ChatMessageItem({
                 bgcolor: "currentColor",
               }}
             />
-            {fDateTime(attachments[0]?.directus_files_id.created_on)}
+            {fDateTime(firstAttachment.created_on)}
           </>
         }
         primaryTypographyProps={{ noWrap: true, typography: "subtitle2" }}
@@ -106,11 +105,11 @@ export function ChatMessageItem({
     </Paper>
   );
 
-  const renderImage = (
+  const renderImage = firstAttachment && (
     <Box
       component="img"
       alt="attachment"
-      src={`${CONFIG.serverUrl}/assets/${attachments[0]?.directus_files_id.id}`}
+      src={`${CONFIG.serverUrl}/assets/${firstAttachment.id}`}
       onClick={() => onOpenLightbox()}
       sx={{
         width: 400,
@@ -133,6 +132,7 @@ export function ChatMessageItem({
         borderRadius: 1,
         typography: "body2",
         bgcolor: "background.neutral",
+        overflow: "auto",
         ...(me && { color: "grey.800", bgcolor: "primary.lighter" }),
         ...(type !== MessageType.TEXT && { p: 0, bgcolor: "transparent" }),
       }}
@@ -152,7 +152,9 @@ export function ChatMessageItem({
           )}
         </>
       )}
-      {type !== MessageType.TEXT && type !== MessageType.IMAGE && renderAttachment}
+      {type !== MessageType.TEXT &&
+        type !== MessageType.IMAGE &&
+        renderAttachment}
     </Stack>
   );
 

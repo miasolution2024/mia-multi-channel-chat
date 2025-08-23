@@ -56,7 +56,7 @@ export function ChatChannels({
         {CHANNELS.map(
           (c: { name: ConversationChannel; src: string }, index: number) => {
             const unreadCount = parseInt(
-              conversationUnRead?.find((item) => item.channel === c.name)?.sum
+              conversationUnRead?.find((item) => item.channel === c.name)?.count
                 .unread_count || "0"
             );
 

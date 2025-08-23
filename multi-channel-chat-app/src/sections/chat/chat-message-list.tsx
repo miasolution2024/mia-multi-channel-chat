@@ -28,7 +28,7 @@ export function ChatMessageList({
   messages: Message[];
   participants: Participant[];
   loading: boolean;
-  selectConversationId: string;
+  selectConversationId: number;
 }) {
   const { messagesEndRef } = useMessagesScroll(messages);
 

@@ -19,17 +19,14 @@ import { ChatPageFilter } from "./chat-nav-page-filter";
 import { ChatNavItemSkeleton } from "./chat-skeleton";
 import { ChatNavSearchResults } from "./chat-nav-search-results";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
-import { today } from "@/utils/format-time";
 import { paths } from "@/routes/path";
 import { useRouter } from "next/navigation";
-import { Participant } from "@/models/participants/participant";
+import useSWRInfinite from "swr/infinite";
 import {
   Conversation,
   ConversationChannel,
 } from "@/models/conversation/conversations";
-import { initialConversation } from "./utils/initial-conversation";
 import {
-  createConversationAsync,
   getConversationsUnreadCountURL,
   getConversationsURL,
 } from "@/actions/conversation";
@@ -38,6 +35,10 @@ import { mutate } from "swr";
 import { CONFIG } from "@/config-global";
 import NotificationSound from "@/components/notification-sound/notification-sound";
 import { uuidv4 } from "@/utils/uuidv4";
+import { fetcher } from "@/utils/axios";
+import { useGetOmniChannelsByChannel } from "@/actions/omni-channel";
+import { useGetCustomersByOmniChannel } from "@/actions/customer";
+import { Customer } from "@/models/customer/customer";
 
 // ----------------------------------------------------------------------
 
@@ -46,18 +47,12 @@ const NAV_WIDTH = 320;
 const NAV_COLLAPSE_WIDTH = 96;
 
 export function ChatNav({
-  loading,
-  contacts,
   collapseNav,
-  conversations,
   selectedConversationId,
   channel,
 }: {
-  loading: boolean;
-  contacts: Participant[];
   collapseNav: any;
-  conversations: Conversation[];
-  selectedConversationId: string;
+  selectedConversationId: number;
   channel: ConversationChannel;
 }) {
   const router = useRouter();
@@ -65,33 +60,6 @@ export function ChatNav({
   const mdUp = useResponsive("up", "md");
 
   const { user } = useAuthContext();
-
-  const pages = useMemo(() => {
-    const pages = conversations.map((c) => ({
-      id: c.omni_channel?.id,
-      page_name: c.omni_channel?.page_name,
-    }));
-
-    return pages.filter(
-      (obj, index, self) => index === self.findIndex((el) => el.id === obj.id)
-    );
-  }, [conversations]);
-
-  const [selectedPageId, setSelectedPageId] = useState<string>("");
-
-  useEffect(() => {
-    if (pages.length > 0) {
-      setSelectedPageId(pages[0].page_name);
-    }
-  }, [pages]);
-
-  const filteredConversations = useMemo(() => {
-    return conversations.filter(
-      (c) => c.omni_channel?.page_name === selectedPageId
-    );
-  }, [selectedPageId, conversations]);
-
-  const allIds = filteredConversations.map((c) => c.id);
 
   const {
     openMobile,
@@ -103,28 +71,56 @@ export function ChatNav({
 
   const [searchContacts, setSearchContacts] = useState<{
     query: string;
-    results: Participant[];
+    results: Customer[];
   }>({
     query: "",
     results: [],
   });
 
-  const myContact = useMemo(
-    () => ({
-      id: `${user?.id}`,
-      role: user?.role,
-      email: `${user?.email}`,
-      full_name: `${user?.full_name}`,
-      lastActivity: today(),
-      avatar: `${user?.avatar}`,
-      status: "online",
-    }),
-    [user]
+  const [selectedPageId, setSelectedPageId] = useState<string>("");
+
+  const getKey = (pageIndex: number, previousPageData: any) => {
+    if (
+      (previousPageData && previousPageData?.data?.length === 0) ||
+      !selectedPageId ||
+      !user?.id
+    )
+      return null;
+    const url = getConversationsURL(channel, selectedPageId, user?.id);
+
+    return `${url}&page=${pageIndex + 1}`;
+  };
+
+  const { data, setSize, isValidating } = useSWRInfinite<{
+    data: Conversation[];
+  }>(getKey, fetcher);
+
+  const conversations = useMemo(
+    () => (data ? data.flatMap((page) => page.data) : []),
+    [data]
   );
 
+  const allIds = conversations.map((c) => c.id);
+
+  const { omniChannels } = useGetOmniChannelsByChannel(channel);
+
+  const { customers } = useGetCustomersByOmniChannel(selectedPageId);
+
+  useEffect(() => {
+    if (omniChannels.length > 0) {
+      setSelectedPageId(omniChannels[0].page_id);
+    }
+  }, [omniChannels]);
+
+  useEffect(() => {
+    setSize(1);
+  }, [selectedPageId, setSize]);
+
   const websocketRef = useRef<WebSocket | null>(null);
+  const loadMoreRef = useRef(null);
 
   const [playNotification, setPlayNotification] = useState<boolean>(false);
+
   useEffect(() => {
     if (playNotification) {
       const timer = setTimeout(() => {
@@ -200,11 +196,11 @@ export function ChatNav({
       if (data.event === "create") {
         console.log(`New conversation created`);
         setPlayNotification(true);
-        mutate(getConversationsURL(channel, user?.id));
+        mutate(getConversationsURL(channel, selectedPageId, user?.id));
         mutate(getConversationsUnreadCountURL());
       } else if (data.event === "update") {
         console.log(`Conversation updated updated!`);
-        mutate(getConversationsURL(channel, user?.id));
+        mutate(getConversationsURL(channel, selectedPageId, user?.id));
         mutate(getConversationsUnreadCountURL());
       }
 
@@ -254,14 +250,14 @@ export function ChatNav({
       setSearchContacts((prevState) => ({ ...prevState, query: inputValue }));
 
       if (inputValue) {
-        const results = contacts.filter((contact: Participant) =>
-          contact.participant_name.toLowerCase().includes(inputValue)
+        const results = customers.filter((contact: Customer) =>
+          contact.name.toLowerCase().includes(inputValue)
         );
 
         setSearchContacts((prevState) => ({ ...prevState, results }));
       }
     },
-    [contacts]
+    [customers]
   );
 
   const handleClickAwaySearch = useCallback(() => {
@@ -269,54 +265,57 @@ export function ChatNav({
   }, []);
 
   const handleClickResult = useCallback(
-    async (result: Participant) => {
+    async (result: Customer) => {
       handleClickAwaySearch();
 
-      const linkTo = (id: string) =>
+      const linkTo = (id: number) =>
         router.push(`${paths.dashboard.chat}?id=${id}`);
 
       try {
         const conversation = conversations.find((c) =>
-          c.participants.some((p) => p.participant_id == result.participant_id)
+          c.participants.some((p) => p.participant_id == result.id)
         );
         // Check if the conversation already exists
         if (!!conversation?.id) {
-          // linkTo(conversation.id);
+          linkTo(conversation.id);
           return;
         }
-
-        // Find the recipient in contacts
-        const recipient = contacts.find(
-          (contact: any) => contact.id === result.id
-        );
-        if (!recipient) {
-          console.error("Recipient not found");
-          return;
-        }
-
-        // Prepare conversation data
-        const { conversationData } = initialConversation({
-          recipients: [recipient],
-          me: myContact,
-          selectedChannel: channel,
-        });
-
-        // Create a new conversation
-        const res = await createConversationAsync(conversationData);
-        linkTo(res.data.id);
       } catch (error) {
         console.error("Error handling click result:", error);
       }
     },
-    [contacts, handleClickAwaySearch, myContact, router, conversations]
+    [handleClickAwaySearch, router, conversations]
   );
+
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        console.log(entries[0].isIntersecting);
+
+        if (entries[0].isIntersecting) {
+          setSize((prev) => prev + 1); // load thêm
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => {
+      if (loadMoreRef.current) {
+        observer.unobserve(loadMoreRef.current);
+      }
+    };
+  }, [setSize]);
 
   const renderLoading = <ChatNavItemSkeleton />;
 
   const renderList = (
     <nav>
       <Box component="ul">
-        {filteredConversations.map((c: Conversation) => (
+        {conversations.map((c: Conversation) => (
           <ChatNavItem
             key={c.id}
             collapse={collapseDesktop}
@@ -325,6 +324,13 @@ export function ChatNav({
             onCloseMobile={onCloseMobile}
           />
         ))}
+
+        <div
+          ref={loadMoreRef}
+          className="h-10 flex items-center justify-center"
+        >
+          {isValidating ? "Loading..." : "Scroll để tải thêm"}
+        </div>
       </Box>
     </nav>
   );
@@ -367,7 +373,7 @@ export function ChatNav({
         {!collapseDesktop && (
           <>
             <ChatPageFilter
-              pages={pages}
+              pages={omniChannels}
               handleChange={(event) => setSelectedPageId(event.target.value)}
               pageId={selectedPageId}
             />
@@ -378,7 +384,7 @@ export function ChatNav({
 
       <Box sx={{ p: 2.5, pt: 0 }}>{!collapseDesktop && renderSearchInput}</Box>
 
-      {loading ? (
+      {isValidating ? (
         renderLoading
       ) : (
         <Scrollbar sx={{ pb: 1 }}>
