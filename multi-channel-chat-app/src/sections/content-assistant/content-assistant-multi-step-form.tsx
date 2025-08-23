@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -111,7 +112,7 @@ const uploadFiles = async (
 type Props = {
   editData?: Content;
   onIdChange?: (
-    value: Record<string, unknown> | null,
+    watchMethod: () => Record<string, unknown>,
     activeStep: number
   ) => void;
 };
@@ -249,9 +250,9 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
           post_html_format: editData.post_html_format || "",
         };
         reset(editValues);
-        // Reset cache when content changes
-        setCachedStep1Data(null);
-        setCachedStep2Data(null);
+        // Set cache with current edit data to prevent unnecessary API calls
+        setCachedStep1Data(getStep1FormData(editValues as FormData));
+        setCachedStep2Data(getStep2FormData(editValues as FormData));
 
         // Determine the appropriate step based on editData.action
         let targetStep = 0;
@@ -300,8 +301,7 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
   // Notify parent component when activeStep changes
   useEffect(() => {
     if (onIdChange && methods) {
-      const formData = methods.getValues();
-      onIdChange(formData, activeStep);
+      onIdChange(methods.watch, activeStep);
     }
   }, [activeStep]); // Only depend on activeStep to avoid loops
 
