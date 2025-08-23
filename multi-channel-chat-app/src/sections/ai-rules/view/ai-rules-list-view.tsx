@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   Box,
@@ -13,21 +13,24 @@ import {
   IconButton,
   MenuList,
   MenuItem,
-} from '@mui/material';
+} from "@mui/material";
 
-import { paths } from '@/routes/path';
-import { DashboardContent } from '@/layouts/dashboard';
-import { Iconify } from '@/components/iconify';
-import { Scrollbar } from '@/components/scrollbar';
-import { ConfirmDialog } from '@/components/custom-dialog';
-import { useBoolean } from '@/hooks/use-boolean';
-import { CustomTable } from '@/components/custom-table';
-import type { TableConfig, DataItem } from '@/components/custom-table/custom-table';
-import { usePopover, CustomPopover } from '@/components/custom-popover';
-import { toast } from '@/components/snackbar';
-import { getAiRules, deleteAiRule } from '@/actions/ai-rules';
+import { paths } from "@/routes/path";
+import { DashboardContent } from "@/layouts/dashboard";
+import { Iconify } from "@/components/iconify";
+import { Scrollbar } from "@/components/scrollbar";
+import { ConfirmDialog } from "@/components/custom-dialog";
+import { useBoolean } from "@/hooks/use-boolean";
+import { CustomTable } from "@/components/custom-table";
+import type {
+  TableConfig,
+  DataItem,
+} from "@/components/custom-table/custom-table";
+import { usePopover, CustomPopover } from "@/components/custom-popover";
+import { toast } from "@/components/snackbar";
+import { getAiRules, deleteAiRule } from "@/actions/ai-rules";
 
-import { AiRule } from '../types';
+import { AiRule } from "../types";
 
 // ----------------------------------------------------------------------
 
@@ -50,7 +53,7 @@ function AiRuleActionMenu({ onEdit, onDelete }: AiRuleActionMenuProps) {
         open={popover.open}
         anchorEl={popover.anchorEl}
         onClose={popover.onClose}
-        slotProps={{ arrow: { placement: 'right-top' } }}
+        slotProps={{ arrow: { placement: "right-top" } }}
       >
         <MenuList>
           <MenuItem
@@ -68,7 +71,7 @@ function AiRuleActionMenu({ onEdit, onDelete }: AiRuleActionMenuProps) {
               onDelete();
               popover.onClose();
             }}
-            sx={{ color: 'error.main' }}
+            sx={{ color: "error.main" }}
           >
             <Iconify icon="solar:trash-bin-trash-bold" />
             Xóa
@@ -80,12 +83,12 @@ function AiRuleActionMenu({ onEdit, onDelete }: AiRuleActionMenuProps) {
 }
 
 const TABLE_HEAD: TableConfig<DataItem>[] = [
-  { key: 'id', label: 'ID', align: 'left' },
-  { key: 'content', label: 'Nội dung', align: 'left' },
+  { key: "id", label: "ID", align: "left" },
+  { key: "content", label: "Nội dung", align: "left" },
   {
-    key: 'actions',
-    label: 'Hành động',
-    align: 'center',
+    key: "actions",
+    label: "Hành động",
+    align: "center",
     render: (item: DataItem) => (
       <AiRuleActionMenu
         rule={item as AiRule}
@@ -118,30 +121,30 @@ export function AiRulesListView() {
         setRules(response.data || []);
         setTotalCount(response.meta?.total_count || 0);
       } catch (error) {
-        console.error('Error fetching AI rules:', error);
-        toast.error('Không thể tải danh sách quy tắc AI');
+        console.error("Error fetching AI rules:", error);
+        toast.error("Không thể tải danh sách quy tắc AI");
       } finally {
         loading.onFalse();
       }
     };
 
     fetchRules();
-  }, [page, pageSize]); // Re-fetch when page or pageSize changes
+  }, [loading, page, pageSize]); // Re-fetch when page or pageSize changes
 
   const handleDeleteConfirm = useCallback(async () => {
     if (selectedRuleId) {
       try {
         await deleteAiRule(selectedRuleId);
-        
+
         // Refresh the current page after deletion
         const response = await getAiRules(page + 1, pageSize);
         setRules(response.data || []);
         setTotalCount(response.meta?.total_count || 0);
-        
-        toast.success('Xóa quy tắc thành công!');
+
+        toast.success("Xóa quy tắc thành công!");
       } catch (error) {
-        console.error('Error deleting AI rule:', error);
-        toast.error('Không thể xóa quy tắc AI');
+        console.error("Error deleting AI rule:", error);
+        toast.error("Không thể xóa quy tắc AI");
       } finally {
         setSelectedRuleId(null);
         confirm.onFalse();
@@ -156,17 +159,23 @@ export function AiRulesListView() {
     },
     [confirm]
   );
-  
+
   // Handle page change
-  const handleChangePage = useCallback((event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
-    setPage(newPage);
-  }, []);
-  
+  const handleChangePage = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+      setPage(newPage);
+    },
+    []
+  );
+
   // Handle rows per page change
-  const handleChangePageSize = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setPageSize(parseInt(event.target.value, 10));
-    setPage(0); // Reset to first page when changing page size
-  }, []);
+  const handleChangePageSize = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setPageSize(parseInt(event.target.value, 10));
+      setPage(0); // Reset to first page when changing page size
+    },
+    []
+  );
 
   return (
     <>
@@ -190,19 +199,30 @@ export function AiRulesListView() {
           </Stack>
 
           <Card>
-            <Box sx={{ position: 'relative' }}>
+            <Box sx={{ position: "relative" }}>
               <Scrollbar sx={{ minHeight: 444 }}>
                 <CustomTable
                   data={rules}
                   tableConfig={TABLE_HEAD.map((col) => ({
                     ...col,
-                    render: col.key === 'actions' ? (item: DataItem) => (
-                      <AiRuleActionMenu
-                        rule={item as AiRule}
-                        onEdit={() => router.push(paths.dashboard.aiRules.edit(item.id as string))}
-                        onDelete={() => handleDeleteClick(item.id as string)}
-                      />
-                    ) : undefined,
+                    render:
+                      col.key === "actions"
+                        ? (item: DataItem) => (
+                            <AiRuleActionMenu
+                              rule={item as AiRule}
+                              onEdit={() =>
+                                router.push(
+                                  paths.dashboard.aiRules.edit(
+                                    item.id as string
+                                  )
+                                )
+                              }
+                              onDelete={() =>
+                                handleDeleteClick(item.id as string)
+                              }
+                            />
+                          )
+                        : undefined,
                   }))}
                   loading={loading.value}
                   firstLoading={loading.value}

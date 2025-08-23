@@ -1,4 +1,4 @@
-import { CONFIG } from '@/config-global';
+import { CONFIG } from "@/config-global";
 
 import { MultiChannelChatView } from '@/sections/chat/view';
 

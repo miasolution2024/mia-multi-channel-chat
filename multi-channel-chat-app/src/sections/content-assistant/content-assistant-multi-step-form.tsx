@@ -109,10 +109,14 @@ const uploadFiles = async (
 };
 
 type Props = {
-  currentContent?: Content;
+  editData?: Content;
+  onIdChange?: (
+    value: Record<string, unknown> | null,
+    activeStep: number
+  ) => void;
 };
 
-export function ContentAssistantMultiStepForm({ currentContent }: Props) {
+export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [isNextLoading, setIsNextLoading] = useState(false);
@@ -124,72 +128,37 @@ export function ContentAssistantMultiStepForm({ currentContent }: Props) {
   const defaultValues: Partial<FormData> = useMemo(
     () => ({
       // Step 1
-      topic: currentContent?.topic || "Chăm sóc trí óc",
-      post_type: currentContent?.post_type || "social_post",
-      main_seo_keyword: currentContent?.main_seo_keyword || "chăm",
-      secondary_seo_keywords: currentContent?.secondary_seo_keywords || [],
-      customer_group: Array.isArray(currentContent?.customer_group)
-        ? currentContent.customer_group
-            .map((item) =>
-              typeof item === "object" && "id" in item ? item.id : item
-            )
-            .filter((id): id is number => typeof id === "number")
-        : [],
-      customer_journey: Array.isArray(currentContent?.customer_journey)
-        ? currentContent.customer_journey
-            .map((item) =>
-              typeof item === "object" && "id" in item ? item.id : item
-            )
-            .filter((id): id is number => typeof id === "number")
-        : [],
-      content_tone: Array.isArray(currentContent?.content_tone)
-        ? currentContent.content_tone
-            .map((item) =>
-              typeof item === "object" && "id" in item ? item.id : item
-            )
-            .filter((id): id is number => typeof id === "number")
-        : [],
-      ai_rule_based: Array.isArray(currentContent?.ai_rule_based)
-        ? currentContent.ai_rule_based
-            .map((item) =>
-              typeof item === "object" && "id" in item ? item.id : item
-            )
-            .filter((id): id is number => typeof id === "number")
-        : [],
-      additional_notes_step_1: currentContent?.additional_notes_step_1 || "",
-      status:
-        (currentContent?.status as string) || (POST_STATUS.DRAFT as string),
-      id: typeof currentContent?.id === "number" ? currentContent.id : null,
-      omni_channels: Array.isArray(currentContent?.omni_channels)
-        ? currentContent.omni_channels
-            .map((item) =>
-              typeof item === "object" && "id" in item ? item.id : item
-            )
-            .filter((id): id is number => typeof id === "number")
-        : [],
+      topic: "",
+      post_type: "social_post",
+      main_seo_keyword: "",
+      secondary_seo_keywords: [],
+      customer_group: [],
+      customer_journey: [],
+      content_tone: [],
+      ai_rule_based: [],
+      additional_notes_step_1: "",
+      status: POST_STATUS.DRAFT as string,
+      id: null,
+      omni_channels: [],
 
       // Step 2
-      outline_post: currentContent?.outline_post || "",
-      post_goal: currentContent?.post_goal || "",
-      post_notes: currentContent?.post_notes || "",
-      additional_notes_step_2: currentContent?.additional_notes_step_2 || "",
+      outline_post: "",
+      post_goal: "",
+      post_notes: "",
+      additional_notes_step_2: "",
 
       // Step 3
-      post_content:
-        typeof currentContent?.post_content === "string"
-          ? currentContent.post_content
-          : "",
-      additional_notes_step_3: currentContent?.additional_notes_step_3 || "",
-      ai_notes_create_image_step_3:
-        currentContent?.ai_notes_create_image_step_3 || "",
-      media: currentContent?.media || [],
-      media_generated_ai: currentContent?.media_generated_ai || [],
+      post_content: "",
+      additional_notes_step_3: "",
+      ai_notes_create_image_step_3: "",
+      media: [],
+      media_generated_ai: [],
 
       // Step 4
-      additional_notes_step_4: currentContent?.additional_notes_step_4 || "",
-      post_html_format: currentContent?.post_html_format || "",
+      additional_notes_step_4: "",
+      post_html_format: "",
     }),
-    [currentContent]
+    []
   );
 
   const methods = useForm<FormData>({
@@ -206,13 +175,128 @@ export function ContentAssistantMultiStepForm({ currentContent }: Props) {
   } = methods;
 
   useEffect(() => {
-    if (currentContent) {
+    if (editData) {
+      // Extract IDs from nested objects for edit mode
+      try {
+        const editValues = {
+          // Step 1
+          topic: editData.topic || "",
+          post_type: editData.post_type || "social_post",
+          main_seo_keyword: editData.main_seo_keyword || "",
+          secondary_seo_keywords: editData.secondary_seo_keywords || [],
+          customer_group: Array.isArray(editData.customer_group)
+            ? editData.customer_group
+                .map(
+                  (item: { customer_group_id: { id: number } }) =>
+                    item.customer_group_id?.id
+                )
+                .filter((id: number) => id > 0)
+            : [],
+          customer_journey: Array.isArray(editData.customer_journey)
+            ? editData.customer_journey
+                .map(
+                  (item: { customer_journey_id: { id: number } }) =>
+                    item.customer_journey_id?.id
+                )
+                .filter((id: number) => id > 0)
+            : [],
+          content_tone: Array.isArray(editData.content_tone)
+            ? editData.content_tone
+                .map(
+                  (item: { content_tone_id: { id: number } }) =>
+                    item.content_tone_id?.id
+                )
+                .filter((id: number) => id > 0)
+            : [],
+          ai_rule_based: Array.isArray(editData.ai_rule_based)
+            ? editData.ai_rule_based
+                .map(
+                  (item: { ai_rule_based_id: { id: number } }) =>
+                    item.ai_rule_based_id?.id
+                )
+                .filter((id: number) => id > 0)
+            : [],
+          additional_notes_step_1: editData.additional_notes_step_1 || "",
+          status: (editData.status as string) || (POST_STATUS.DRAFT as string),
+          id: typeof editData.id === "number" ? editData.id : null,
+          omni_channels: Array.isArray(editData.omni_channels)
+            ? editData.omni_channels
+                .map(
+                  (item: { omni_channels_id: number }) => item.omni_channels_id
+                )
+                .filter((id: number) => id > 0)
+            : [],
+
+          // Step 2
+          outline_post: editData.outline_post || "",
+          post_goal: editData.post_goal || "",
+          post_notes: editData.post_notes || "",
+          additional_notes_step_2: editData.additional_notes_step_2 || "",
+
+          // Step 3
+          post_content:
+            typeof editData.post_content === "string"
+              ? editData.post_content
+              : "",
+          additional_notes_step_3: editData.additional_notes_step_3 || "",
+          ai_notes_create_image_step_3:
+            editData.ai_notes_create_image_step_3 || "",
+          media: editData.media || [],
+          media_generated_ai: editData.media_generated_ai || [],
+
+          // Step 4
+          additional_notes_step_4: editData.additional_notes_step_4 || "",
+          post_html_format: editData.post_html_format || "",
+        };
+        reset(editValues);
+        // Reset cache when content changes
+        setCachedStep1Data(null);
+        setCachedStep2Data(null);
+        
+        // Determine the appropriate step based on editData.action
+        let targetStep = 0;
+        if (editData.action) {
+          const actionToStepMap: Record<string, number> = {
+            "research_analysis": 0,
+            "make_outline": 1,
+            "write_article": 2,
+            "generate_image": 2,
+            "HTML_coding": 3,
+          };
+          targetStep = actionToStepMap[editData.action] ?? 0;
+        } else {
+          // Fallback: determine step based on available data if no action
+          if (typeof editData.post_html_format === 'string' && editData.post_html_format.trim() !== "") {
+            targetStep = 3; // Step 4 (Format HTML)
+          } else if (typeof editData.post_content === 'string' && editData.post_content.trim() !== "") {
+            targetStep = 2; // Step 3 (Content)
+          } else if (typeof editData.outline_post === 'string' && editData.outline_post.trim() !== "") {
+            targetStep = 1; // Step 2 (Outline)
+          } else {
+            targetStep = 0; // Step 1 (Research)
+          }
+        }
+        setActiveStep(targetStep);
+      } catch (error) {
+        console.error("Error mapping editData:", error);
+        reset(defaultValues);
+        setActiveStep(0);
+      }
+    } else {
       reset(defaultValues);
-      // Reset cache when content changes
-      setCachedStep1Data(null);
-      setCachedStep2Data(null);
+      setActiveStep(0);
     }
-  }, [currentContent, defaultValues, reset]);
+  }, [editData, defaultValues, reset]);
+
+  // Watch for id changes and notify parent component
+  useEffect(() => {
+    const subscription = methods.watch((value, { name }) => {
+      if (name === "id" && onIdChange) {
+        onIdChange(value || null, activeStep);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [methods, onIdChange, activeStep]);
 
   const buildStep1Data = (formData: FormData) => ({
     topic: formData.topic,
@@ -308,7 +392,7 @@ export function ContentAssistantMultiStepForm({ currentContent }: Props) {
             step2: {},
             step3: {},
             step4: {},
-            id: currentContent?.id || null,
+            id: editData?.id || null,
           };
 
           const response = await createPost(apiData);
@@ -348,7 +432,7 @@ export function ContentAssistantMultiStepForm({ currentContent }: Props) {
         setIsNextLoading(true);
         try {
           const apiData = {
-            id: currentContent?.id || formDataStep2.id || null,
+            id: editData?.id || formDataStep2.id || null,
             step1: {},
             step2: {
               outline_post: formDataStep2.outline_post,
@@ -394,7 +478,7 @@ export function ContentAssistantMultiStepForm({ currentContent }: Props) {
             ...mediaArray?.map((item) => item.id),
           ];
           const apiData = {
-            id: currentContent?.id || formData.id || null,
+            id: editData?.id || formData.id || null,
             step1: {},
             step2: {},
             step3: {},
@@ -428,7 +512,7 @@ export function ContentAssistantMultiStepForm({ currentContent }: Props) {
         try {
           const formData = methods.getValues();
           const apiData = {
-            id: currentContent?.id || formData.id || null,
+            id: editData?.id || formData.id || null,
             step1: {},
             step2: {},
             step3: {},
@@ -500,7 +584,7 @@ export function ContentAssistantMultiStepForm({ currentContent }: Props) {
     try {
       setIsNextLoading(true);
       const apiData = {
-        id: currentContent?.id || data.id || null,
+        id: editData?.id || data.id || null,
         step1: {},
         step2: {},
         step3: {},
@@ -584,7 +668,7 @@ export function ContentAssistantMultiStepForm({ currentContent }: Props) {
             size="large"
             sx={{ borderRadius: 2 }}
           >
-            {!currentContent ? "Tạo nội dung" : "Cập nhật"}
+            {!editData ? "Tạo nội dung" : "Cập nhật"}
           </Button>
         )}
       </Stack>

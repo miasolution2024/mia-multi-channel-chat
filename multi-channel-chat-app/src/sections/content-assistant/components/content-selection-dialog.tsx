@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -46,14 +46,7 @@ export function ContentSelectionDialog({
   const [loading, setLoading] = useState(false);
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>(selectedIds);
 
-  useEffect(() => {
-    if (open) {
-      setTempSelectedIds(selectedIds);
-      fetchItems();
-    }
-  }, [open, selectedIds]);
-
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     try {
       setLoading(true);
       let data;
@@ -75,7 +68,14 @@ export function ContentSelectionDialog({
     } finally {
       setLoading(false);
     }
-  };
+  }, [type]);
+
+  useEffect(() => {
+    if (open) {
+      setTempSelectedIds(selectedIds);
+      fetchItems();
+    }
+  }, [fetchItems, open, selectedIds]);
 
   const handleToggleItem = (id: string) => {
     setTempSelectedIds((prev) =>
@@ -143,11 +143,7 @@ export function ContentSelectionDialog({
               </TableHead>
               <TableBody>
                 {items.map((item) => (
-                  <TableRow
-                    key={item.id}
-                    hover
-                    sx={{ cursor: "pointer" }}
-                  >
+                  <TableRow key={item.id} hover sx={{ cursor: "pointer" }}>
                     <TableCell padding="checkbox">
                       <Checkbox
                         checked={tempSelectedIds.includes(item.id)}

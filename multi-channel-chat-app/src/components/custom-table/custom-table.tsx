@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   Box,
   Checkbox,
@@ -11,16 +12,16 @@ import {
   TablePagination,
   TableRow,
   Typography,
-} from '@mui/material';
-import { useEffect, useState } from 'react';
-import { Scrollbar } from '../scrollbar';
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import { Scrollbar } from "../scrollbar";
 
 // ----------------------------------------------------------------------
 
 export interface TableConfig<T = Record<string, unknown>> {
   key: string;
   label: string;
-  align?: 'left' | 'center' | 'right';
+  align?: "left" | "center" | "right";
   render?: (item: T, index: number) => React.ReactNode;
 }
 
@@ -35,7 +36,10 @@ export interface CustomTableProps<T = DataItem> {
   count?: number;
   page?: number;
   pageSize?: number;
-  onChangePage?: (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => void;
+  onChangePage?: (
+    event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number
+  ) => void;
   onChangePageSize?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   firstLoading?: boolean;
   loading?: boolean;
@@ -71,13 +75,21 @@ export default function CustomTable({
   onSelect,
   moreOptions,
   defaultSelected = [],
-}: Omit<CustomTableProps, 'csvConfig' | 'csvNameFile' | 'csvData' | 'csvOnClick' | 'csvFetchingData'>) {
+}: Omit<
+  CustomTableProps,
+  "csvConfig" | "csvNameFile" | "csvData" | "csvOnClick" | "csvFetchingData"
+>) {
   const PAGE_SIZE = [5, 10, 20, 25, 50];
-  const [selected, setSelected] = useState<(string | number)[]>(defaultSelected);
-  const isNotFound = data.length === 0 && !loading && !errorMsg && !firstLoading;
+  const [selected, setSelected] =
+    useState<(string | number)[]>(defaultSelected);
+  const isNotFound =
+    data.length === 0 && !loading && !errorMsg && !firstLoading;
   const _colSpan = tableConfig.length + (onSelect ? 1 : 0);
 
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>, key: string) => {
+  const handleSelectAllClick = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    key: string
+  ) => {
     if (event.target.checked) {
       const newSelecteds = data.map((n) => n[key] as string | number);
       setSelected(newSelecteds);
@@ -86,7 +98,10 @@ export default function CustomTable({
     setSelected([]);
   };
 
-  const handleClick = (event: React.ChangeEvent<HTMLInputElement>, item: string | number) => {
+  const handleClick = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    item: string | number
+  ) => {
     const selectedIndex = selected.indexOf(item);
     let newSelected: (string | number)[] = [];
     if (selectedIndex === -1) {
@@ -96,7 +111,10 @@ export default function CustomTable({
     } else if (selectedIndex === selected.length - 1) {
       newSelected = newSelected.concat(selected.slice(0, -1));
     } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(selected.slice(0, selectedIndex), selected.slice(selectedIndex + 1));
+      newSelected = newSelected.concat(
+        selected.slice(0, selectedIndex),
+        selected.slice(selectedIndex + 1)
+      );
     }
     setSelected(newSelected);
   };
@@ -119,10 +137,14 @@ export default function CustomTable({
                     ) : (
                       <Checkbox
                         size="small"
-                        indeterminate={selected.length > 0 && selected.length < data.length}
-                        checked={data.length > 0 && selected.length === data.length}
+                        indeterminate={
+                          selected.length > 0 && selected.length < data.length
+                        }
+                        checked={
+                          data.length > 0 && selected.length === data.length
+                        }
                         onChange={(e) => {
-                          handleSelectAllClick(e, checkKey || 'id');
+                          handleSelectAllClick(e, checkKey || "id");
                         }}
                       />
                     )}
@@ -130,12 +152,16 @@ export default function CustomTable({
                 )}
 
                 {tableConfig.map((item, index) => (
-                  <TableCell key={index} align={item.align} sx={{ whiteSpace: 'nowrap' }}>
+                  <TableCell
+                    key={index}
+                    align={item.align}
+                    sx={{ whiteSpace: "nowrap" }}
+                  >
                     {item.label}
                   </TableCell>
                 ))}
                 {moreOptions && (
-                  <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                  <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
                     {/* CSV Export functionality would go here */}
                   </TableCell>
                 )}
@@ -155,34 +181,70 @@ export default function CustomTable({
 
               {!isNotFound &&
                 data.map((item, index) => {
-                  const selectedUser = selected.indexOf(checkKey ? item[checkKey] as string | number : item.id as string | number) !== -1;
+                  const selectedUser =
+                    selected.indexOf(
+                      checkKey
+                        ? (item[checkKey] as string | number)
+                        : (item.id as string | number)
+                    ) !== -1;
                   return (
                     <TableRow key={index} hover>
                       {Boolean(onSelect) && (
                         <TableCell padding="checkbox" align="left">
-                          {loading || (updateList?.length > 0 && updateList?.indexOf(checkKey ? item[checkKey] as string | number : item.id as string | number) !== -1) ? (
+                          {loading ||
+                          (updateList?.length > 0 &&
+                            updateList?.indexOf(
+                              checkKey
+                                ? (item[checkKey] as string | number)
+                                : (item.id as string | number)
+                            ) !== -1) ? (
                             <CheckboxEmpty />
                           ) : (
                             <Checkbox
                               size="small"
                               checked={selectedUser}
-                              onChange={(event) => handleClick(event, checkKey ? item[checkKey] as string | number : item.id as string | number)}
+                              onChange={(event) =>
+                                handleClick(
+                                  event,
+                                  checkKey
+                                    ? (item[checkKey] as string | number)
+                                    : (item.id as string | number)
+                                )
+                              }
                             />
                           )}
                         </TableCell>
                       )}
                       {tableConfig.map((x, i) => (
-                        <TableCell key={i} align={x.align} sx={{ whiteSpace: 'nowrap' }}>
-                          {loading || (updateList?.length > 0 && updateList?.indexOf(checkKey ? item[checkKey] as string | number : item.id as string | number) !== -1) ? (
+                        <TableCell
+                          key={i}
+                          align={x.align}
+                          sx={{ whiteSpace: "nowrap" }}
+                        >
+                          {loading ||
+                          (updateList?.length > 0 &&
+                            updateList?.indexOf(
+                              checkKey
+                                ? (item[checkKey] as string | number)
+                                : (item.id as string | number)
+                            ) !== -1) ? (
                             <Skeleton width="80%" />
                           ) : (
-                            <>{x.render ? x.render(item, index) : item[x.key]}</>
+                            <>
+                              {x.render ? x.render(item, index) : item[x.key]}
+                            </>
                           )}
                         </TableCell>
                       ))}
                       {moreOptions && (
-                        <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                          {loading || (updateList?.length > 0 && updateList?.indexOf(checkKey ? item[checkKey] as string | number : item.id as string | number) !== -1) ? (
+                        <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                          {loading ||
+                          (updateList?.length > 0 &&
+                            updateList?.indexOf(
+                              checkKey
+                                ? (item[checkKey] as string | number)
+                                : (item.id as string | number)
+                            ) !== -1) ? (
                             <MoreOptionsEmpty />
                           ) : (
                             moreOptions(item)
@@ -196,21 +258,27 @@ export default function CustomTable({
           </Table>
         </Scrollbar>
       </TableContainer>
-      {page !== undefined && count !== undefined && pageSize !== undefined && onChangePage && onChangePageSize && (
-        <TablePagination
-          rowsPerPageOptions={PAGE_SIZE}
-          labelRowsPerPage={'Số dòng mỗi trang'}
-          labelDisplayedRows={({ from, to, count }) => {
-            return `${from}–${to} của ${count !== -1 ? count : `nhiều hơn ${to}`}`;
-          }}
-          component="div"
-          count={count}
-          rowsPerPage={pageSize}
-          page={page}
-          onPageChange={onChangePage}
-          onRowsPerPageChange={onChangePageSize}
-        />
-      )}
+      {page !== undefined &&
+        count !== undefined &&
+        pageSize !== undefined &&
+        onChangePage &&
+        onChangePageSize && (
+          <TablePagination
+            rowsPerPageOptions={PAGE_SIZE}
+            labelRowsPerPage={"Số dòng mỗi trang"}
+            labelDisplayedRows={({ from, to, count }) => {
+              return `${from}–${to} của ${
+                count !== -1 ? count : `nhiều hơn ${to}`
+              }`;
+            }}
+            component="div"
+            count={count}
+            rowsPerPage={pageSize}
+            page={page}
+            onPageChange={onChangePage}
+            onRowsPerPageChange={onChangePageSize}
+          />
+        )}
     </>
   );
 }
@@ -219,14 +287,24 @@ export default function CustomTable({
 
 const CheckboxEmpty = () => (
   <Stack alignItems="center" justifyContent="center" width={38} height={38}>
-    <Skeleton sx={{ borderRadius: 0.4 }} variant="rectangular" width="1.2em" height="1.2em" />
+    <Skeleton
+      sx={{ borderRadius: 0.4 }}
+      variant="rectangular"
+      width="1.2em"
+      height="1.2em"
+    />
   </Stack>
 );
 
 const MoreOptionsEmpty = () => (
   <Stack direction="row" alignItems="center">
     <Box flex={1} />
-    <Skeleton sx={{ borderRadius: 0.4, marginRight: '8px' }} variant="rectangular" width="60%" height="1.2em" />
+    <Skeleton
+      sx={{ borderRadius: 0.4, marginRight: "8px" }}
+      variant="rectangular"
+      width="60%"
+      height="1.2em"
+    />
   </Stack>
 );
 
