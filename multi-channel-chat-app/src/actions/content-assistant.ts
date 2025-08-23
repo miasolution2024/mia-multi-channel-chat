@@ -103,7 +103,8 @@ export async function getContentAssistantList(
       'omni_channels.omni_channels_id',
       'ai_rule_based.ai_rule_based_id.id',
       'ai_rule_based.ai_rule_based_id.content',
-      'id'
+      'id',
+      'action'
     ];
     
     fields.forEach(field => {
@@ -228,7 +229,6 @@ export async function updateContentAssistant(
     delete data.ai_notes_create_image_step_3;
     delete data.id;
 
-    console.log('data', data)
     const response = await axiosInstance.patch(
       `/items/ai_content_suggestions/${id}`,
       data

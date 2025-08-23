@@ -252,25 +252,34 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
         // Reset cache when content changes
         setCachedStep1Data(null);
         setCachedStep2Data(null);
-        
+
         // Determine the appropriate step based on editData.action
         let targetStep = 0;
         if (editData.action) {
           const actionToStepMap: Record<string, number> = {
-            "research_analysis": 0,
-            "make_outline": 1,
-            "write_article": 2,
-            "generate_image": 2,
-            "HTML_coding": 3,
+            research_analysis: 0,
+            make_outline: 1,
+            write_article: 2,
+            generate_image: 2,
+            HTML_coding: 3,
           };
           targetStep = actionToStepMap[editData.action] ?? 0;
         } else {
           // Fallback: determine step based on available data if no action
-          if (typeof editData.post_html_format === 'string' && editData.post_html_format.trim() !== "") {
+          if (
+            typeof editData.post_html_format === "string" &&
+            editData.post_html_format.trim() !== ""
+          ) {
             targetStep = 3; // Step 4 (Format HTML)
-          } else if (typeof editData.post_content === 'string' && editData.post_content.trim() !== "") {
+          } else if (
+            typeof editData.post_content === "string" &&
+            editData.post_content.trim() !== ""
+          ) {
             targetStep = 2; // Step 3 (Content)
-          } else if (typeof editData.outline_post === 'string' && editData.outline_post.trim() !== "") {
+          } else if (
+            typeof editData.outline_post === "string" &&
+            editData.outline_post.trim() !== ""
+          ) {
             targetStep = 1; // Step 2 (Outline)
           } else {
             targetStep = 0; // Step 1 (Research)
@@ -288,15 +297,13 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
     }
   }, [editData, defaultValues, reset]);
 
-  // Watch for id changes and notify parent component
+  // Notify parent component when activeStep changes
   useEffect(() => {
-    const subscription = methods.watch((value, { name }) => {
-      if (name === "id" && onIdChange) {
-        onIdChange(value || null, activeStep);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [methods, onIdChange, activeStep]);
+    if (onIdChange && methods) {
+      const formData = methods.getValues();
+      onIdChange(formData, activeStep);
+    }
+  }, [activeStep]); // Only depend on activeStep to avoid loops
 
   const buildStep1Data = (formData: FormData) => ({
     topic: formData.topic,

@@ -59,7 +59,6 @@ export default function Page() {
         const data = await getContentAssistantList({
           id: Number(id),
         });
-        console.log("data", data);
         const transformedData = transformApiData(data.data[0]);
         setEditData(transformedData);
       } catch (err) {
