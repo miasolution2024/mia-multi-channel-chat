@@ -74,7 +74,7 @@ export const Logo = forwardRef(
       <Box
         alt="Full logo"
         component="img"
-        src={`${CONFIG.assetsDir}/assets/images/logo/full-logo.png`}
+        src={`${CONFIG.assetsDir}/assets/images/logo/logo.png`}
         width="100%"
         height="100%"
       />

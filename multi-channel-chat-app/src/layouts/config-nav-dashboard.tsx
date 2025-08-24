@@ -85,31 +85,31 @@ export const navData = [
       //   path: paths.dashboard.salesOrder.root,
       //   icon: ICONS.invoice,
       // },
-      {
-        title: "Omni Channels",
-        path: paths.dashboard.omniChannels.root,
-        icon: ICONS.channel,
-      },
+      // {
+      //   title: "Omni Channels",
+      //   path: paths.dashboard.omniChannels.root,
+      //   icon: ICONS.channel,
+      // },
       {
         title: "Chat",
         path: paths.dashboard.chat,
         icon: ICONS.chat,
       },
-      {
-        title: "Trợ lý nội dung",
-        path: paths.dashboard.contentAssistant.root,
-        icon: ICONS.blog,
-      },
-      {
-        title: "Văn phong AI",
-        path: paths.dashboard.contentTone.root,
-        icon: ICONS.file,
-      },
-      {
-        title: "Quy tắc AI",
-        path: paths.dashboard.aiRules.root,
-        icon: ICONS.menuItem,
-      },
+      // {
+      //   title: "Trợ lý nội dung",
+      //   path: paths.dashboard.contentAssistant.root,
+      //   icon: ICONS.blog,
+      // },
+      // {
+      //   title: "Văn phong AI",
+      //   path: paths.dashboard.contentTone.root,
+      //   icon: ICONS.file,
+      // },
+      // {
+      //   title: "Quy tắc AI",
+      //   path: paths.dashboard.aiRules.root,
+      //   icon: ICONS.menuItem,
+      // },
     ],
   },
 ];
