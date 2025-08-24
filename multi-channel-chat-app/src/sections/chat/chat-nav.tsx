@@ -17,7 +17,6 @@ import { Scrollbar } from "@/components/scrollbar";
 import { ToggleButton } from "./styles";
 import { ChatNavItem } from "./chat-nav-item";
 import { ChatPageFilter } from "./chat-nav-page-filter";
-import { ChatNavItemSkeleton } from "./chat-skeleton";
 import { ChatNavSearchResults } from "./chat-nav-search-results";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { paths } from "@/routes/path";
@@ -42,6 +41,7 @@ import { useGetOmniChannelsByChannel } from "@/actions/omni-channel";
 import { useGetCustomersByOmniChannel } from "@/actions/customer";
 import { Customer } from "@/models/customer/customer";
 import { useDebounce } from "@/hooks/use-debounce";
+import { SelectChangeEvent } from "@mui/material";
 
 // ----------------------------------------------------------------------
 
@@ -90,7 +90,7 @@ export function ChatNav({
     return `${url}&page=${pageIndex + 1}`;
   };
 
-  const { data, setSize, isValidating } = useSWRInfinite<{
+  const { data, setSize } = useSWRInfinite<{
     data: Conversation[];
   }>(getKey, fetcher);
 
@@ -119,7 +119,7 @@ export function ChatNav({
   }, [selectedPageId, setSize]);
 
   const websocketRef = useRef<WebSocket | null>(null);
-  const loadMoreRef = useRef(null);
+  const chatNavRef = useRef<any>(null);
 
   const [playNotification, setPlayNotification] = useState<boolean>(false);
 
@@ -281,30 +281,31 @@ export function ChatNav({
     [handleClickAwaySearch, router, conversations]
   );
 
-  useEffect(() => {
-    if (!loadMoreRef.current) return;
+  const loadMoreRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node) return;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            setSize((prev) => prev + 1);
+          }
+        },
+        { threshold: 1.0 }
+      );
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        console.log(entries[0].isIntersecting);
+      observer.observe(node);
 
-        if (entries[0].isIntersecting) {
-          setSize((prev) => prev + 1); // load thêm
-        }
-      },
-      { threshold: 1.0 }
-    );
+      return () => observer.disconnect();
+    },
+    [setSize]
+  );
 
-    observer.observe(loadMoreRef.current);
-
-    return () => {
-      if (loadMoreRef.current) {
-        observer.unobserve(loadMoreRef.current);
-      }
-    };
-  }, [setSize]);
-
-  const renderLoading = <ChatNavItemSkeleton />;
+  const handSelectPage = (event: SelectChangeEvent) => {
+    setSelectedPageId(event.target.value);
+    if (chatNavRef.current) {
+      chatNavRef.current.scrollTop = 0;
+    }
+  };
 
   const renderList = (
     <nav>
@@ -319,12 +320,7 @@ export function ChatNav({
           />
         ))}
 
-        <div
-          ref={loadMoreRef}
-          className="h-10 flex items-center justify-center"
-        >
-          {isValidating ? "Loading..." : "Scroll để tải thêm"}
-        </div>
+        <div ref={loadMoreRef}></div>
       </Box>
     </nav>
   );
@@ -368,7 +364,7 @@ export function ChatNav({
           <>
             <ChatPageFilter
               pages={omniChannels}
-              handleChange={(event) => setSelectedPageId(event.target.value)}
+              handleChange={handSelectPage}
               pageId={selectedPageId}
             />
             <Box sx={{ flexGrow: 1 }} />
@@ -378,15 +374,9 @@ export function ChatNav({
 
       <Box sx={{ p: 2.5, pt: 0 }}>{!collapseDesktop && renderSearchInput}</Box>
 
-      {isValidating ? (
-        renderLoading
-      ) : (
-        <Scrollbar sx={{ pb: 1 }}>
-          {searchQuery && !!allIds.length
-            ? renderListResults
-            : renderList}
-        </Scrollbar>
-      )}
+      <Scrollbar ref={chatNavRef} sx={{ pb: 1 }}>
+        {searchQuery && !!allIds.length ? renderListResults : renderList}
+      </Scrollbar>
     </>
   );
 
