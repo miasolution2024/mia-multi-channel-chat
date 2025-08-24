@@ -104,7 +104,14 @@ export async function getContentAssistantList(
       'ai_rule_based.ai_rule_based_id.id',
       'ai_rule_based.ai_rule_based_id.content',
       'id',
-      'action'
+      'action',
+      'outline_post',
+      'post_goal' ,
+      'post_notes',
+      'post_content',
+      'media',
+      'media_generated_ai',
+      'post_html_format'
     ];
     
     fields.forEach(field => {

@@ -73,6 +73,10 @@ interface AiRuleBasedItem {
   };
 }
 
+interface OmniChannelsItem {
+  omni_channels_id: number;
+}
+
 // Định nghĩa interface cho Content
 export interface Content {
   id: number | string;
@@ -84,6 +88,7 @@ export interface Content {
   customer_journey: CustomerJourneyItem[]; // Hành trình khách hàng
   ai_rule_based: AiRuleBasedItem[]; // Quy tắc AI
   content_tone: ContentToneItem[]; // Tonal
+  omni_channels?: OmniChannelsItem[]; // Kênh omni
   additional_notes?: string; // Ghi chú bổ sung
   created_at?: string | Date;
   status: string; // Trạng thái từ API

@@ -22,16 +22,16 @@ type Props = {
 export function ContentAssistantEditView({ editData }: Props) {
   const settings = useSettingsContext();
   const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [formData, setFormData] = useState<Record<string, unknown> | null>(
+  const [watchMethod, setWatchMethod] = useState<(() => Record<string, unknown>) | null>(
     null
   );
   const [activeStep, setActiveStep] = useState(0);
 
   const handleIdChange = (
-    formData: Record<string, unknown> | null,
+    watchMethod: () => Record<string, unknown>,
     activeStep: number
   ) => {
-    setFormData(formData);
+    setWatchMethod(() => watchMethod);
     setActiveStep(activeStep);
   };
   useEffect(() => {
@@ -61,61 +61,96 @@ export function ContentAssistantEditView({ editData }: Props) {
   };
 
   const handleSaveDraft = useCallback(async () => {
-    if (!editData?.id || !formData) return;
+    if (!editData?.id || !watchMethod) return;
 
     setIsSavingDraft(true);
     console.log("activeStep", activeStep);
     try {
+      const currentFormData = watchMethod();
       const updateData = {
-        ...formData,
+        ...currentFormData,
         action: getActionByStep(activeStep),
-        // Transform all RHFMultiSelect fields to correct format
         customer_group: {
-          create: Array.isArray(formData.customer_group)
-            ? formData.customer_group.map((groupId: number) => ({
-                ai_content_suggestions_id: editData.id.toString(),
-                customer_group_id: { id: groupId },
-              }))
+          create: Array.isArray(currentFormData.customer_group)
+            ? currentFormData.customer_group
+                .filter(
+                  (groupId: number) =>
+                    !editData.customer_group?.some(
+                      (item) => item.customer_group_id.id === groupId
+                    )
+                )
+                .map((groupId: number) => ({
+                  ai_content_suggestions_id: editData.id.toString(),
+                  customer_group_id: { id: groupId },
+                }))
             : [],
           update: [],
           delete: [],
         },
         customer_journey: {
-          create: Array.isArray(formData.customer_journey)
-            ? formData.customer_journey.map((journeyId: number) => ({
-                ai_content_suggestions_id: editData.id.toString(),
-                customer_journey_id: { id: journeyId },
-              }))
+          create: Array.isArray(currentFormData.customer_journey)
+            ? currentFormData.customer_journey
+                .filter(
+                  (journeyId: number) =>
+                    !editData.customer_journey?.some(
+                      (item) => item.customer_journey_id.id === journeyId
+                    )
+                )
+                .map((journeyId: number) => ({
+                  ai_content_suggestions_id: editData.id.toString(),
+                  customer_journey_id: { id: journeyId },
+                }))
             : [],
           update: [],
           delete: [],
         },
         ai_rule_based: {
-          create: Array.isArray(formData.ai_rule_based)
-            ? formData.ai_rule_based.map((ruleId: number) => ({
-                ai_content_suggestions_id: editData.id.toString(),
-                ai_rule_based_id: { id: ruleId },
-              }))
+          create: Array.isArray(currentFormData.ai_rule_based)
+            ? currentFormData.ai_rule_based
+                .filter(
+                  (ruleId: number) =>
+                    !editData.ai_rule_based?.some(
+                      (item) => item.ai_rule_based_id.id === ruleId
+                    )
+                )
+                .map((ruleId: number) => ({
+                  ai_content_suggestions_id: editData.id.toString(),
+                  ai_rule_based_id: { id: ruleId },
+                }))
             : [],
           update: [],
           delete: [],
         },
         content_tone: {
-          create: Array.isArray(formData.content_tone)
-            ? formData.content_tone.map((toneId: number) => ({
-                ai_content_suggestions_id: editData.id.toString(),
-                content_tone_id: { id: toneId },
-              }))
+          create: Array.isArray(currentFormData.content_tone)
+            ? currentFormData.content_tone
+                .filter(
+                  (toneId: number) =>
+                    !editData.content_tone?.some(
+                      (item) => item.content_tone_id.id === toneId
+                    )
+                )
+                .map((toneId: number) => ({
+                  ai_content_suggestions_id: editData.id.toString(),
+                  content_tone_id: { id: toneId },
+                }))
             : [],
           update: [],
           delete: [],
         },
         omni_channels: {
-          create: Array.isArray(formData.omni_channels)
-            ? formData.omni_channels.map((channelId: number) => ({
-                ai_content_suggestions_id: editData.id.toString(),
-                omni_channels_id: { id: channelId },
-              }))
+          create: Array.isArray(currentFormData.omni_channels)
+            ? currentFormData.omni_channels
+                .filter(
+                  (channelId: number) =>
+                    !editData.omni_channels?.some(
+                      (item) => item.omni_channels_id === channelId
+                    )
+                )
+                .map((channelId: number) => ({
+                  ai_content_suggestions_id: editData.id.toString(),
+                  omni_channels_id: { id: channelId },
+                }))
             : [],
           update: [],
           delete: [],
@@ -129,7 +164,7 @@ export function ContentAssistantEditView({ editData }: Props) {
     } finally {
       setIsSavingDraft(false);
     }
-  }, [editData, formData, activeStep]);
+  }, [editData, watchMethod, activeStep]);
 
   return (
     <Container maxWidth={settings.themeStretch ? false : "lg"}>
