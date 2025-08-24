@@ -191,6 +191,21 @@ export async function readConversationAsync(conversationId: number) {
 }
 
 // ----------------------------------------------------------------------
+
+export async function getConversationByParticipantId(participantId: number) {
+  try {
+    const url = `${endpoints.conversations.list}?filter[participants][_some][participant_id][_eq]=${participantId}`;
+    const response = await axios.get(url);
+    if ((response.status === 200 && response.data)) {
+      return response.data.data;
+    }
+  } catch (error) {
+    console.error("Error during get conversation:", error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
 export function getConversationsUnreadCountURL() {
   return `${endpoints.conversations.list}?filter[unread_count][_gt]=0&aggregate[count]=unread_count&groupBy[]=channel`;
 }

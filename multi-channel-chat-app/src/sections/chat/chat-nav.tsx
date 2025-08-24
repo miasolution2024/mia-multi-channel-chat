@@ -28,6 +28,7 @@ import {
   ConversationChannel,
 } from "@/models/conversation/conversations";
 import {
+  getConversationByParticipantId,
   getConversationsUnreadCountURL,
   getConversationsURL,
 } from "@/actions/conversation";
@@ -40,6 +41,7 @@ import { fetcher } from "@/utils/axios";
 import { useGetOmniChannelsByChannel } from "@/actions/omni-channel";
 import { useGetCustomersByOmniChannel } from "@/actions/customer";
 import { Customer } from "@/models/customer/customer";
+import { useDebounce } from "@/hooks/use-debounce";
 
 // ----------------------------------------------------------------------
 
@@ -70,13 +72,9 @@ export function ChatNav({
     collapseDesktop,
   } = collapseNav;
 
-  const [searchContacts, setSearchContacts] = useState<{
-    query: string;
-    results: Customer[];
-  }>({
-    query: "",
-    results: [],
-  });
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const debouncedQuery = useDebounce(searchQuery);
 
   const [selectedPageId, setSelectedPageId] = useState<string>("");
 
@@ -105,7 +103,10 @@ export function ChatNav({
 
   const { omniChannels } = useGetOmniChannelsByChannel(channel);
 
-  const { customers } = useGetCustomersByOmniChannel(selectedPageId);
+  const { customers } = useGetCustomersByOmniChannel(
+    selectedPageId,
+    debouncedQuery
+  );
 
   useEffect(() => {
     if (omniChannels.length > 0) {
@@ -247,22 +248,14 @@ export function ChatNav({
   }, [onCloseDesktop, mdUp]);
 
   const handleSearchContacts = useCallback(
-    (inputValue: any) => {
-      setSearchContacts((prevState) => ({ ...prevState, query: inputValue }));
-
-      if (inputValue) {
-        const results = customers.filter((contact: Customer) =>
-          contact.name.toLowerCase().includes(inputValue)
-        );
-
-        setSearchContacts((prevState) => ({ ...prevState, results }));
-      }
+    (inputValue: string) => {
+      setSearchQuery(inputValue);
     },
     [customers]
   );
 
   const handleClickAwaySearch = useCallback(() => {
-    setSearchContacts({ query: "", results: [] });
+    setSearchQuery("");
   }, []);
 
   const handleClickResult = useCallback(
@@ -273,12 +266,12 @@ export function ChatNav({
         router.push(`${paths.dashboard.chat}?id=${id}`);
 
       try {
-        const conversation = conversations.find((c) =>
-          c.participants.some((p) => p.participant_id == result.id)
-        );
-        // Check if the conversation already exists
-        if (!!conversation?.id) {
-          linkTo(conversation.id);
+        const conversationSearchResults = (await getConversationByParticipantId(
+          result.id
+        )) as Conversation[];
+
+        if (conversationSearchResults.length > 0) {
+          linkTo(conversationSearchResults[0].id);
           return;
         }
       } catch (error) {
@@ -338,8 +331,8 @@ export function ChatNav({
 
   const renderListResults = (
     <ChatNavSearchResults
-      query={searchContacts.query}
-      results={searchContacts.results}
+      query={searchQuery}
+      results={customers}
       onClickResult={handleClickResult}
     />
   );
@@ -348,7 +341,7 @@ export function ChatNav({
     <ClickAwayListener onClickAway={handleClickAwaySearch}>
       <TextField
         fullWidth
-        value={searchContacts.query}
+        value={searchQuery}
         onChange={(event) => handleSearchContacts(event.target.value)}
         placeholder="Search contacts..."
         InputProps={{
@@ -389,7 +382,7 @@ export function ChatNav({
         renderLoading
       ) : (
         <Scrollbar sx={{ pb: 1 }}>
-          {searchContacts.query && !!allIds.length
+          {searchQuery && !!allIds.length
             ? renderListResults
             : renderList}
         </Scrollbar>
