@@ -13,10 +13,10 @@ export enum ConversationType {
 export enum ConversationChannel {
   ZALO = "Zalo",
   FACEBOOK = "Facebook",
-  WHATSAPP = "WHATSAPP",
-  WEBSITE = "WEBSITE",
-  INSTAGRAM = "INSTAGRAM",
-  ZALO_OA = "ZALO_OA",
+  WHATSAPP = "WhatsApp",
+  WEBSITE = "Website",
+  INSTAGRAM = "Instagram",
+  ZALO_OA = "Zalo_OA",
 }
 
 export type Conversation = Common & {

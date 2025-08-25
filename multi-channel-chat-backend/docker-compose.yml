@@ -52,7 +52,7 @@ services:
       EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD}
 
       CORS_ENABLED: true
-      CORS_ORIGIN: "http://localhost:3000,https://rad-admin.miasolution.vn"
+      CORS_ORIGIN: "http://localhost:3000,https://donghan-aichat.miasolution.vn"
 
       ACCESS_TOKEN_TTL: "1d"
 
