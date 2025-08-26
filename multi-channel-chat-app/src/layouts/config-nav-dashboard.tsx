@@ -89,11 +89,11 @@ export const navData = [
       //   path: paths.dashboard.inventoryTransaction.root,
       //   icon: ICONS.inventory,
       // },
-      {
-        title: "Chat",
-        path: paths.dashboard.chat,
-        icon: ICONS.chat,
-      },
+      // {
+      //   title: "Chat",
+      //   path: paths.dashboard.chat,
+      //   icon: ICONS.chat,
+      // },
       {
         title: "Trợ lý nội dung",
         path: paths.dashboard.contentAssistant.root,
