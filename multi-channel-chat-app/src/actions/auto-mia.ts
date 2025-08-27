@@ -6,19 +6,19 @@ interface Step1Data {
   main_seo_keyword: string;
   secondary_seo_keywords: string[];
   customer_group: {
-    "customer_group_id": number;
+    customer_group_id: number;
   }[];
   customer_journey: {
-    "customer_journey_id": number;
+    customer_journey_id: number;
   }[];
   omni_channels: {
-    "omni_channels_id": number;
+    omni_channels_id: number;
   }[];
   ai_rule_based: {
-    "ai_rule_based_id": number;
+    ai_rule_based_id: number;
   }[];
   content_tone: {
-    "content_tone_id": number;
+    content_tone_id: number;
   }[];
   additional_notes_step_1: string;
 }
@@ -41,6 +41,9 @@ interface PostBaiVietResponse {
     post_goal?: string;
     post_content?: string;
     post_html_format?: string;
+    omni_channels?: {
+      omni_channels_id: number;
+    };
     customer_group: {
       customer_group_id: {
         id: number;
@@ -75,10 +78,14 @@ interface PostBaiVietResponse {
   [key: string]: unknown;
 }
 
-export const createPost = async (data: PostBaiVietRequest): Promise<PostBaiVietResponse> => {
+export const createPost = async (
+  data: PostBaiVietRequest
+): Promise<PostBaiVietResponse> => {
   try {
-    const response = await autoMiaAxiosInstance.post("/webhook/post-bai-viet", [data]);
-    console.log('response', response)
+    const response = await autoMiaAxiosInstance.post("/webhook/post-bai-viet", [
+      data,
+    ]);
+    console.log("response", response);
     return response?.data?.[0] || {};
   } catch (error) {
     console.error("Error calling post-bai-viet API:", error);
