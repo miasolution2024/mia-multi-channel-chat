@@ -1,11 +1,11 @@
 name: Vercel Production Deployment
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_MIA_ADMIN_PROJECT_ID }}
 on:
   push:
     branches:
-      - a-dong-silk-chat-app
+      - master
 jobs:
   Deploy-Production:
     runs-on: ubuntu-latest
