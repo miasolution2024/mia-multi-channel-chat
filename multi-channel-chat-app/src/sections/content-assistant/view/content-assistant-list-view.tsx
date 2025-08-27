@@ -271,7 +271,6 @@ function ContentActionMenu({
       <IconButton onClick={popover.onOpen}>
         <Iconify icon="eva:more-vertical-fill" />
       </IconButton>
-
       <Popover
         open={popover.open}
         anchorEl={popover.anchorEl}

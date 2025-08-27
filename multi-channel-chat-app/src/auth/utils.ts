@@ -62,7 +62,7 @@ export function tokenExpired(exp: number) {
       console.error("Error during token expiration:", error);
       throw error;
     }
-  }, timeLeft);
+  }, timeLeft); // VAN CONFIG TO DEV
 }
 
 // ----------------------------------------------------------------------

@@ -135,7 +135,6 @@ export function AiRulesListView() {
     if (selectedRuleId) {
       try {
         await deleteAiRule(selectedRuleId);
-
         // Refresh the current page after deletion
         const response = await getAiRules(page + 1, pageSize);
         setRules(response.data || []);

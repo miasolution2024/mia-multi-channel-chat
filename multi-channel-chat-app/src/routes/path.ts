@@ -4,9 +4,9 @@ const ROOTS = {
 };
 
 export const paths = {
-  // about: "/about-us",
-  // contact: "/contact-us",
-  // faqs: "/faqs",
+  about: "/about-us",
+  contact: "/contact-us",
+  faqs: "/faqs",
   page403: "/error/403",
   page404: "/error/404",
   page500: "/error/500",
@@ -20,7 +20,7 @@ export const paths = {
   },
   dashboard: {
     root: `${ROOTS.DASHBOARD}/content-assistant`,
-    // chat: `${ROOTS.DASHBOARD}/chat`,
+    chat: `${ROOTS.DASHBOARD}/chat`,
     contentAssistant: {
       root: `${ROOTS.DASHBOARD}/content-assistant`,
       new: `${ROOTS.DASHBOARD}/content-assistant/new`,
@@ -36,32 +36,32 @@ export const paths = {
     new: `${ROOTS.DASHBOARD}/ai-rules/new`,
     edit: (id: string) => `${ROOTS.DASHBOARD}/ai-rules/${id}/edit`,
   },
-    // customer: {
-    //   root: `${ROOTS.DASHBOARD}/customer`,
-    // },
-    // supplier: {
-    //   root: `${ROOTS.DASHBOARD}/supplier`,
-    // },
-    // category: {
-    //   root: `${ROOTS.DASHBOARD}/category`,
-    // },
-    // purchaseOrder: {
-    //   root: `${ROOTS.DASHBOARD}/purchase-order`,
-    //   new: `${ROOTS.DASHBOARD}/purchase-order/new`,
-    //   edit: (id: string) => `${ROOTS.DASHBOARD}/purchase-order/${id}/edit`,
-    //   details: (id: string) => `${ROOTS.DASHBOARD}/purchase-order/${id}`,
-    // },
-    // salesOrder: {
-    //   root: `${ROOTS.DASHBOARD}/sales-order`,
-    //   details: (id: string) => `${ROOTS.DASHBOARD}/sales-order/${id}`,
-    // },
-    // product: {
-    //   root: `${ROOTS.DASHBOARD}/product`,
-    //   new: `${ROOTS.DASHBOARD}/product/new`,
-    //   edit: (id: string) => `${ROOTS.DASHBOARD}/product/${id}/edit`,
-    // },
-    // inventoryTransaction: {
-    //   root: `${ROOTS.DASHBOARD}/inventory-transaction`,
-    // },
+    customer: {
+      root: `${ROOTS.DASHBOARD}/customer`,
+    },
+    supplier: {
+      root: `${ROOTS.DASHBOARD}/supplier`,
+    },
+    category: {
+      root: `${ROOTS.DASHBOARD}/category`,
+    },
+    purchaseOrder: {
+      root: `${ROOTS.DASHBOARD}/purchase-order`,
+      new: `${ROOTS.DASHBOARD}/purchase-order/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/purchase-order/${id}/edit`,
+      details: (id: string) => `${ROOTS.DASHBOARD}/purchase-order/${id}`,
+    },
+    salesOrder: {
+      root: `${ROOTS.DASHBOARD}/sales-order`,
+      details: (id: string) => `${ROOTS.DASHBOARD}/sales-order/${id}`,
+    },
+    product: {
+      root: `${ROOTS.DASHBOARD}/product`,
+      new: `${ROOTS.DASHBOARD}/product/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/product/${id}/edit`,
+    },
+    inventoryTransaction: {
+      root: `${ROOTS.DASHBOARD}/inventory-transaction`,
+    },
   },
 };

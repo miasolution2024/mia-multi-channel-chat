@@ -295,7 +295,6 @@ export function StepContent({ currentContent }: Props) {
                 helperText="Chọn nhiều hình ảnh để đính kèm"
                 hidePreview={true}
               />
-
               {/* Hiển thị ảnh đã upload */}
               {watch("media")?.length > 0 && (
                 <Paper sx={{ p: 2, mt: 2 }}>

@@ -99,7 +99,6 @@ function ContentToneActionMenu({
 
 export function ContentToneListView() {
   const router = useRouter();
-
   const [tones, setTones] = useState<ContentTone[]>([]);
   const [selectedToneId, setSelectedToneId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -185,7 +184,6 @@ export function ContentToneListView() {
     if (selectedToneId) {
       try {
         await deleteContentTone(selectedToneId);
-
         // Refresh the current page after deletion
         const data = await getContentTones(page + 1, pageSize);
         setTones(data.data || []);
