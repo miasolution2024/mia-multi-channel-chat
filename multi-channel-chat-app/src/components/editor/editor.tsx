@@ -92,8 +92,20 @@ export const Editor = forwardRef<HTMLDivElement>(
 
     useEffect(() => {
       const timer = setTimeout(() => {
-        if (editor?.isEmpty && content !== '<p></p>') {
-          editor.commands.setContent(content);
+        if (editor && content && content !== '<p></p>') {
+          // Handle content with \n characters
+          let processedContent = content;
+          if (typeof content === 'string' && content.includes('\n')) {
+            processedContent = content
+              .replace(/\n\n/g, '</p><p>')
+              .replace(/\n/g, '<br>')
+              .replace(/^/, '<p>')
+              .replace(/$/, '</p>');
+          }
+          
+          if (editor.isEmpty || editor.getHTML() !== processedContent) {
+            editor.commands.setContent(processedContent);
+          }
         }
       }, 100);
       return () => clearTimeout(timer);

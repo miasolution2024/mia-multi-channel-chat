@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 
@@ -24,7 +25,10 @@ import { today } from "@/utils/format-time";
 import { paths } from "@/routes/path";
 import { useRouter } from "next/navigation";
 import { Participant } from "@/models/participants/participant";
-import { Conversation, ConversationChannel } from "@/models/conversation/conversations";
+import {
+  Conversation,
+  ConversationChannel,
+} from "@/models/conversation/conversations";
 import { initialConversation } from "./utils/initial-conversation";
 import {
   createConversationAsync,
@@ -48,7 +52,7 @@ export function ChatNav({
   collapseNav,
   conversations,
   selectedConversationId,
-  channel
+  channel,
 }: {
   loading: boolean;
   contacts: Participant[];

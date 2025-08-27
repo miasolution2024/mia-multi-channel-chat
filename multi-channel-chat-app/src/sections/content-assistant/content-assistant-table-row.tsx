@@ -1,17 +1,17 @@
-import { useCallback } from 'react';
+import { useCallback } from "react";
 
-import TableRow from '@mui/material/TableRow';
-import TableCell from '@mui/material/TableCell';
-import IconButton from '@mui/material/IconButton';
-import MenuItem from '@mui/material/MenuItem';
-import Checkbox from '@mui/material/Checkbox';
+import TableRow from "@mui/material/TableRow";
+import TableCell from "@mui/material/TableCell";
+import IconButton from "@mui/material/IconButton";
+import MenuItem from "@mui/material/MenuItem";
+import Checkbox from "@mui/material/Checkbox";
 
-import { useBoolean } from '@/hooks/use-boolean';
-import { Iconify } from '@/components/iconify';
-import { ConfirmDialog } from '@/components/custom-dialog';
-import { CustomPopover } from '@/components/custom-popover';
-import { Label } from '@/components/label';
-import { Content } from './view/content-assistant-list-view';
+import { useBoolean } from "@/hooks/use-boolean";
+import { Iconify } from "@/components/iconify";
+import { ConfirmDialog } from "@/components/custom-dialog";
+import { CustomPopover } from "@/components/custom-popover";
+import { Label } from "@/components/label";
+import { Content } from "./view/content-assistant-list-view";
 
 // ----------------------------------------------------------------------
 
@@ -19,12 +19,27 @@ type Props = {
   row: Content;
   selected: boolean;
   onSelectRow: () => void;
-  onEditRow: (id: string) => void;
-  onDeleteRow?: (id: string) => void;
+  onEditRow: (id: string | number) => void;
+  onDeleteRow?: (id: string | number) => void;
 };
 
-export function ContentAssistantTableRow({ row, selected, onSelectRow, onEditRow, onDeleteRow }: Props) {
-  const { id, topic, contentType, mainSeoKeyword, secondarySeoKeywords, customerGroup, customerJourney, status } = row;
+export function ContentAssistantTableRow({
+  row,
+  selected,
+  onSelectRow,
+  onEditRow,
+  onDeleteRow,
+}: Props) {
+  const {
+    id,
+    topic,
+    post_type,
+    main_seo_keyword,
+    secondary_seo_keywords,
+    customer_group,
+    customer_journey,
+    status,
+  } = row;
 
   const confirm = useBoolean();
 
@@ -35,7 +50,7 @@ export function ContentAssistantTableRow({ row, selected, onSelectRow, onEditRow
       onDeleteRow(id);
     }
     confirm.onFalse();
-  }, [id, onDeleteRow]);
+  }, [confirm, id, onDeleteRow]);
 
   return (
     <>
@@ -43,44 +58,57 @@ export function ContentAssistantTableRow({ row, selected, onSelectRow, onEditRow
         <TableCell padding="checkbox">
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
-        
+
         <TableCell>{topic}</TableCell>
 
-        <TableCell>{contentType}</TableCell>
+        <TableCell>{post_type || "N/A"}</TableCell>
 
         <TableCell>
           <Label variant="soft" color="primary">
-            {mainSeoKeyword}
+            {main_seo_keyword}
           </Label>
         </TableCell>
 
         <TableCell>
-          {secondarySeoKeywords && secondarySeoKeywords.map((keyword, index) => (
-            <Label
-              key={index}
-              variant="soft"
-              color="info"
-              sx={{ mr: 1, mb: 1 }}
-            >
-              {keyword}
+          {secondary_seo_keywords &&
+            secondary_seo_keywords.map((keyword: string, index: number) => (
+              <Label
+                key={index}
+                variant="soft"
+                color="info"
+                sx={{ mr: 1, mb: 1 }}
+              >
+                {keyword}
+              </Label>
+            ))}
+        </TableCell>
+
+        <TableCell>
+          {customer_group.map((group, index) => (
+            <Label key={index} variant="soft" color="default" sx={{ mr: 1 }}>
+              {group.customer_group_id.name}
             </Label>
           ))}
         </TableCell>
 
-        <TableCell>{customerGroup}</TableCell>
-        
-        <TableCell>{customerJourney}</TableCell>
+        <TableCell>
+          {customer_journey.map((journey, index) => (
+            <Label key={index} variant="soft" color="info" sx={{ mr: 1 }}>
+              {journey.customer_journey_id.name}
+            </Label>
+          ))}
+        </TableCell>
 
         <TableCell>
           <Label
             variant="soft"
             color={
-              (status === 'Published' && 'success') ||
-              (status === 'Draft' && 'warning') ||
-              'default'
+              (status === "published" && "success") ||
+              (status === "draft" && "warning") ||
+              "default"
             }
           >
-            {status}
+            {status === "published" ? "Đã xuất bản" : "Nháp"}
           </Label>
         </TableCell>
 
@@ -112,7 +140,7 @@ export function ContentAssistantTableRow({ row, selected, onSelectRow, onEditRow
             confirm.onTrue();
             popover.onFalse();
           }}
-          sx={{ color: 'error.main' }}
+          sx={{ color: "error.main" }}
         >
           <Iconify icon="solar:trash-bin-trash-bold" />
           Xóa

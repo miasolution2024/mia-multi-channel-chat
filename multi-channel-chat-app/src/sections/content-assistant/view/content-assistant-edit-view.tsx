@@ -1,154 +1,213 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
 
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import { alpha } from '@mui/material/styles';
-
-import { paths } from '@/routes/path';
-import { useSettingsContext } from '@/components/settings';
-import { CustomBreadcrumbs } from '@/components/custom-breadcrumbs';
-import { ContentAssistantNewEditForm } from '../content-assistant-new-edit-form';
-import { Content } from './content-assistant-list-view';
+import { paths } from "@/routes/path";
+import { useSettingsContext } from "@/components/settings";
+import { CustomBreadcrumbs } from "@/components/custom-breadcrumbs";
+import { toast } from "@/components/snackbar";
+import { ContentAssistantMultiStepForm } from "../content-assistant-multi-step-form";
+import { updateContentAssistant } from "@/actions/content-assistant";
+import { Content } from "./content-assistant-list-view";
 
 // ----------------------------------------------------------------------
 
 type Props = {
-  contentId: string;
+  editData: Content;
 };
 
-export function ContentAssistantEditView({ contentId }: Props) {
+export function ContentAssistantEditView({ editData }: Props) {
   const settings = useSettingsContext();
-  const router = useRouter();
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [watchMethod, setWatchMethod] = useState<(() => Record<string, unknown>) | null>(
+    null
+  );
+  const [activeStep, setActiveStep] = useState(0);
 
-  const [currentContent, setCurrentContent] = useState<Content | null>(null);
-  const [loading, setLoading] = useState(true);
-
+  const handleIdChange = (
+    watchMethod: () => Record<string, unknown>,
+    activeStep: number
+  ) => {
+    setWatchMethod(() => watchMethod);
+    setActiveStep(activeStep);
+  };
   useEffect(() => {
-    // Giả lập việc lấy dữ liệu từ API
-    const fetchContent = async () => {
-      try {
-        // Thay thế bằng API call thực tế
-        const mockContent: Content = {
-          id: contentId,
-          topic: 'Bài viết mẫu',
-          contentType: 'Blog',
-          mainSeoKeyword: 'SEO chính',
-          secondarySeoKeywords: ['SEO phụ 1', 'SEO phụ 2'],
-          customerGroup: 'Tiềm năng',
-          customerJourney: 'Cân nhắc',
-          description: '<p>Nội dung mẫu cho bài viết</p>',
-          createdAt: new Date().toISOString(),
-          status: 'published',
-        };
+    if (editData && editData.action) {
+      const getStepByAction = (action: string) => {
+        const actions = [
+          "research_analysis", // Step 0
+          "make_outline", // Step 1
+          "write_article", // Step 2
+          "generate_image", // Step 3
+        ];
+        return actions.indexOf(action);
+      };
+      setActiveStep(getStepByAction(editData.action));
+    }
+  }, [editData]);
 
-        setCurrentContent(mockContent);
-      } catch (error) {
-        console.error('Failed to fetch content:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContent();
-  }, [contentId]);
-
-  const handleGoBack = () => {
-    router.push(paths.dashboard.contentAssistant.root);
+  const getActionByStep = (step: number): string => {
+    const actions = [
+      "research_analysis", // Step 0
+      "make_outline", // Step 1
+      "write_article", // Step 2
+      "generate_image", // Step 3
+      "HTML_coding", // Step 4
+    ];
+    return actions[step] || "research_analysis";
   };
 
-  if (loading) {
-    return (
-      <Container maxWidth={settings.themeStretch ? false : 'lg'}>
-        <Box sx={{ py: 5, textAlign: 'center' }}>
-          <Typography>Đang tải...</Typography>
-        </Box>
-      </Container>
-    );
-  }
+  const handleSaveDraft = useCallback(async () => {
+    if (!editData?.id || !watchMethod) return;
 
-  if (!currentContent) {
-    return (
-      <Container maxWidth={settings.themeStretch ? false : 'lg'}>
-        <Box sx={{ py: 5, textAlign: 'center' }}>
-          <Typography>Không tìm thấy nội dung</Typography>
-          <Button onClick={handleGoBack} sx={{ mt: 2 }}>
-            Quay lại
-          </Button>
-        </Box>
-      </Container>
-    );
-  }
+    setIsSavingDraft(true);
+    console.log("activeStep", activeStep);
+    try {
+      const currentFormData = watchMethod();
+      const updateData = {
+        ...currentFormData,
+        action: getActionByStep(activeStep),
+        customer_group: {
+          create: Array.isArray(currentFormData.customer_group)
+            ? currentFormData.customer_group
+                .filter(
+                  (groupId: number) =>
+                    !editData.customer_group?.some(
+                      (item) => item.customer_group_id.id === groupId
+                    )
+                )
+                .map((groupId: number) => ({
+                  ai_content_suggestions_id: editData.id.toString(),
+                  customer_group_id: { id: groupId },
+                }))
+            : [],
+          update: [],
+          delete: [],
+        },
+        customer_journey: {
+          create: Array.isArray(currentFormData.customer_journey)
+            ? currentFormData.customer_journey
+                .filter(
+                  (journeyId: number) =>
+                    !editData.customer_journey?.some(
+                      (item) => item.customer_journey_id.id === journeyId
+                    )
+                )
+                .map((journeyId: number) => ({
+                  ai_content_suggestions_id: editData.id.toString(),
+                  customer_journey_id: { id: journeyId },
+                }))
+            : [],
+          update: [],
+          delete: [],
+        },
+        ai_rule_based: {
+          create: Array.isArray(currentFormData.ai_rule_based)
+            ? currentFormData.ai_rule_based
+                .filter(
+                  (ruleId: number) =>
+                    !editData.ai_rule_based?.some(
+                      (item) => item.ai_rule_based_id.id === ruleId
+                    )
+                )
+                .map((ruleId: number) => ({
+                  ai_content_suggestions_id: editData.id.toString(),
+                  ai_rule_based_id: { id: ruleId },
+                }))
+            : [],
+          update: [],
+          delete: [],
+        },
+        content_tone: {
+          create: Array.isArray(currentFormData.content_tone)
+            ? currentFormData.content_tone
+                .filter(
+                  (toneId: number) =>
+                    !editData.content_tone?.some(
+                      (item) => item.content_tone_id.id === toneId
+                    )
+                )
+                .map((toneId: number) => ({
+                  ai_content_suggestions_id: editData.id.toString(),
+                  content_tone_id: { id: toneId },
+                }))
+            : [],
+          update: [],
+          delete: [],
+        },
+        omni_channels: {
+          create: Array.isArray(currentFormData.omni_channels)
+            ? currentFormData.omni_channels
+                .filter(
+                  (channelId: number) =>
+                    !editData.omni_channels?.some(
+                      (item) => item.omni_channels_id === channelId
+                    )
+                )
+                .map((channelId: number) => ({
+                  ai_content_suggestions_id: editData.id.toString(),
+                  omni_channels_id: { id: channelId },
+                }))
+            : [],
+          update: [],
+          delete: [],
+        },
+      };
+      await updateContentAssistant(editData.id, updateData);
+      toast.success("Cập nhật thành công!");
+    } catch (error) {
+      console.error("Error updating content:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật!");
+    } finally {
+      setIsSavingDraft(false);
+    }
+  }, [editData, watchMethod, activeStep]);
 
   return (
-    <Container maxWidth={settings.themeStretch ? false : 'lg'}>
+    <Container maxWidth={settings.themeStretch ? false : "lg"}>
       <CustomBreadcrumbs
         heading="Chỉnh sửa bài viết"
         links={[
           {
-            name: 'Dashboard',
+            name: "Dashboard",
             href: paths.dashboard.root,
           },
           {
-            name: 'Trợ lý nội dung',
+            name: "Trợ lý nội dung",
             href: paths.dashboard.contentAssistant.root,
           },
-          { name: currentContent.topic },
+          { name: "Chỉnh sửa" },
         ]}
         sx={{
           mb: { xs: 3, md: 5 },
         }}
+        action={
+          <Button
+            variant="outlined"
+            onClick={handleSaveDraft}
+            loading={isSavingDraft}
+            disabled={isSavingDraft}
+            sx={{ borderRadius: 2 }}
+          >
+            {isSavingDraft ? "Đang cập nhật..." : "Lưu nháp"}
+          </Button>
+        }
       />
 
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
+          display: "flex",
+          flexDirection: "column",
           gap: 3,
         }}
       >
-        <Box
-          sx={{
-            borderRadius: 1.5,
-            bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
-            p: 3,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-          }}
-        >
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              display: 'flex',
-              borderRadius: '50%',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-            }}
-          >
-            <Box
-              component="img"
-              src="/assets/icons/modules/ic_content.svg"
-              sx={{ width: 24, height: 24 }}
-            />
-          </Box>
-
-          <Box>
-            <Typography variant="subtitle1">Chỉnh sửa nội dung bài viết</Typography>
-
-            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-              Bạn có thể chỉnh sửa thông tin và nội dung của bài viết tại đây.
-            </Typography>
-          </Box>
-        </Box>
-
-        <ContentAssistantNewEditForm currentContent={currentContent} />
+        <ContentAssistantMultiStepForm
+          editData={editData}
+          onIdChange={handleIdChange}
+        />
       </Box>
     </Container>
   );

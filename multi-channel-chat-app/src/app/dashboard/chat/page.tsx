@@ -1,6 +1,6 @@
-import { CONFIG } from '@/config-global';
+import { CONFIG } from "@/config-global";
 
-import { ChatView, MultiChannelChatView } from '@/sections/chat/view';
+import { MultiChannelChatView } from "@/sections/chat/view";
 
 // ----------------------------------------------------------------------
 

@@ -22,10 +22,10 @@ import { useSettingsContext } from "@/components/settings/context";
 import { navData as dashboardNavData } from "../config-nav-dashboard";
 import { Logo } from "@/components/logo";
 // import { NotificationsDrawer } from "../components/notifications-drawer";
-import { SettingsButton } from "../components/settings-button";
+// import { SettingsButton } from "../components/settings-button";
 // import { Searchbar } from "../components/searchbar";
-import { LanguagePopover } from "../components/language-popover";
-import { allLangs } from "@/locales";
+// import { LanguagePopover } from "../components/language-popover";
+// import { allLangs } from "@/locales";
 
 // ----------------------------------------------------------------------
 
@@ -133,11 +133,11 @@ export function DashboardLayout({ sx, children, header, data }: any) {
                 {/* -- Searchbar -- */}
                 {/* <Searchbar data={navData} /> */}
                 {/* -- Language popover -- */}
-                <LanguagePopover data={allLangs} />
+                {/* <LanguagePopover data={allLangs} /> */}
                 {/* -- Notifications popover -- */}
                 {/* <NotificationsDrawer data={_notifications} /> */}
                 {/* -- Settings button -- */}
-                <SettingsButton />
+                {/* <SettingsButton /> */}
                 {/* -- Account drawer -- */}
                 <AccountDrawer data={_account} />
               </Box>

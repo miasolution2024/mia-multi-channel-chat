@@ -17,15 +17,22 @@ import { useFormContext } from "react-hook-form";
 
 import { RHFTextField, RHFEditor, RHFUpload } from "@/components/hook-form";
 import { Iconify } from "@/components/iconify";
+import { createPost } from "@/actions/auto-mia";
+import { toast } from "@/components/snackbar";
+import { Content } from "../../view/content-assistant-list-view";
+import { CONFIG } from "@/config-global";
+import { MediaGeneratedAiItem } from "@/actions/content-assistant";
 
 // ----------------------------------------------------------------------
 
-export function StepContent() {
-  const [isNotesExpanded, setIsNotesExpanded] = useState(false);
-  const [isImageNotesExpanded, setIsImageNotesExpanded] = useState(false);
+type Props = {
+  currentContent?: Content;
+};
+
+export function StepContent({ currentContent }: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImages, setGeneratedImages] = useState<File[]>([]);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
 
   const { setValue, watch } = useFormContext();
   const mediaGeneratedAi = watch("media_generated_ai") || [];
@@ -36,33 +43,46 @@ export function StepContent() {
 
   const handleGenerateImage = async () => {
     setIsGenerating(true);
+    try {
+      const formData = watch();
+      const apiData = {
+        id: currentContent?.id || formData.id || null,
+        step1: {},
+        step2: {},
+        step3: {
+          post_content: formData.post_content,
+          ai_notes_create_image_step_3: formData.ai_notes_create_image_step_3,
+          isGeneratedByAI: true,
+        },
+        step4: {},
+      };
 
-    // Simulate API call delay
-    setTimeout(async () => {
-      // Use Unsplash images as fake generated images
-      const fakeImageUrls = [
-        "https://images.unsplash.com/photo-1754764987594-2236e7736115?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-        "https://images.unsplash.com/photo-1754766621748-2a96cbf56a1f?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      ];
+      const response = await createPost(apiData);
+      if (response?.data?.media_generated_ai) {
+        setGeneratedImages(
+          response?.data?.media_generated_ai?.map((item) => {
+            return `${CONFIG.serverUrl}/assets/${item.directus_files_id}&key=system-large-contain`;
+          })
+        );
+        setValue(
+          "media_generated_ai",
+          response.data.media_generated_ai?.map(
+            (item) => item.directus_files_id
+          )
+        );
+      }
 
-      const fakeFiles = await Promise.all(
-        fakeImageUrls.map(async (url, index) => {
-          const response = await fetch(url);
-          const blob = await response.blob();
-          return new File([blob], `generated-image-${index + 1}.jpg`, {
-            type: "image/jpeg",
-          });
-        })
-      );
-
-      setGeneratedImages(fakeFiles);
-
-      // Save to form field
-      const updatedMedia = [...mediaGeneratedAi, ...fakeFiles];
-      setValue("media_generated_ai", updatedMedia);
-
+      if (response?.data) {
+        toast.success("Tạo sinh hình ảnh thành công!");
+      } else {
+        toast.error("Có lỗi xảy ra khi tạo sinh hình ảnh!");
+      }
+    } catch (error) {
+      console.error("Error generating image:", error);
+      toast.error("Có lỗi xảy ra khi tạo sinh hình ảnh!");
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
   const handleRemoveImage = (index: number) => {
@@ -70,7 +90,12 @@ export function StepContent() {
     setGeneratedImages(updatedImages);
 
     const updatedMedia = mediaGeneratedAi.filter(
-      (file: File) => !generatedImages.includes(file)
+      (item: MediaGeneratedAiItem | string) => {
+        const fileId = typeof item === "string" ? item : item.directus_files_id;
+        return !generatedImages.includes(
+          `${CONFIG.serverUrl}/assets/${fileId}&key=system-large-contain`
+        );
+      }
     );
     setValue("media_generated_ai", [...updatedMedia, ...updatedImages]);
   };
@@ -87,19 +112,10 @@ export function StepContent() {
           <Box sx={{ m: 3 }}>
             <RHFTextField
               name="additional_notes_step_3"
-              placeholder={
-                isNotesExpanded
-                  ? "Viết thêm mô tả chi tiết và lưu ý bài viết"
-                  : "💬 Nhấp để thêm yêu cầu chi tiết..."
-              }
-              multiline={isNotesExpanded}
-              rows={isNotesExpanded ? 4 : 1}
-              onClick={() => setIsNotesExpanded(true)}
-              onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
-                if (!e.target.value) {
-                  setIsNotesExpanded(false);
-                }
-              }}
+              placeholder="💬 Viết thêm mô tả chi tiết và lưu ý bài viết"
+              multiline
+              minRows={1}
+              maxRows={4}
               InputProps={{
                 startAdornment: (
                   <Iconify
@@ -112,7 +128,7 @@ export function StepContent() {
                   />
                 ),
                 sx: {
-                  alignItems: isNotesExpanded ? "flex-start" : "center",
+                  alignItems: "flex-start",
                 },
               }}
               sx={{
@@ -131,7 +147,7 @@ export function StepContent() {
           <CardHeader title="Nội dung bài viết" />
           <Stack spacing={3} sx={{ p: 3 }}>
             <RHFEditor
-              name="content"
+              name="post_content"
               label="Nội dung bài viết"
               placeholder="Nhập nội dung bài viết"
             />
@@ -147,15 +163,10 @@ export function StepContent() {
             <Box>
               <RHFTextField
                 name="ai_notes_create_image_step_3"
-                placeholder={"Viết mô tả hình ảnh bạn hướng đến AI đề xuất"}
-                multiline={isImageNotesExpanded}
-                rows={isImageNotesExpanded ? 4 : 1}
-                onClick={() => setIsImageNotesExpanded(true)}
-                onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
-                  if (!e.target.value) {
-                    setIsImageNotesExpanded(false);
-                  }
-                }}
+                placeholder="Viết mô tả hình ảnh bạn hướng đến AI đề xuất"
+                multiline
+                minRows={1}
+                maxRows={4}
                 InputProps={{
                   startAdornment: (
                     <Iconify
@@ -168,7 +179,7 @@ export function StepContent() {
                     />
                   ),
                   sx: {
-                    alignItems: isImageNotesExpanded ? "flex-start" : "center",
+                    alignItems: "flex-start",
                   },
                 }}
                 sx={{
@@ -221,12 +232,12 @@ export function StepContent() {
                     Hình ảnh đã tạo sinh ({generatedImages.length})
                   </Typography>
                   <Grid container spacing={2}>
-                    {generatedImages.map((file, index) => (
+                    {generatedImages.map((url, index) => (
                       <Grid item xs={12} sm={6} md={4} key={index}>
                         <Box sx={{ position: "relative" }}>
                           <Box
                             component="img"
-                            src={URL.createObjectURL(file)}
+                            src={url}
                             alt={`Generated ${index + 1}`}
                             sx={{
                               width: "100%",
@@ -284,7 +295,6 @@ export function StepContent() {
                 helperText="Chọn nhiều hình ảnh để đính kèm"
                 hidePreview={true}
               />
-              
               {/* Hiển thị ảnh đã upload */}
               {watch("media")?.length > 0 && (
                 <Paper sx={{ p: 2, mt: 2 }}>
@@ -313,7 +323,9 @@ export function StepContent() {
                             color="error"
                             onClick={() => {
                               const currentMedia = watch("media") || [];
-                              const updatedMedia = currentMedia.filter((_: File, i: number) => i !== index);
+                              const updatedMedia = currentMedia.filter(
+                                (_: File, i: number) => i !== index
+                              );
                               setValue("media", updatedMedia);
                             }}
                             sx={{

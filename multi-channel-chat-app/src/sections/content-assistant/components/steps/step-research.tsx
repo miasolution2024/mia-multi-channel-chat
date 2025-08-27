@@ -13,6 +13,7 @@ import {
   RHFTextField,
   RHFAutocomplete,
   RHFMultiSelect,
+  RHFSelect,
 } from "@/components/hook-form";
 import { Iconify } from "@/components/iconify";
 import { ContentSelectionDialog, SelectedItemsTable } from "../index";
@@ -20,11 +21,12 @@ import { getCustomerGroups } from "@/actions/customer-group";
 import { CustomerGroup } from "@/sections/customer-group/types";
 import { getCustomerJourneys } from "@/actions/customer-journey";
 import { CustomerJourney } from "@/sections/customer-journey/types";
+import { MenuItem } from "@mui/material";
+import { getOmniChannels, OmniChannel } from "@/actions/omni-channels";
 
 // ----------------------------------------------------------------------
 
 export function StepResearch() {
-  const [isNotesExpanded, setIsNotesExpanded] = useState(false);
   const [contentTonesDialogOpen, setContentTonesDialogOpen] = useState(false);
   const [aiRulesDialogOpen, setAiRulesDialogOpen] = useState(false);
   const [customerGroupsData, setCustomerGroupsData] = useState<CustomerGroup[]>(
@@ -33,6 +35,7 @@ export function StepResearch() {
   const [customerJourneysData, setCustomerJourneysData] = useState<
     CustomerJourney[]
   >([]);
+  const [omniChannelsData, setOmniChannelsData] = useState<OmniChannel[]>([]);
 
   const { watch, setValue } = useFormContext();
   const contentTones = watch("content_tone") || [];
@@ -75,8 +78,18 @@ export function StepResearch() {
       }
     };
 
+    const fetchOmniChannels = async () => {
+      try {
+        const response = await getOmniChannels(1, 100);
+        setOmniChannelsData(response.data || []);
+      } catch (error) {
+        console.error("Error fetching omni channels:", error);
+      }
+    };
+
     fetchCustomerGroups();
     fetchCustomerJourneys();
+    fetchOmniChannels();
   }, []);
 
   return (
@@ -85,19 +98,10 @@ export function StepResearch() {
       <Box sx={{ mb: 3 }}>
         <RHFTextField
           name="additional_notes_step_1"
-          placeholder={
-            isNotesExpanded
-              ? "Viết thêm mô tả chi tiết và lưu ý bài viết"
-              : "💬 Nhấp để thêm yêu cầu chi tiết..."
-          }
-          multiline={isNotesExpanded}
-          rows={isNotesExpanded ? 4 : 1}
-          onClick={() => setIsNotesExpanded(true)}
-          onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
-            if (!e.target.value) {
-              setIsNotesExpanded(false);
-            }
-          }}
+          placeholder="💬 Viết thêm mô tả chi tiết và lưu ý bài viết..."
+          multiline
+          minRows={1}
+          maxRows={4}
           InputProps={{
             startAdornment: (
               <Iconify
@@ -110,7 +114,7 @@ export function StepResearch() {
               />
             ),
             sx: {
-              alignItems: isNotesExpanded ? "flex-start" : "center",
+              alignItems: "flex-start",
             },
           }}
           sx={{
@@ -132,6 +136,16 @@ export function StepResearch() {
         <Stack spacing={3} sx={{ p: 3 }}>
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <RHFTextField required name="topic" label="Chủ đề bài viết" />
+            <RHFSelect required name="post_type" label="Loại bài viết">
+              {[
+                { value: "social_post", label: "Bài viết xã hội" },
+                { value: "seo_post", label: "Bài viết SEO" },
+              ].map((item) => (
+                <MenuItem key={item.value} value={item.value}>
+                  {item.label}
+                </MenuItem>
+              ))}
+            </RHFSelect>
           </Stack>
 
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
@@ -187,6 +201,16 @@ export function StepResearch() {
               options={customerJourneysData?.map((item: CustomerJourney) => ({
                 value: item.id,
                 label: item.name,
+              }))}
+            />
+            <RHFMultiSelect
+              required
+              name="omni_channels"
+              label="Omni channel"
+              sx={{ width: "100%" }}
+              options={omniChannelsData?.map((item: OmniChannel) => ({
+                value: item.id,
+                label: item.page_name,
               }))}
             />
           </Stack>
