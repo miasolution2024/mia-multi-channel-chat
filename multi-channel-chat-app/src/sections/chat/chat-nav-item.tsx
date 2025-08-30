@@ -69,6 +69,9 @@ export function ChatNavItem({
       const newQueryString = newSearchParams.toString();
 
       await readConversationAsync(conversation.id);
+
+      conversation.unread_count = 0;
+      
       mutate(getConversationsUnreadCountURL());
       
       router.push(`${paths.dashboard.chat}?${newQueryString}`);
