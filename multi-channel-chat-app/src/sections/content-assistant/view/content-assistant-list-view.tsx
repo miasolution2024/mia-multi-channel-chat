@@ -31,6 +31,7 @@ import {
   type ContentAssistantApiResponse,
   type MediaGeneratedAiItem,
 } from "@/actions/content-assistant";
+import { POST_TYPE_OPTIONS } from "@/constants/auto-post";
 
 // Tạo interface riêng cho table config
 interface ContentTableConfig {
@@ -118,6 +119,12 @@ const TABLE_CONFIG: ContentTableConfig[] = [
     id: "post_type",
     label: "Loại bài viết",
     align: "left",
+    render: (item: Content) => (
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+        {POST_TYPE_OPTIONS.find((option) => option.value === item.post_type)
+          ?.label || "N/A"}
+      </Box>
+    ),
   },
   {
     key: "main_seo_keyword",
@@ -382,6 +389,8 @@ export function ContentAssistantListView() {
       status: item.status || "draft",
       description: item.description,
       action: item.action,
+      media: [],
+      media_generated_ai: [],
     }));
   };
 

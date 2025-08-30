@@ -11,6 +11,7 @@ import { CustomBreadcrumbs } from "@/components/custom-breadcrumbs";
 import { toast } from "@/components/snackbar";
 import { ContentAssistantMultiStepForm } from "../content-assistant-multi-step-form";
 import { updateContentAssistant } from "@/actions/content-assistant";
+import { uploadFile } from "@/actions/upload";
 
 // ----------------------------------------------------------------------
 
@@ -18,9 +19,9 @@ export function ContentAssistantNewView() {
   const settings = useSettingsContext();
   const [isShowDraftButton, setIsShowDraftButton] = useState<boolean>(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [watchMethod, setWatchMethod] = useState<(() => Record<string, unknown>) | null>(
-    null
-  );
+  const [watchMethod, setWatchMethod] = useState<
+    (() => Record<string, unknown>) | null
+  >(null);
   const [activeStep, setActiveStep] = useState(0);
 
   const handleIdChange = (
@@ -47,13 +48,30 @@ export function ContentAssistantNewView() {
 
   const handleSaveDraft = useCallback(async () => {
     if (!watchMethod) return;
-    
+
     const currentFormData = watchMethod();
     if (!currentFormData?.id) return;
 
     setIsSavingDraft(true);
-    console.log("activeStep", activeStep);
     try {
+      // Upload media files if any
+      const uploadMediaFiles = async (
+        files: File[]
+      ): Promise<Array<{ id: string }>> => {
+        const uploadPromises = files.map(async (file) => {
+          const response = await uploadFile(file);
+          return { id: response.data.id };
+        });
+        return Promise.all(uploadPromises);
+      };
+
+      let mediaArray: Array<{ id: string }> = [];
+      if (
+        Array.isArray(currentFormData.media) &&
+        currentFormData.media.length > 0
+      ) {
+        mediaArray = await uploadMediaFiles(currentFormData.media);
+      }
       const updateData = {
         ...currentFormData,
         action: getActionByStep(activeStep),
@@ -103,6 +121,24 @@ export function ContentAssistantNewView() {
             ? currentFormData.omni_channels.map((channelId: number) => ({
                 ai_content_suggestions_id: "0", // Will be set by backend after creation
                 omni_channels_id: { id: channelId },
+              }))
+            : [],
+          update: [],
+          delete: [],
+        },
+        media: {
+          create: mediaArray.map((item) => ({
+            ai_content_suggestions_id: "+",
+            directus_files_id: { id: item.id },
+          })),
+          update: [],
+          delete: [],
+        },
+        media_generated_ai: {
+          create: Array.isArray(currentFormData.media_generated_ai)
+            ? currentFormData.media_generated_ai.map((fileId: string) => ({
+                ai_content_suggestions_id: "+",
+                directus_files_id: { id: fileId },
               }))
             : [],
           update: [],

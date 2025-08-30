@@ -109,8 +109,8 @@ export async function getContentAssistantList(
       'post_goal' ,
       'post_notes',
       'post_content',
-      'media',
-      'media_generated_ai',
+      'media.*',
+      'media_generated_ai.*',
       'post_html_format'
     ];
     

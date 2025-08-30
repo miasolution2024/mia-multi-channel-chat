@@ -11,13 +11,11 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import { alpha } from "@mui/material/styles";
-import Backdrop from "@mui/material/Backdrop";
-import Typography from "@mui/material/Typography";
-import LinearProgress from "@mui/material/LinearProgress";
 
 import { paths } from "@/routes/path";
 import { toast } from "@/components/snackbar";
 import { Form } from "@/components/hook-form";
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { Content } from "./view/content-assistant-list-view";
 import { CONFIG } from "@/config-global";
 
@@ -29,7 +27,7 @@ import {
   StepFormatHtml,
 } from "./components";
 import { createPost } from "@/actions/auto-mia";
-import { POST_STATUS } from "@/constants/auto-post";
+import { POST_STATUS, POST_TYPE } from "@/constants/auto-post";
 import { uploadFile } from "@/actions/upload";
 
 // ----------------------------------------------------------------------
@@ -172,6 +170,7 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
     reset,
     handleSubmit,
     trigger,
+    watch,
     formState: { isSubmitting },
   } = methods;
 
@@ -388,7 +387,9 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
         // Check if step 1 data has changed
         if (!isStep1DataChanged(currentStep1Data, cachedStep1Data)) {
           // Data hasn't changed, skip API call
-          setActiveStep((prevStep) => Math.min(prevStep + 1, 3));
+          const postType = methods.getValues("post_type");
+          const maxStep = postType === POST_TYPE.FACEBOOK_POST ? 2 : 3;
+          setActiveStep((prevStep) => Math.min(prevStep + 1, maxStep));
           break;
         }
 
@@ -415,7 +416,9 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
           // Cache the step 1 data after successful API call
           setCachedStep1Data(currentStep1Data);
 
-          setActiveStep((prevStep) => Math.min(prevStep + 1, 3));
+          const postType = methods.getValues("post_type");
+          const maxStep = postType === POST_TYPE.FACEBOOK_POST ? 2 : 3;
+          setActiveStep((prevStep) => Math.min(prevStep + 1, maxStep));
         } catch (error) {
           console.error("Error calling API:", error);
           toast.error("Có lỗi xảy ra khi tạo dàn ý!");
@@ -432,7 +435,9 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
         // Check if step 2 data has changed
         if (!isStep2DataChanged(currentStep2Data, cachedStep2Data)) {
           // Data hasn't changed, skip API call
-          setActiveStep((prevStep) => Math.min(prevStep + 1, 3));
+          const postType = methods.getValues("post_type");
+          const maxStep = postType === POST_TYPE.FACEBOOK_POST ? 2 : 3;
+          setActiveStep((prevStep) => Math.min(prevStep + 1, maxStep));
           break;
         }
 
@@ -462,7 +467,9 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
           // Cache the step 2 data after successful API call
           setCachedStep2Data(currentStep2Data);
 
-          setActiveStep((prevStep) => Math.min(prevStep + 1, 3));
+          const postType = methods.getValues("post_type");
+          const maxStep = postType === POST_TYPE.FACEBOOK_POST ? 2 : 3;
+          setActiveStep((prevStep) => Math.min(prevStep + 1, maxStep));
         } catch (error) {
           console.error("Error calling API:", error);
           toast.error("Có lỗi xảy ra khi tạo nội dung!");
@@ -498,14 +505,21 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
           };
 
           const response = await createPost(apiData);
-          if (response?.data?.post_html_format) {
+          const postType = methods.getValues("post_type");
+
+          // For facebook_post, we don't need HTML format step
+          if (
+            postType !== POST_TYPE.FACEBOOK_POST &&
+            response?.data?.post_html_format
+          ) {
             methods.setValue(
               "post_html_format",
               response.data.post_html_format
             );
           }
 
-          setActiveStep((prevStep) => Math.min(prevStep + 1, 3));
+          const maxStep = postType === POST_TYPE.FACEBOOK_POST ? 2 : 3;
+          setActiveStep((prevStep) => Math.min(prevStep + 1, maxStep));
         } catch (error) {
           console.error("Error calling API:", error);
           toast.error("Có lỗi xảy ra khi tạo HTML format!");
@@ -612,6 +626,8 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
   });
 
   const renderStepContent = () => {
+    const postType = watch("post_type");
+
     switch (activeStep) {
       case 0:
         return <StepResearch />;
@@ -620,67 +636,78 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
       case 2:
         return <StepContent />;
       case 3:
-        return <StepFormatHtml />;
+        // Only show HTML step for non-facebook posts
+        return postType !== POST_TYPE.FACEBOOK_POST ? (
+          <StepFormatHtml />
+        ) : (
+          <StepContent />
+        );
 
       default:
         return <StepResearch />;
     }
   };
 
-  const renderActions = () => (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 2,
-        mt: 4,
-        p: 3,
-        borderRadius: 1.5,
-        bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
-      }}
-    >
-      {activeStep !== 0 && (
-        <Button
-          sx={{ borderRadius: 2 }}
-          size="large"
-          variant="outlined"
-          onClick={
-            activeStep === 0
-              ? () => router.push(paths.dashboard.contentAssistant.root)
-              : handleBack
-          }
-        >
-          Quay lại
-        </Button>
-      )}
+  const renderActions = () => {
+    const postType = watch("post_type");
+    const maxStep = postType === POST_TYPE.FACEBOOK_POST ? 2 : 3;
+    const isLastStep = activeStep >= maxStep;
 
-      <Stack direction="row" spacing={2}>
-        {activeStep < 3 ? (
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 2,
+          mt: 4,
+          p: 3,
+          borderRadius: 1.5,
+          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
+        }}
+      >
+        {activeStep !== 0 && (
           <Button
-            variant="contained"
-            onClick={handleNext}
-            size="large"
             sx={{ borderRadius: 2 }}
-            loading={isNextLoading}
-            disabled={isNextLoading}
-          >
-            {isNextLoading ? "Đang tạo dàn ý..." : "Tiếp theo"}
-          </Button>
-        ) : (
-          <Button
-            type="submit"
-            variant="contained"
-            loading={isSubmitting}
             size="large"
-            sx={{ borderRadius: 2 }}
+            variant="outlined"
+            onClick={
+              activeStep === 0
+                ? () => router.push(paths.dashboard.contentAssistant.root)
+                : handleBack
+            }
           >
-            {!editData ? "Tạo nội dung" : "Cập nhật"}
+            Quay lại
           </Button>
         )}
-      </Stack>
-    </Box>
-  );
+
+        <Stack direction="row" spacing={2}>
+          {!isLastStep ? (
+            <Button
+              variant="contained"
+              onClick={handleNext}
+              size="large"
+              sx={{ borderRadius: 2 }}
+              loading={isNextLoading}
+              disabled={isNextLoading}
+            >
+              {isNextLoading ? "Đang tạo dàn ý..." : "Tiếp theo"}
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              variant="contained"
+              loading={isSubmitting}
+              size="large"
+              sx={{ borderRadius: 2 }}
+            >
+              {!editData ? "Tạo nội dung" : "Cập nhật"}
+            </Button>
+          )}
+        </Stack>
+      </Box>
+    );
+  };
 
   const getLoadingMessage = () => {
     switch (activeStep) {
@@ -700,7 +727,7 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
   return (
     <>
       <Form methods={methods} onSubmit={onSubmit}>
-        <ContentStepper activeStep={activeStep} />
+        <ContentStepper activeStep={activeStep} postType={watch("post_type")} />
 
         {renderStepContent()}
 
@@ -708,78 +735,11 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
       </Form>
 
       {/* Loading Overlay */}
-      <Backdrop
-        sx={{
-          color: "#fff",
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: "rgba(0, 0, 0, 0.8)",
-          backdropFilter: "blur(4px)",
-        }}
+      <LoadingOverlay
         open={isNextLoading}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 3,
-            p: 4,
-            borderRadius: 2,
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            minWidth: 320,
-          }}
-        >
-          <Box sx={{ textAlign: "center", width: "100%" }}>
-            <Typography
-              variant="h6"
-              sx={{
-                color: "#fff",
-                fontWeight: 600,
-                mb: 1,
-              }}
-            >
-              Đang xử lý...
-            </Typography>
-
-            <Typography
-              variant="body2"
-              sx={{
-                color: "rgba(255, 255, 255, 0.8)",
-                mb: 2,
-                lineHeight: 1.5,
-              }}
-            >
-              {getLoadingMessage()}
-            </Typography>
-
-            <LinearProgress
-              sx={{
-                width: "100%",
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                "& .MuiLinearProgress-bar": {
-                  backgroundColor: "#fff",
-                  borderRadius: 3,
-                },
-              }}
-            />
-
-            <Typography
-              variant="caption"
-              sx={{
-                color: "rgba(255, 255, 255, 0.6)",
-                mt: 2,
-                display: "block",
-              }}
-            >
-              Quá trình này có thể mất 1-2 phút. Vui lòng không tắt trình duyệt.
-            </Typography>
-          </Box>
-        </Box>
-      </Backdrop>
+        title="Đang xử lý..."
+        description={getLoadingMessage()}
+      />
     </>
   );
 }

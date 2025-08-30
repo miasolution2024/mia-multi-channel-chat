@@ -140,6 +140,7 @@ export function StepResearch() {
               {[
                 { value: "social_post", label: "Bài viết xã hội" },
                 { value: "seo_post", label: "Bài viết SEO" },
+                { value: "facebook_post", label: "Bài viết Facebook" },
               ].map((item) => (
                 <MenuItem key={item.value} value={item.value}>
                   {item.label}

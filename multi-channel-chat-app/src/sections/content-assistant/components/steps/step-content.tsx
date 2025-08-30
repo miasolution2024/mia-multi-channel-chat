@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
 import CardHeader from "@mui/material/CardHeader";
@@ -12,11 +12,11 @@ import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
-import CircularProgress from "@mui/material/CircularProgress";
 import { useFormContext } from "react-hook-form";
 
 import { RHFTextField, RHFEditor, RHFUpload } from "@/components/hook-form";
 import { Iconify } from "@/components/iconify";
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { createPost } from "@/actions/auto-mia";
 import { toast } from "@/components/snackbar";
 import { Content } from "../../view/content-assistant-list-view";
@@ -24,6 +24,11 @@ import { CONFIG } from "@/config-global";
 import { MediaGeneratedAiItem } from "@/actions/content-assistant";
 
 // ----------------------------------------------------------------------
+
+// Extended File interface to include preview property
+interface FileWithPreview extends File {
+  preview?: string;
+}
 
 type Props = {
   currentContent?: Content;
@@ -36,11 +41,22 @@ export function StepContent({ currentContent }: Props) {
 
   const { setValue, watch } = useFormContext();
   const mediaGeneratedAi = watch("media_generated_ai") || [];
+  console.log("mediaGeneratedAi", mediaGeneratedAi);
 
+  // Initialize generated images from existing mediaGeneratedAi data
+  useEffect(() => {
+    if (mediaGeneratedAi && mediaGeneratedAi.length > 0) {
+      const imageUrls = mediaGeneratedAi.map((item: MediaGeneratedAiItem | string) => {
+        // Handle both object format (from API) and string format (new generated)
+        const fileId = typeof item === 'string' ? item : item.directus_files_id;
+        return `${CONFIG.serverUrl}/assets/${fileId}&key=system-large-contain`;
+      });
+      setGeneratedImages(imageUrls);
+    }
+  }, [mediaGeneratedAi]);
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
-
   const handleGenerateImage = async () => {
     setIsGenerating(true);
     try {
@@ -86,18 +102,18 @@ export function StepContent({ currentContent }: Props) {
   };
 
   const handleRemoveImage = (index: number) => {
+    const removedImageUrl = generatedImages[index];
     const updatedImages = generatedImages.filter((_, i) => i !== index);
     setGeneratedImages(updatedImages);
 
     const updatedMedia = mediaGeneratedAi.filter(
       (item: MediaGeneratedAiItem | string) => {
         const fileId = typeof item === "string" ? item : item.directus_files_id;
-        return !generatedImages.includes(
-          `${CONFIG.serverUrl}/assets/${fileId}&key=system-large-contain`
-        );
+        const imageUrl = `${CONFIG.serverUrl}/assets/${fileId}&key=system-large-contain`;
+        return imageUrl !== removedImageUrl;
       }
     );
-    setValue("media_generated_ai", [...updatedMedia, ...updatedImages]);
+    setValue("media_generated_ai", updatedMedia);
   };
 
   return (
@@ -212,17 +228,11 @@ export function StepContent({ currentContent }: Props) {
               <Button
                 variant="contained"
                 onClick={handleGenerateImage}
-                startIcon={
-                  isGenerating ? (
-                    <CircularProgress size={20} color="inherit" />
-                  ) : (
-                    <Iconify icon="solar:gallery-add-bold" />
-                  )
-                }
+                startIcon={<Iconify icon="solar:gallery-add-bold" />}
                 disabled={isGenerating}
                 sx={{ mb: 3 }}
               >
-                {isGenerating ? "Đang tạo sinh..." : "Tạo sinh hình ảnh"}
+                Tạo sinh hình ảnh
               </Button>
 
               {/* Hiển thị ảnh đã generate */}
@@ -307,7 +317,10 @@ export function StepContent({ currentContent }: Props) {
                         <Box sx={{ position: "relative" }}>
                           <Box
                             component="img"
-                            src={URL.createObjectURL(file)}
+                            src={
+                              (file as FileWithPreview).preview ||
+                              URL.createObjectURL(file)
+                            }
                             alt={`Uploaded ${index + 1}`}
                             sx={{
                               width: "100%",
@@ -357,6 +370,12 @@ export function StepContent({ currentContent }: Props) {
           </Stack>
         </Card>
       )}
+
+      <LoadingOverlay
+        open={isGenerating}
+        title="Đang tạo sinh hình ảnh..."
+        description="AI đang phân tích nội dung và tạo sinh hình ảnh phù hợp"
+      />
     </Box>
   );
 }

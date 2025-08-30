@@ -11,7 +11,21 @@ import { CustomBreadcrumbs } from "@/components/custom-breadcrumbs";
 import { toast } from "@/components/snackbar";
 import { ContentAssistantMultiStepForm } from "../content-assistant-multi-step-form";
 import { updateContentAssistant } from "@/actions/content-assistant";
+import { uploadFile } from "@/actions/upload";
 import { Content } from "./content-assistant-list-view";
+
+// Interface for File with additional properties from API transformation
+interface FileWithApiProperties extends File {
+  path?: string;
+  preview?: string;
+  idItem?: string;
+}
+
+// Interface for MediaGeneratedAiItem
+interface MediaGeneratedAiItem {
+  id?: number;
+  directus_files_id: string;
+}
 
 // ----------------------------------------------------------------------
 
@@ -22,9 +36,9 @@ type Props = {
 export function ContentAssistantEditView({ editData }: Props) {
   const settings = useSettingsContext();
   const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [watchMethod, setWatchMethod] = useState<(() => Record<string, unknown>) | null>(
-    null
-  );
+  const [watchMethod, setWatchMethod] = useState<
+    (() => Record<string, unknown>) | null
+  >(null);
   const [activeStep, setActiveStep] = useState(0);
 
   const handleIdChange = (
@@ -64,9 +78,121 @@ export function ContentAssistantEditView({ editData }: Props) {
     if (!editData?.id || !watchMethod) return;
 
     setIsSavingDraft(true);
-    console.log("activeStep", activeStep);
     try {
       const currentFormData = watchMethod();
+
+      // Upload media files if any
+      const uploadMediaFiles = async (
+        files: File[]
+      ): Promise<Array<{ id: string }>> => {
+        const uploadPromises = files.map(async (file) => {
+          const response = await uploadFile(file);
+          return { id: response.data.id };
+        });
+        return Promise.all(uploadPromises);
+      };
+
+      // Compare current media with editData.media to find new files
+      const getNewMediaFiles = (
+        currentMedia: FileWithApiProperties[],
+        originalMedia: FileWithApiProperties[]
+      ): FileWithApiProperties[] => {
+        if (!Array.isArray(currentMedia)) return [];
+        if (!Array.isArray(originalMedia)) return currentMedia;
+
+        return currentMedia.filter((currentFile) => {
+          // Check if this file exists in original media
+          // Files from API have 'path' property starting with 'image-'
+          // New uploaded files don't have this property or have different path
+          const isFromApi =
+            currentFile.path && currentFile.path.startsWith("image-");
+          if (!isFromApi) {
+            // This is a new uploaded file
+            return true;
+          }
+
+          // Check if this API file still exists in original data
+          return !originalMedia.some(
+            (originalFile) => originalFile.path === currentFile.path
+          );
+        });
+      };
+
+      // Find deleted media files (files that exist in original but not in current)
+      const getDeletedMediaFiles = (
+        currentMedia: FileWithApiProperties[],
+        originalMedia: FileWithApiProperties[]
+      ): string[] => {
+        if (!Array.isArray(originalMedia)) return [];
+        if (!Array.isArray(currentMedia))
+          return originalMedia
+            .map((file) => file.idItem)
+            .filter(Boolean) as string[];
+
+        return originalMedia
+          .filter((originalFile) => {
+            // Only consider API files (files with path starting with 'image-')
+            const isFromApi =
+              originalFile.path && originalFile.path.startsWith("image-");
+            if (!isFromApi) return false;
+
+            // Check if this original file still exists in current media
+            return !currentMedia.some(
+              (currentFile) => currentFile.path === originalFile.path
+            );
+          })
+          .map((file) => file.idItem)
+          .filter(Boolean) as string[];
+      };
+
+      // Find deleted media_generated_ai items
+      const getDeletedMediaGeneratedAiFiles = (
+        currentMediaGeneratedAi: string[] | MediaGeneratedAiItem[],
+        originalMediaGeneratedAi: MediaGeneratedAiItem[]
+      ): string[] => {
+        if (!Array.isArray(originalMediaGeneratedAi)) return [];
+        if (!Array.isArray(currentMediaGeneratedAi))
+          return originalMediaGeneratedAi
+            .map((item) => item.id?.toString())
+            .filter(Boolean) as string[];
+
+        return originalMediaGeneratedAi
+          .filter((originalItem) => {
+            // Check if this original item still exists in current media_generated_ai
+            return !currentMediaGeneratedAi.some((currentItem) => {
+              // Compare by directus_files_id if it's a string, or by id if it's an object
+              const currentId =
+                typeof currentItem === "string"
+                  ? currentItem
+                  : currentItem.directus_files_id;
+              return currentId === originalItem.directus_files_id;
+            });
+          })
+          .map((item) => item.id?.toString())
+          .filter(Boolean) as string[];
+      };
+
+      const newMediaFiles = getNewMediaFiles(
+        currentFormData.media as FileWithApiProperties[],
+        editData.media as FileWithApiProperties[]
+      );
+
+      const deletedMediaIds = getDeletedMediaFiles(
+        currentFormData.media as FileWithApiProperties[],
+        editData.media as FileWithApiProperties[]
+      );
+
+      const deletedMediaGeneratedAiIds = getDeletedMediaGeneratedAiFiles(
+        (currentFormData.media_generated_ai as
+          | string[]
+          | MediaGeneratedAiItem[]) || [],
+        editData.media_generated_ai || []
+      );
+
+      let mediaArray: Array<{ id: string }> = [];
+      if (newMediaFiles.length > 0) {
+        mediaArray = await uploadMediaFiles(newMediaFiles);
+      }
       const updateData = {
         ...currentFormData,
         action: getActionByStep(activeStep),
@@ -154,6 +280,32 @@ export function ContentAssistantEditView({ editData }: Props) {
             : [],
           update: [],
           delete: [],
+        },
+        media: {
+          create: mediaArray.map((item) => ({
+            ai_content_suggestions_id: "+",
+            directus_files_id: { id: item.id },
+          })),
+          update: [],
+          delete: deletedMediaIds,
+        },
+        media_generated_ai: {
+          create: Array.isArray(currentFormData.media_generated_ai)
+            ? currentFormData.media_generated_ai
+                .filter((item: string | MediaGeneratedAiItem) => {
+                  // Include all string items (new generated images)
+                  if (typeof item === "string") {
+                    return true;
+                  }
+                  return false; // Don't include existing objects in create
+                })
+                .map((fileId: string) => ({
+                  ai_content_suggestions_id: "+",
+                  directus_files_id: { id: fileId },
+                }))
+            : [],
+          update: [],
+          delete: deletedMediaGeneratedAiIds,
         },
       };
       await updateContentAssistant(editData.id, updateData);

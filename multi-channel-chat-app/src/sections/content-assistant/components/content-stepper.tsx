@@ -23,17 +23,32 @@ const steps = [
   },
 ];
 
+const facebookSteps = [
+  {
+    label: 'Nghiên cứu & phân tích',
+  },
+  {
+    label: 'Lên outline bài viết',
+  },
+  {
+    label: 'Viết bài',
+  },
+];
+
 // ----------------------------------------------------------------------
 
 type Props = {
   activeStep: number;
+  postType?: string;
 };
 
-export function ContentStepper({ activeStep }: Props) {
+export function ContentStepper({ activeStep, postType }: Props) {
+  const currentSteps = postType === 'facebook_post' ? facebookSteps : steps;
+  
   return (
     <Box sx={{ width: '100%', mb: 4 }}>
       <Stepper activeStep={activeStep} alternativeLabel>
-        {steps.map((step) => (
+        {currentSteps.map((step) => (
           <Step key={step.label}>
             <StepLabel
               sx={{
@@ -63,4 +78,4 @@ export function ContentStepper({ activeStep }: Props) {
   );
 }
 
-export { steps };
+export { steps, facebookSteps };
