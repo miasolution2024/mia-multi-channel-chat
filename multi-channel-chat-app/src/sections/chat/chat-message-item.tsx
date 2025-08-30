@@ -210,7 +210,7 @@ export function ChatMessageItem({
       sx={{
         p: 1.5,
         minWidth: 48,
-        maxWidth: 320,
+        maxWidth: 350,
         borderRadius: 1,
         typography: "body2",
         bgcolor: "background.neutral",

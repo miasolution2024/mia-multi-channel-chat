@@ -86,6 +86,7 @@ export function getConversationDetailURL(conversationId: number) {
       "messages.attachments.directus_files_id.filename_download",
       "omni_channel.id",
       "omni_channel.page_name",
+      "omni_channel.page_id",
     ].join(","),
   }).toString();
 

@@ -2,6 +2,7 @@
 // ----------------------------------------------------------------------
 
 import { CONFIG } from "@/config-global";
+import { MessageType } from "@/models/message/message";
 
 // Define more types here
 const FORMAT_PDF = ["pdf"];
@@ -12,7 +13,7 @@ const FORMAT_EXCEL = ["xls", "xlsx"];
 const FORMAT_ZIP = ["zip", "rar", "iso"];
 const FORMAT_ILLUSTRATOR = ["ai", "esp"];
 const FORMAT_POWERPOINT = ["ppt", "pptx"];
-const FORMAT_AUDIO = ["wav", "aif", "mp3", "aac","mpga"];
+const FORMAT_AUDIO = ["wav", "aif", "mp3", "aac", "mpga"];
 const FORMAT_IMG = ["jpg", "jpeg", "gif", "bmp", "png", "svg", "webp"];
 const FORMAT_VIDEO = ["m4v", "avi", "mpg", "mp4", "webm", "mov"];
 
@@ -113,6 +114,25 @@ export function fileThumb(fileUrl: string) {
       thumb = iconUrl("ic-file");
   }
   return thumb;
+}
+// ----------------------------------------------------------------------
+
+export function getMessageType(fileUrl: string) {
+  let type;
+  switch (fileFormat(fileUrl)) {
+    case "audio":
+      type = MessageType.AUDIO;
+      break;
+    case "video":
+      type = MessageType.VIDEO;
+      break;
+    case "image":
+      type = MessageType.IMAGE;
+      break;
+    default:
+      type = MessageType.FILE;
+  }
+  return type;
 }
 
 // ----------------------------------------------------------------------

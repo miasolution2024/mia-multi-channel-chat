@@ -15,6 +15,10 @@ import {
   Conversation,
   ConversationChannel,
 } from "@/models/conversation/conversations";
+import { useBoolean } from "@/hooks/use-boolean";
+import { MultiFilePreview } from "@/components/upload";
+import { uploadFile } from "@/actions/upload";
+import { fileTypeByUrl, getMessageType } from "@/components/file-thumbnail";
 
 // ----------------------------------------------------------------------
 
@@ -32,8 +36,10 @@ export function ChatMessageInput({
   const { user } = useAuthContext();
 
   const fileRef = useRef<any | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
   const [message, setMessage] = useState("");
+  const isSending = useBoolean();
 
   const myContact: User = useMemo(
     () => ({
@@ -54,28 +60,70 @@ export function ChatMessageInput({
     selectedChannel,
   });
 
-  // const handleAttach = useCallback(() => {
-  //   if (fileRef.current) {
-  //     fileRef.current.click();
-  //   }
-  // }, []);
+  const handleFileChange = (event: any) => {
+    console.log(event);
+
+    setFile(event.target.files[0]);
+  };
+
+  const handleAttach = useCallback(() => {
+    if (fileRef.current) {
+      fileRef.current.click();
+    }
+  }, []);
 
   const handleChangeMessage = useCallback((event: any) => {
     setMessage(event.target.value);
   }, []);
 
+  const onRemove = () => {
+    setFile(null);
+  };
+
+  const handleUpload = useCallback(
+    async (file: File) => {
+      try {
+        const response = await uploadFile(file);
+        messageData.attachments = [
+          { id: response.data.id, fileExtension: fileTypeByUrl(file.name) },
+        ];
+        messageData.type = getMessageType(file.name);
+        setFile(null);
+      } catch (error) {
+        console.error("File upload failed:", error);
+      }
+    },
+    [messageData]
+  );
+
   const handleSendMessage = useCallback(async () => {
     try {
-      if (!message) return;
+      if (!selectedConversationId || isSending.value) return;
 
-      if (!selectedConversationId) return;
+      if (!message && !file) return;
+
+      isSending.onTrue();
+
+      if (file) {
+        await handleUpload(file);
+      }
+
       await sendMessage(messageData);
+
+      isSending.onFalse();
     } catch (error) {
       console.error(error);
     } finally {
       setMessage("");
     }
-  }, [message, messageData, selectedConversationId]);
+  }, [
+    message,
+    messageData,
+    selectedConversationId,
+    isSending,
+    file,
+    handleUpload,
+  ]);
 
   return (
     <>
@@ -89,23 +137,17 @@ export function ChatMessageInput({
         }}
         onChange={handleChangeMessage}
         placeholder="Type a message"
-        disabled={disabled}
-        // startAdornment={
-        //   <IconButton>
-        //     <Iconify icon="eva:smiling-face-fill" />
-        //   </IconButton>
-        // }
+        disabled={disabled || isSending.value}
+        startAdornment={
+          <IconButton>
+            <Iconify icon="eva:smiling-face-fill" />
+          </IconButton>
+        }
         endAdornment={
           <Stack direction="row" sx={{ flexShrink: 0 }}>
-            {/* <IconButton onClick={handleAttach}>
-              <Iconify icon="solar:gallery-add-bold" />
-            </IconButton>
             <IconButton onClick={handleAttach}>
               <Iconify icon="eva:attach-2-fill" />
             </IconButton>
-            <IconButton>
-              <Iconify icon="solar:microphone-bold" />
-            </IconButton> */}
             <IconButton onClick={handleSendMessage}>
               <Iconify icon="streamline-plump:mail-send-email-message-solid" />
             </IconButton>
@@ -118,8 +160,16 @@ export function ChatMessageInput({
           borderTop: (theme: any) => `solid 1px ${theme.vars.palette.divider}`,
         }}
       />
+      {file && (
+        <MultiFilePreview files={[file]} onRemove={onRemove} sx={{ m: 3 }} />
+      )}
 
-      <input type="file" ref={fileRef} style={{ display: "none" }} />
+      <input
+        type="file"
+        ref={fileRef}
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
     </>
   );
 }

@@ -26,10 +26,6 @@ export function initialConversation({
 }): {
   messageData: MessageCreateRequest;
 } {
-  const sender = conversation?.participants.find(
-    (participant: Participant) => participant.participant_id === me.id
-  );
-
   const recipient = conversation?.participants.find(
     (participant: Participant) => participant.participant_id !== me.id
   );
@@ -42,7 +38,7 @@ export function initialConversation({
     type: MessageType.TEXT,
     sender_id: me.id,
     sender_type: ParticipantType.STAFF,
-    external_receive_id: sender?.external_user_id,
+    external_receive_id: conversation?.omni_channel?.page_id,
     external_sender_id: recipient?.external_user_id,
   };
 

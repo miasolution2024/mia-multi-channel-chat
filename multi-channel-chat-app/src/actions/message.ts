@@ -14,7 +14,7 @@ import axios from "axios";
 // ----------------------------------------------------------------------
 export async function sendMessage(request: MessageCreateRequest) {
   try {
-    const url = 'https://auto.miasolution.vn/webhook/mia/message'
+    const url = 'https://auto.miasolution.vn/webhook/donghan-ai-chat'
     await axios.post(url, request);
   } catch (error) {
     console.error("Error during create message:", error);

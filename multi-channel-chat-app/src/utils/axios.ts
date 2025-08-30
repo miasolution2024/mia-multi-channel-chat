@@ -168,7 +168,7 @@ export const endpoints = {
     list: "items/mc_messages",
     create: "items/mc_messages",
   },
-  upload: "/api/upload",
+  upload: "/files",
   files: "/files",
   chat: "/api/chat",
   contentTones: {

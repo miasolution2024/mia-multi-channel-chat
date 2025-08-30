@@ -1,3 +1,4 @@
+import axiosInstance from "@/utils/axios";
 import axios, { endpoints } from "@/utils/axios";
 
 // Interface for file upload response
@@ -42,7 +43,7 @@ export async function uploadFiles(files: File[]) {
       form.append("files", file, file.name);
     });
 
-    const response = await axios.post(endpoints.upload, form, {
+    const response = await axiosInstance.post(endpoints.upload, form, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -61,7 +62,7 @@ export async function uploadFile(file: File): Promise<FileUploadResponse> {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await axios.post<FileUploadResponse>(endpoints.files, formData, {
+    const response = await axiosInstance.post<FileUploadResponse>(endpoints.files, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
