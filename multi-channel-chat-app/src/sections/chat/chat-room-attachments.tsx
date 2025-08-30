@@ -9,7 +9,8 @@ import { FileThumbnail } from "@/components/file-thumbnail";
 
 import { CollapseButton } from "./styles";
 import { fDateTime } from "@/utils/format-time";
-import { Attachment } from "@/models/message/message";
+import { Attachment, DirectusFile } from "@/models/message/message";
+import { CONFIG } from "@/config-global";
 
 // ----------------------------------------------------------------------
 
@@ -22,6 +23,16 @@ export function ChatRoomAttachments({
 
   const totalAttachments = attachments.length;
 
+  const handleDownload = (file: DirectusFile) => {
+    if (!file) return;
+    const link = document.createElement("a");
+    link.href = `${CONFIG.serverUrl}/assets/${file.id}?download=true`;
+    link.download = file.filename_download;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const renderList = attachments
     .filter((a) => a.directus_files_id)
     .map((attachment: Attachment) => (
@@ -33,7 +44,7 @@ export function ChatRoomAttachments({
       >
         <FileThumbnail
           file={attachment.directus_files_id?.filename_download}
-          onDownload={() => console.info("DOWNLOAD")}
+          onDownload={() => handleDownload(attachment.directus_files_id)}
           slotProps={{ icon: { width: 24, height: 24 } }}
           sx={{ width: 40, height: 40, bgcolor: "background.neutral" }}
         />

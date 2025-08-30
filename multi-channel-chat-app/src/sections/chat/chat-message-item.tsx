@@ -7,15 +7,26 @@ import Typography from "@mui/material/Typography";
 import { getMessage } from "./utils/get-message";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { fDateTime, fToNow } from "@/utils/format-time";
-import { Message, MessageType } from "@/models/message/message";
+import { DirectusFile, Message, MessageType } from "@/models/message/message";
 import {
   Participant,
   ParticipantType,
 } from "@/models/participants/participant";
 import { CONFIG } from "@/config-global";
 import { FileThumbnail } from "@/components/file-thumbnail";
-import { ListItemText, Paper } from "@mui/material";
+import {
+  IconButton,
+  ListItemText,
+  MenuItem,
+  MenuList,
+  Paper,
+} from "@mui/material";
 import { fData } from "@/utils/format-number";
+import { CustomPopover, usePopover } from "@/components/custom-popover";
+import { Iconify } from "@/components/iconify";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { useCallback } from "react";
+import { toast } from "@/components/snackbar";
 
 // ----------------------------------------------------------------------
 
@@ -30,6 +41,10 @@ export function ChatMessageItem({
 }) {
   const { user } = useAuthContext();
 
+  const popover = usePopover();
+
+  const { copy } = useCopyToClipboard();
+
   const { me, senderDetails, type } = getMessage({
     message,
     participants,
@@ -41,7 +56,24 @@ export function ChatMessageItem({
   const { content, attachments, date_created, sender_type } = message;
 
   const firstAttachment = attachments[0]?.directus_files_id;
-  
+
+  const handleCopy = useCallback(
+    (file: DirectusFile) => {
+      toast.success("Copied!");
+      copy(`${CONFIG.serverUrl}/assets/${file.id}`);
+    },
+    [copy]
+  );
+
+  const handleDownload = (file: DirectusFile) => {
+    if (!file) return;
+    const link = document.createElement("a");
+    link.href = `${CONFIG.serverUrl}/assets/${file.id}?download=true`;
+    link.download = file.filename_download;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   const renderInfo = (
     <Typography
       noWrap
@@ -54,55 +86,105 @@ export function ChatMessageItem({
     </Typography>
   );
 
-  const renderAttachment = firstAttachment && (
-    <Paper
-      variant="outlined"
+  const renderAction = (
+    <Box
       sx={{
-        gap: 2,
-        borderRadius: 2,
-        display: "flex",
-        cursor: "pointer",
-        position: "relative",
-        bgcolor: "transparent",
-        p: { xs: 2.5, sm: 2 },
-        alignItems: { xs: "unset", sm: "center" },
-        flexDirection: { xs: "column", sm: "row" },
-        "&:hover": {
-          bgcolor: "background.paper",
-          boxShadow: (theme: any) => theme.customShadows.z20,
-        },
+        top: 8,
+        right: 8,
+        flexShrink: { sm: 0 },
+        position: { xs: "absolute", sm: "unset" },
       }}
     >
-      <FileThumbnail file={firstAttachment?.filename_download} />
+      <IconButton
+        color={popover.open ? "inherit" : "default"}
+        onClick={popover.onOpen}
+      >
+        <Iconify icon="eva:more-vertical-fill" />
+      </IconButton>
+    </Box>
+  );
 
-      <ListItemText
-        primary={firstAttachment.filename_download}
-        secondary={
-          <>
-            {fData(firstAttachment.filesize)}
-            <Box
-              sx={{
-                mx: 0.75,
-                width: 2,
-                height: 2,
-                borderRadius: "50%",
-                bgcolor: "currentColor",
-              }}
-            />
-            {fDateTime(firstAttachment.created_on)}
-          </>
-        }
-        primaryTypographyProps={{ noWrap: true, typography: "subtitle2" }}
-        secondaryTypographyProps={{
-          mt: 0.5,
-          component: "span",
-          alignItems: "center",
-          typography: "caption",
-          color: "text.disabled",
-          display: "inline-flex",
+  const renderAttachment = firstAttachment && (
+    <>
+      <Paper
+        variant="outlined"
+        sx={{
+          gap: 2,
+          borderRadius: 2,
+          display: "flex",
+          cursor: "pointer",
+          position: "relative",
+          bgcolor: "transparent",
+          p: { xs: 2.5, sm: 2 },
+          alignItems: { xs: "unset", sm: "center" },
+          flexDirection: { xs: "column", sm: "row" },
+          "&:hover": {
+            bgcolor: "background.paper",
+            boxShadow: (theme: any) => theme.customShadows.z20,
+          },
         }}
-      />
-    </Paper>
+      >
+        <FileThumbnail file={firstAttachment?.filename_download} />
+
+        <ListItemText
+          primary={firstAttachment.filename_download}
+          secondary={
+            <>
+              {fData(firstAttachment.filesize)}
+              <Box
+                sx={{
+                  mx: 0.75,
+                  width: 2,
+                  height: 2,
+                  borderRadius: "50%",
+                  bgcolor: "currentColor",
+                }}
+              />
+              {fDateTime(firstAttachment.created_on)}
+            </>
+          }
+          primaryTypographyProps={{ noWrap: true, typography: "subtitle2" }}
+          secondaryTypographyProps={{
+            mt: 0.5,
+            component: "span",
+            alignItems: "center",
+            typography: "caption",
+            color: "text.disabled",
+            display: "inline-flex",
+          }}
+        />
+        {renderAction}
+      </Paper>
+
+      <CustomPopover
+        open={popover.open}
+        anchorEl={popover.anchorEl}
+        onClose={popover.onClose}
+        slotProps={{ arrow: { placement: "right-top" } }}
+      >
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              popover.onClose();
+              handleCopy(firstAttachment);
+            }}
+          >
+            <Iconify icon="eva:link-2-fill" />
+            Copy Link
+          </MenuItem>
+
+          <MenuItem
+            onClick={() => {
+              popover.onClose();
+              handleDownload(firstAttachment);
+            }}
+          >
+            <Iconify icon="solar:download-minimalistic-linear" />
+            Download
+          </MenuItem>
+        </MenuList>
+      </CustomPopover>
+    </>
   );
 
   const renderImage = firstAttachment && (
