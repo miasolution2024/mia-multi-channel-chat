@@ -27,7 +27,6 @@ export function MultiChannelChatView() {
     }
     newSearchParams.set("channel", selectedChannel);
     const newQueryString = newSearchParams.toString();
-    console.log(newQueryString);
 
     router.push(`${paths.dashboard.chat}?${newQueryString}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps

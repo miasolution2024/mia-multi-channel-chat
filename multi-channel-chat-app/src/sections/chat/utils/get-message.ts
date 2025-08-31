@@ -1,5 +1,8 @@
-import { Message} from "@/models/message/message";
-import { Participant, ParticipantType } from "@/models/participants/participant";
+import { Message } from "@/models/message/message";
+import {
+  Participant,
+  ParticipantType,
+} from "@/models/participants/participant";
 
 export function getMessage({
   message,
@@ -10,7 +13,6 @@ export function getMessage({
   participants: Participant[];
   currentUserId: string;
 }) {
-  
   const sender = participants.find(
     (participant: Participant) =>
       participant.participant_id == message.sender_id
@@ -18,14 +20,16 @@ export function getMessage({
 
   const senderDetails =
     message.sender_id === currentUserId
-      ? { type: "me" }
+      ? { type: "me", firstName: sender?.participant_name }
       : {
           firstName: sender?.participant_name,
           participant_type: sender?.participant_type,
           participant_avatar: sender?.participant_avatar,
         };
- 
-  const me = senderDetails.type === "me" || sender?.participant_type === ParticipantType.CHATBOT;
+
+  const me =
+    senderDetails.type === "me" ||
+    sender?.participant_type === ParticipantType.CHATBOT;
 
   const type = message.type;
 

@@ -10,12 +10,16 @@ import { Message, MessageType } from "@/models/message/message";
 import { Participant } from "@/models/participants/participant";
 import { useEffect, useRef, useState } from "react";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
-import { getConversationDetailURL, getConversationsUnreadCountURL } from "@/actions/conversation";
+import {
+  getConversationDetailURL,
+  getConversationsUnreadCountURL,
+} from "@/actions/conversation";
 import { mutate } from "swr";
 import { websocketMessage } from "@/models/websocket-message";
 import { CONFIG } from "@/config-global";
 import NotificationSound from "@/components/notification-sound/notification-sound";
 import { uuidv4 } from "@/utils/uuidv4";
+import { useGetGroupsByUserId } from "@/actions/user";
 
 // ----------------------------------------------------------------------
 
@@ -43,6 +47,13 @@ export function ChatMessageList({
   const lightbox = useLightBox(slides);
 
   const { user } = useAuthContext();
+
+  const { userGroups } = useGetGroupsByUserId(user?.id);
+
+  const participantIds = [
+    ...(userGroups?.map((g) => g.id.toString()) || []),
+    user?.id || "",
+  ].filter((id) => !!id);
 
   const websocketRef = useRef<WebSocket | null>(null);
 
@@ -138,7 +149,7 @@ export function ChatMessageList({
           setPlayNotification(true);
 
         mutate(getConversationDetailURL(selectConversationId));
-        mutate(getConversationsUnreadCountURL());
+        mutate(getConversationsUnreadCountURL(participantIds));
       }
       if (data.type === "ping") {
         connection.send(JSON.stringify({ type: "pong" }));

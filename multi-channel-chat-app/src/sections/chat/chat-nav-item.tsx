@@ -22,6 +22,7 @@ import {
   readConversationAsync,
 } from "@/actions/conversation";
 import { mutate } from "swr";
+import { useGetGroupsByUserId } from "@/actions/user";
 
 // ----------------------------------------------------------------------
 
@@ -37,6 +38,13 @@ export function ChatNavItem({
   onCloseMobile: () => void;
 }) {
   const { user } = useAuthContext();
+
+  const { userGroups } = useGetGroupsByUserId(user?.id);
+
+  const participantIds = [
+    ...(userGroups?.map((g) => g.id.toString()) || []),
+    user?.id || "",
+  ].filter((id) => !!id);
 
   const searchParams = useSearchParams();
 
@@ -71,9 +79,9 @@ export function ChatNavItem({
       await readConversationAsync(conversation.id);
 
       conversation.unread_count = 0;
-      
-      mutate(getConversationsUnreadCountURL());
-      
+
+      mutate(getConversationsUnreadCountURL(participantIds));
+
       router.push(`${paths.dashboard.chat}?${newQueryString}`);
     } catch (error) {
       console.error(error);

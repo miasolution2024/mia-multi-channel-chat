@@ -13,8 +13,7 @@ export function getNavItem({
 
   const participantsInConversation = participants.filter(
     (participant) =>
-      participant.participant_id !== currentUserId &&
-      participant.participant_type !== ParticipantType.CHATBOT
+      participant.participant_type === ParticipantType.CUSTOMER
   );
 
   const displayName = participantsInConversation

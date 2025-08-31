@@ -17,7 +17,7 @@ import { usePopover, CustomPopover } from "@/components/custom-popover";
 
 import { ChatHeaderSkeleton } from "./chat-skeleton";
 import { fToNow } from "@/utils/format-time";
-import { Participant } from "@/models/participants/participant";
+import { Participant, ParticipantType } from "@/models/participants/participant";
 import { FormControlLabel, Switch } from "@mui/material";
 import { updateConversationChatbotActiveAsync } from "@/actions/conversation";
 
@@ -39,8 +39,8 @@ export function ChatHeaderDetail({
   const popover = usePopover();
 
   const lgUp = useResponsive("up", "lg");
-
-  const singleParticipant = participants[0];
+ 
+  const singleParticipant = participants.find(p => p.participant_type == ParticipantType.CUSTOMER);
 
   const { collapseDesktop, onCollapseDesktop, onOpenMobile } = collapseNav;
 

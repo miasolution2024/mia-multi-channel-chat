@@ -42,6 +42,9 @@ import { useGetCustomersByOmniChannel } from "@/actions/customer";
 import { Customer } from "@/models/customer/customer";
 import { useDebounce } from "@/hooks/use-debounce";
 import { SelectChangeEvent } from "@mui/material";
+import {
+  useGetGroupsByUserId,
+} from "@/actions/user";
 
 // ----------------------------------------------------------------------
 
@@ -78,6 +81,13 @@ export function ChatNav({
 
   const [selectedPageId, setSelectedPageId] = useState<string>("");
 
+  const { userGroups } = useGetGroupsByUserId(user?.id);
+
+  const participantIds = [
+    ...(userGroups?.map((g) => g.id.toString()) || []),
+    user?.id || "",
+  ].filter((id) => !!id);
+
   const getKey = (pageIndex: number, previousPageData: any) => {
     if (
       (previousPageData && previousPageData?.data?.length === 0) ||
@@ -85,7 +95,7 @@ export function ChatNav({
       !user?.id
     )
       return null;
-    const url = getConversationsURL(channel, selectedPageId, user?.id);
+    const url = getConversationsURL(channel, selectedPageId, participantIds);
 
     return `${url}&page=${pageIndex + 1}`;
   };
@@ -101,7 +111,7 @@ export function ChatNav({
 
   const allIds = conversations.map((c) => c.id);
 
-  const { omniChannels } = useGetOmniChannelsByChannel(channel);
+  const { omniChannels } = useGetOmniChannelsByChannel(channel, user?.id);
 
   const { customers } = useGetCustomersByOmniChannel(
     selectedPageId,
@@ -198,12 +208,12 @@ export function ChatNav({
       if (data.event === "create") {
         console.log(`New conversation created`);
         setPlayNotification(true);
-        mutate(getConversationsURL(channel, selectedPageId, user?.id));
-        mutate(getConversationsUnreadCountURL());
+        mutate(getConversationsURL(channel, selectedPageId, participantIds));
+        mutate(getConversationsUnreadCountURL(participantIds));
       } else if (data.event === "update") {
         console.log(`Conversation updated updated!`);
-        mutate(getConversationsURL(channel, selectedPageId, user?.id));
-        mutate(getConversationsUnreadCountURL());
+        mutate(getConversationsURL(channel, selectedPageId, participantIds));
+        mutate(getConversationsUnreadCountURL(participantIds));
       }
 
       if (data.type === "ping") {

@@ -28,6 +28,7 @@ export type MessageCreateRequest = {
   content: string;
   type: MessageType;
   external_message_id?: string;
+  customer_id?: string;
   attachments: {
     id: string;
     fileExtension: string;

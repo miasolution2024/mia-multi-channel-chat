@@ -15,11 +15,12 @@ import {
 export function getConversationsURL(
   channel: ConversationChannel,
   pageId: string,
-  userId?: string
+  participantIds: string[]
 ) {
-  if (!userId || !pageId) return "";
+  if (!participantIds || !pageId) return "";
   const queryParams = new URLSearchParams({
-    "filter[participants][_some][participant_id][_eq]": userId,
+    "filter[participants][_some][participant_id][_in]":
+      participantIds.join(","),
     "filter[omni_channel][page_id][_eq]": pageId,
     "filter[channel][_eq]": channel,
     sort: "-last_message_at",
@@ -47,9 +48,9 @@ export function getConversationsURL(
 export function useGetConversations(
   channel: ConversationChannel,
   pageId: string,
-  userId?: string
+  participantIds: string[]
 ) {
-  const url = getConversationsURL(channel, pageId, userId);
+  const url = getConversationsURL(channel, pageId, participantIds);
 
   const { data, isLoading, error, isValidating } = useSWR(
     url,
@@ -197,7 +198,7 @@ export async function getConversationByParticipantId(participantId: number) {
   try {
     const url = `${endpoints.conversations.list}?filter[participants][_some][participant_id][_eq]=${participantId}`;
     const response = await axios.get(url);
-    if ((response.status === 200 && response.data)) {
+    if (response.status === 200 && response.data) {
       return response.data.data;
     }
   } catch (error) {
@@ -207,14 +208,22 @@ export async function getConversationByParticipantId(participantId: number) {
 }
 
 // ----------------------------------------------------------------------
-export function getConversationsUnreadCountURL() {
-  return `${endpoints.conversations.list}?filter[unread_count][_gt]=0&aggregate[count]=unread_count&groupBy[]=channel`;
+export function getConversationsUnreadCountURL(participantIds: string[]) {
+  if (!participantIds) return "";
+  const queryParams = new URLSearchParams({
+    "filter[participants][_some][participant_id][_in]":
+      participantIds.join(","),
+    "filter[unread_count][_gt]": "0",
+    "aggregate[count]": "unread_count",
+    "groupBy[]": "channel",
+  }).toString();
+  return `${endpoints.conversations.list}?${queryParams}`;
 }
 
-export function useGetUnreadCountGroupByChannel() {
+export function useGetUnreadCountGroupByChannel(participantIds: string[]) {
   try {
     const { data, isLoading, error, isValidating } = useSWR(
-      getConversationsUnreadCountURL(),
+      getConversationsUnreadCountURL(participantIds),
       fetcher,
       swrConfig
     );

@@ -31,18 +31,27 @@ export function useGetOmniChannels() {
   return memoizedValue;
 }
 
-export function getOmniChannelsByChannelURL(channel: ConversationChannel) {
-  if (!channel) return "";
+export function getOmniChannelsByChannelURL(
+  channel: ConversationChannel,
+  userId?: string
+) {
+  if (!channel || !userId) return "";
   const queryParams = new URLSearchParams({
     "filter[source][_eq]": channel,
+    "filter[user_groups][_some][user_groups_id][users][directus_users_id][_eq]":
+      userId,
     "filter[is_enabled][_eq]": "true",
     fields: ["id", "page_id", "page_name"].join(","),
+    sort: "sort",
   }).toString();
   return `${endpoints.omniChannels.list}?${queryParams}`;
 }
 
-export function useGetOmniChannelsByChannel(channel: ConversationChannel) {
-  const url = getOmniChannelsByChannelURL(channel);
+export function useGetOmniChannelsByChannel(
+  channel: ConversationChannel,
+  userId?: string
+) {
+  const url = getOmniChannelsByChannelURL(channel, userId);
 
   const { data, isLoading, error, isValidating } = useSWR(
     url,

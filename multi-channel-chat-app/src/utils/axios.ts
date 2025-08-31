@@ -102,6 +102,10 @@ export const endpoints = {
     list: "/users",
     update: "/users",
   },
+  userGroups: {
+    list: "items/user_groups",
+    update: "items/user_groups",
+  },
   customers: {
     list: "/items/customers",
     update: "/items/customers",
@@ -194,5 +198,5 @@ export const endpoints = {
     create: "/items/customer_journey",
     update: "/items/customer_journey",
     delete: "/items/customer_journey",
-  }
+  },
 };

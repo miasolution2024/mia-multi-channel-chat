@@ -88,9 +88,10 @@ export function ChatMessageInput({
           { id: response.data.id, fileExtension: fileTypeByUrl(file.name) },
         ];
         messageData.type = getMessageType(file.name);
-        setFile(null);
       } catch (error) {
         console.error("File upload failed:", error);
+      } finally {
+        setFile(null);
       }
     },
     [messageData]
@@ -109,11 +110,10 @@ export function ChatMessageInput({
       }
 
       await sendMessage(messageData);
-
-      isSending.onFalse();
     } catch (error) {
       console.error(error);
     } finally {
+      isSending.onFalse();
       setMessage("");
     }
   }, [

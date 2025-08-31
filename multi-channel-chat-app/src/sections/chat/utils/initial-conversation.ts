@@ -37,6 +37,7 @@ export function initialConversation({
     content: message,
     type: MessageType.TEXT,
     sender_id: me.id,
+    customer_id: recipient?.participant_id,
     sender_type: ParticipantType.STAFF,
     external_receive_id: conversation?.omni_channel?.page_id,
     external_sender_id: recipient?.external_user_id,
