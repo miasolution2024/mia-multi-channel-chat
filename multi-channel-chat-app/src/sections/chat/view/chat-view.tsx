@@ -66,8 +66,6 @@ export function ChatView({
             collapseNav={roomNav}
             participants={allParticipants}
             loading={conversationLoading}
-            is_chatbot_active={conversation?.is_chatbot_active ?? false}
-            selectedConversationId={selectedConversationId}
           />
         ) : (
           <></>

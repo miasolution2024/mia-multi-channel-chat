@@ -75,6 +75,29 @@ export function useGetCustomers() {
 }
 
 // ----------------------------------------------------------------------
+export function useGetCustomerById(customerID?: string) {
+  const url = customerID ? `${endpoints.customers.list}/${customerID}` : "";
+  const { data, isLoading, error, isValidating } = useSWR(
+    url,
+    fetcher,
+    swrConfig
+  );
+
+  const memoizedValue = useMemo(
+    () => ({
+      customer: data?.data as Customer,
+      customerLoading: isLoading,
+      customerError: error,
+      customerValidating: isValidating,
+      customerEmpty: !isLoading && !data?.data.length,
+    }),
+    [data?.data, error, isLoading, isValidating]
+  );
+
+  return memoizedValue;
+}
+
+// ----------------------------------------------------------------------
 
 export async function updateCustomerAsync(
   customerID: string,
@@ -122,6 +145,26 @@ export async function deleteBulkCustomerAsync(customerIDs: string[]) {
     });
   } catch (error) {
     console.error("Error during delete customer:", error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function updateCustomerChatbotActiveAsync(
+  customerId: string,
+  isChatbotActive: boolean
+) {
+  try {
+    const url = `${endpoints.customers.update}/${customerId}`;
+    const response = await axiosInstance.patch(url, {
+      chatbot_response: isChatbotActive,
+    });
+    if ((response.status = 200)) {
+      return response.data;
+    }
+  } catch (error) {
+    console.error("Error during update conversation:", error);
     throw error;
   }
 }

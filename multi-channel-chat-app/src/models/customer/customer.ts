@@ -9,6 +9,7 @@ export type Customer = Common & {
   status: string;
   customer_source: string;
   address: string;
+  chatbot_response: boolean;
 }
 
 export interface CustomerRequest {

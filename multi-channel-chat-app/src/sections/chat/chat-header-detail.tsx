@@ -17,9 +17,15 @@ import { usePopover, CustomPopover } from "@/components/custom-popover";
 
 import { ChatHeaderSkeleton } from "./chat-skeleton";
 import { fToNow } from "@/utils/format-time";
-import { Participant, ParticipantType } from "@/models/participants/participant";
+import {
+  Participant,
+  ParticipantType,
+} from "@/models/participants/participant";
 import { FormControlLabel, Switch } from "@mui/material";
-import { updateConversationChatbotActiveAsync } from "@/actions/conversation";
+import {
+  updateCustomerChatbotActiveAsync,
+  useGetCustomerById,
+} from "@/actions/customer";
 
 // ----------------------------------------------------------------------
 
@@ -27,28 +33,29 @@ export function ChatHeaderDetail({
   collapseNav,
   participants,
   loading,
-  is_chatbot_active,
-  selectedConversationId
 }: {
   collapseNav: any;
   participants: Participant[];
   loading: boolean;
-  is_chatbot_active: boolean;
-  selectedConversationId: number;
 }) {
   const popover = usePopover();
 
   const lgUp = useResponsive("up", "lg");
- 
-  const singleParticipant = participants.find(p => p.participant_type == ParticipantType.CUSTOMER);
+
+  const singleParticipant = participants.find(
+    (p) => p.participant_type == ParticipantType.CUSTOMER
+  );
 
   const { collapseDesktop, onCollapseDesktop, onOpenMobile } = collapseNav;
 
-  const [checked, setChecked] = useState(is_chatbot_active);
+  const { customer } = useGetCustomerById(singleParticipant?.participant_id);
+
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    setChecked(is_chatbot_active);
-  }, [is_chatbot_active]);
+    if (!customer) return;
+    setChecked(customer?.chatbot_response);
+  }, [customer]);
 
   const handleToggleNav = useCallback(() => {
     if (lgUp) {
@@ -59,9 +66,14 @@ export function ChatHeaderDetail({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lgUp]);
 
-  const handActiveChatbot = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handActiveChatbot = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!customer) return;
+
     setChecked(event.target.checked);
-    await updateConversationChatbotActiveAsync(selectedConversationId, event.target.checked);
+
+    await updateCustomerChatbotActiveAsync(customer.id, event.target.checked);
   };
 
   const renderSingle = (
@@ -103,14 +115,6 @@ export function ChatHeaderDetail({
       {renderSingle}
 
       <Stack direction="row" flexGrow={1} justifyContent="flex-end">
-        {/* <IconButton>
-          <Iconify icon="solar:phone-bold" />
-        </IconButton>
-
-        <IconButton>
-          <Iconify icon="solar:videocamera-record-bold" />
-        </IconButton> */}
-
         <FormControlLabel
           control={
             <Switch
@@ -121,6 +125,14 @@ export function ChatHeaderDetail({
           }
           label="Chatbot Active"
         />
+
+        {/* <IconButton>
+          <Iconify icon="solar:phone-bold" />
+        </IconButton>
+
+        <IconButton>
+          <Iconify icon="solar:videocamera-record-bold" />
+        </IconButton> */}
 
         <IconButton onClick={handleToggleNav}>
           <Iconify
