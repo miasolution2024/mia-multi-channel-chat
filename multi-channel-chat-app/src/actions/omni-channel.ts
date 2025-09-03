@@ -1,8 +1,9 @@
 // ----------------------------------------------------------------------
 
+import { CONFIG } from "@/config-global";
 import { ConversationChannel } from "@/models/conversation/conversations";
 import { OmniChannel } from "@/models/omni-channel/omni-channel";
-import { endpoints, fetcher, swrConfig } from "@/utils/axios";
+import axiosInstance, { endpoints, fetcher, swrConfig } from "@/utils/axios";
 import { useMemo } from "react";
 import useSWR from "swr";
 
@@ -69,4 +70,15 @@ export function useGetOmniChannelsByChannel(
   }, [data?.data, error, isLoading, isValidating]);
 
   return memoizedValue;
+}
+
+export async function getZaloQRLoginImage() {
+  try {
+    const url = `${CONFIG.utilitiesAPIUr}/qr-login`;
+    const response = await axiosInstance.get(url);
+    return response.data;
+  } catch (error) {
+    console.error("Error during create message:", error);
+    throw error;
+  }
 }

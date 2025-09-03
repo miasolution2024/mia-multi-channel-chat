@@ -85,11 +85,11 @@ export const navData = [
       //   path: paths.dashboard.salesOrder.root,
       //   icon: ICONS.invoice,
       // },
-      // {
-      //   title: "Omni Channels",
-      //   path: paths.dashboard.omniChannels.root,
-      //   icon: ICONS.channel,
-      // },
+      {
+        title: "Omni Channels",
+        path: paths.dashboard.omniChannels.root,
+        icon: ICONS.channel,
+      },
       {
         title: "Chat",
         path: paths.dashboard.chat,

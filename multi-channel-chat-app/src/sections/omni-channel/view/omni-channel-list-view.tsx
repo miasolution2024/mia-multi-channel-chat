@@ -5,9 +5,7 @@ import { useCallback } from "react";
 
 import Table from "@mui/material/Table";
 import Button from "@mui/material/Button";
-import Tooltip from "@mui/material/Tooltip";
 import TableBody from "@mui/material/TableBody";
-import IconButton from "@mui/material/IconButton";
 import { useTable } from "@/hooks/use-table";
 import { useBoolean } from "@/hooks/use-boolean";
 import { useSetState } from "@/hooks/use-set-state";
@@ -26,7 +24,7 @@ import { CustomBreadcrumbs } from "@/components/custom-breadcrumbs";
 import { Iconify } from "@/components/iconify";
 import { toast } from "@/components/snackbar";
 import { ConfirmDialog } from "@/components/custom-dialog";
-import { Box, Card } from "@mui/material";
+import { Avatar, Box, Card, MenuItem, MenuList } from "@mui/material";
 import { Scrollbar } from "@/components/scrollbar";
 import { endpoints } from "@/utils/axios";
 import { mutate } from "swr";
@@ -35,19 +33,19 @@ import { useGetOmniChannels } from "@/actions/omni-channel";
 import { OmniChannelsTableToolbar } from "../omni-channel-table-toolbar";
 import { OmniChannelsTableFiltersResult } from "../omni-channel-table-filters-result";
 import { OmniChannelsTableRow } from "../omni-channel-table-row";
-import { RouterLink } from "@/routes/components";
-import { useRouter } from "next/navigation";
-
+import { CustomPopover, usePopover } from "@/components/custom-popover";
+import { CHANNELS } from "@/sections/chat/chat-channels";
+import { ZaloLoginQR } from "../omni-channel-zalo-qr";
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: "id", label: "Id" },
+  // { id: "id", label: "Id" },
   { id: "page_id", label: "Page Id" },
   { id: "page_name", label: "Page Name" },
   { id: "source", label: "Source" },
   { id: "is_enabled", label: "Is Enabled" },
   { id: "expired_date", label: "Expired Date" },
-  { id: "", width: 88 },
+  // { id: "", width: 88 },
 ];
 
 export type FilterOmniChannelsState = {
@@ -57,15 +55,19 @@ export type FilterOmniChannelsState = {
 // ----------------------------------------------------------------------
 
 export function OmniChannelsListView() {
-  const table = useTable();
+  const table = useTable({ defaultOrderBy: "id", defaultRowsPerPage: 100 });
 
   const confirm = useBoolean();
 
-  const router = useRouter();
+  const openZaloLoginDialog = useBoolean();
+
+  // const router = useRouter();
 
   const { omniChannels: tableData } = useGetOmniChannels();
 
-  const filters = useSetState<FilterOmniChannelsState>({ omnichannelsName: "" });
+  const filters = useSetState<FilterOmniChannelsState>({
+    omnichannelsName: "",
+  });
 
   const dataFiltered = applyFilter({
     inputData: tableData,
@@ -90,12 +92,14 @@ export function OmniChannelsListView() {
     }
   }, [table]);
 
-  const handleEditRow = useCallback(
-    (id: string | number) => {
-      router.push(paths.dashboard.omniChannels.edit(id));
-    },
-    [router]
-  );
+  // const handleEditRow = useCallback(
+  //   (id: string | number) => {
+  //     router.push(paths.dashboard.omniChannels.edit(id));
+  //   },
+  //   [router]
+  // );
+
+  const popover = usePopover();
 
   return (
     <>
@@ -109,8 +113,7 @@ export function OmniChannelsListView() {
           ]}
           action={
             <Button
-              component={RouterLink}
-              href={paths.dashboard.omniChannels.new}
+              onClick={popover.onOpen}
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
@@ -145,13 +148,13 @@ export function OmniChannelsListView() {
                   dataFiltered.map((row: OmniChannel) => row.id)
                 )
               }
-              action={
-                <Tooltip title="Delete">
-                  <IconButton color="primary" onClick={confirm.onTrue}>
-                    <Iconify icon="solar:trash-bin-trash-bold" />
-                  </IconButton>
-                </Tooltip>
-              }
+              // action={
+              //   <Tooltip title="Delete">
+              //     <IconButton color="primary" onClick={confirm.onTrue}>
+              //       <Iconify icon="solar:trash-bin-trash-bold" />
+              //     </IconButton>
+              //   </Tooltip>
+              // }
             />
 
             <Scrollbar>
@@ -164,8 +167,8 @@ export function OmniChannelsListView() {
                   orderBy={table.orderBy}
                   headLabel={TABLE_HEAD}
                   rowCount={dataFiltered.length}
-                  numSelected={table.selected.length}
                   onSort={table.onSort}
+                  numSelected={table.selected.length}
                   onSelectAllRows={(checked: boolean) =>
                     table.onSelectAllRows(
                       checked,
@@ -186,7 +189,6 @@ export function OmniChannelsListView() {
                         row={row}
                         selected={table.selected.includes(row.id)}
                         onSelectRow={() => table.onSelectRow(row.id)}
-                        onEditRow={handleEditRow}
                       />
                     ))}
 
@@ -240,6 +242,31 @@ export function OmniChannelsListView() {
           </Button>
         }
       />
+
+      <CustomPopover
+        open={popover.open}
+        anchorEl={popover.anchorEl}
+        onClose={popover.onClose}
+        slotProps={{ arrow: { placement: "right-top" } }}
+      >
+        <MenuList>
+          {CHANNELS.map((c, index) => (
+            <MenuItem
+              key={index}
+              onClick={() => {
+                openZaloLoginDialog.onTrue();
+                popover.onClose();
+              }}
+              sx={{ gap: 1 }}
+            >
+              <Avatar alt={c.name} src={c.src} sx={{ width: 20, height: 20 }} />
+              {c.name}
+            </MenuItem>
+          ))}
+        </MenuList>
+      </CustomPopover>
+
+      <ZaloLoginQR open={openZaloLoginDialog.value} onClose={openZaloLoginDialog.onFalse}></ZaloLoginQR>
     </>
   );
 }
@@ -255,7 +282,10 @@ function applyFilter({
 }) {
   const { omnichannelsName } = filters;
 
-  const stabilizedThis = inputData.map((el: OmniChannel, index: number) => [el, index]);
+  const stabilizedThis = inputData.map((el: OmniChannel, index: number) => [
+    el,
+    index,
+  ]);
 
   stabilizedThis.sort((a: any, b: any) => {
     const order = comparator(a[0], b[0]);

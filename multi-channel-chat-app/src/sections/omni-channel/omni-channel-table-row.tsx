@@ -1,13 +1,8 @@
-import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
-import Tooltip from "@mui/material/Tooltip";
 import TableRow from "@mui/material/TableRow";
 import Checkbox from "@mui/material/Checkbox";
 import TableCell from "@mui/material/TableCell";
-import IconButton from "@mui/material/IconButton";
 import { useBoolean } from "@/hooks/use-boolean";
-import { usePopover } from "@/components/custom-popover";
-import { Iconify } from "@/components/iconify";
 import { ConfirmDialog } from "@/components/custom-dialog";
 import { mutate } from "swr";
 import { useCallback } from "react";
@@ -22,18 +17,16 @@ export interface OmniChannelsTableRowProps {
   row: OmniChannel;
   selected: boolean;
   onSelectRow: VoidFunction;
-  onEditRow: (id: string | number) => void;
 }
 
 export function OmniChannelsTableRow({
   row,
   selected,
   onSelectRow,
-  onEditRow,
 }: OmniChannelsTableRowProps) {
   const confirm = useBoolean();
 
-  const popover = usePopover();
+  // const popover = usePopover();
 
   const handleDeleteRow = useCallback(async () => {
     // await deleteOmniChannelsAsync(row.id);
@@ -50,7 +43,7 @@ export function OmniChannelsTableRow({
           <Checkbox id={row.id.toString()} checked={selected} onClick={onSelectRow} />
         </TableCell>
 
-        <TableCell sx={{ whiteSpace: "nowrap" }}>{row.id}</TableCell>
+        {/* <TableCell sx={{ whiteSpace: "nowrap" }}>{row.id}</TableCell> */}
         <TableCell sx={{ whiteSpace: "nowrap" }}>{row.page_id}</TableCell>
         <TableCell sx={{ whiteSpace: "nowrap" }}>{row.page_name}</TableCell>
         <TableCell sx={{ whiteSpace: "nowrap" }}>{row.source}</TableCell>
@@ -70,7 +63,7 @@ export function OmniChannelsTableRow({
           {fDate(row.expired_date)}
         </TableCell>
 
-        <TableCell>
+        {/* <TableCell>
           <Stack direction="row" alignItems="center">
             <Tooltip title="Edit" placement="top" arrow>
               <IconButton color="inherit" onClick={() => onEditRow(row.id)}>
@@ -90,7 +83,7 @@ export function OmniChannelsTableRow({
               </IconButton>
             </Tooltip>
           </Stack>
-        </TableCell>
+        </TableCell> */}
       </TableRow>
       <ConfirmDialog
         open={confirm.value}

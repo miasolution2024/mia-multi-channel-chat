@@ -6,7 +6,7 @@ import { styled } from "@mui/material/styles";
 // ----------------------------------------------------------------------
 
 export const StyledArrow = styled("span", {
-  shouldForwardProp: (prop) =>
+  shouldForwardProp: (prop: any) =>
     prop !== "size" && prop !== "placement" && prop !== "offset",
 })(({ placement, offset = 0, size = 0, theme }: any) => {
   const POSITION = -(size / 2) + 0.5;
