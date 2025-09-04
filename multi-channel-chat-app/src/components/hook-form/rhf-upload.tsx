@@ -78,7 +78,7 @@ export function RHFUpload({ name, multiple, helperText, hidePreview, ...other }:
         const onDrop = (acceptedFiles: any) => {
           const value = multiple
             ? [...field.value, ...acceptedFiles]
-            : acceptedFiles[0];
+            : acceptedFiles;
 
           setValue(name, value, { shouldValidate: true });
         };

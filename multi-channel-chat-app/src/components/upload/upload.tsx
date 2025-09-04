@@ -48,11 +48,13 @@ export function Upload({
 
   const isArray = Array.isArray(value) && multiple;
 
-  const hasFile = !isArray && !!value;
+  const hasFile = !isArray && !!value && !Array.isArray(value);
 
   const hasFiles = isArray && !!value.length;
 
   const hasError = isDragReject || !!error;
+
+  console.log("hasFile", hasFile);
 
   const renderMultiPreview = hasFiles && (
     <>

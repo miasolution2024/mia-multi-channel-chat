@@ -84,9 +84,11 @@ export const createPost = async (
   try {
     const response = await autoMiaAxiosInstance.post("/webhook/post-bai-viet", [
       data,
-    ]);
-    console.log("response", response);
-    return response?.data?.[0] || {};
+    ]).then((res) => res.data).catch((err) => {
+      console.error("Error calling post-bai-viet API:", err);
+      return {};
+    });
+    return response?.[0] || {};
   } catch (error) {
     console.error("Error calling post-bai-viet API:", error);
     return {};

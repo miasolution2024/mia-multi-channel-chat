@@ -193,6 +193,16 @@ export function ContentAssistantEditView({ editData }: Props) {
       if (newMediaFiles.length > 0) {
         mediaArray = await uploadMediaFiles(newMediaFiles);
       }
+      
+      // Handle video upload separately
+      let videoId: string | null = null;
+      if (Array.isArray(currentFormData.video) && currentFormData.video.length > 0) {
+        const videoUploadResult = await uploadFile(currentFormData.video[0]);
+        videoId = videoUploadResult.data.id;
+      }
+      
+
+      
       const updateData = {
         ...currentFormData,
         action: getActionByStep(activeStep),
@@ -289,6 +299,7 @@ export function ContentAssistantEditView({ editData }: Props) {
           update: [],
           delete: deletedMediaIds,
         },
+        video: videoId,
         media_generated_ai: {
           create: Array.isArray(currentFormData.media_generated_ai)
             ? currentFormData.media_generated_ai

@@ -72,6 +72,15 @@ export function ContentAssistantNewView() {
       ) {
         mediaArray = await uploadMediaFiles(currentFormData.media);
       }
+
+      let videoId: string | null = null;
+      if (
+        Array.isArray(currentFormData.video) &&
+        currentFormData.video.length > 0
+      ) {
+        const videoUploadResult = await uploadFile(currentFormData.video[0]);
+        videoId = videoUploadResult.data.id;
+      }
       const updateData = {
         ...currentFormData,
         action: getActionByStep(activeStep),
@@ -134,6 +143,7 @@ export function ContentAssistantNewView() {
           update: [],
           delete: [],
         },
+        video: videoId,
         media_generated_ai: {
           create: Array.isArray(currentFormData.media_generated_ai)
             ? currentFormData.media_generated_ai.map((fileId: string) => ({

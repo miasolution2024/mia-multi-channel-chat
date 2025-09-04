@@ -46,11 +46,14 @@ export function StepContent({ currentContent }: Props) {
   // Initialize generated images from existing mediaGeneratedAi data
   useEffect(() => {
     if (mediaGeneratedAi && mediaGeneratedAi.length > 0) {
-      const imageUrls = mediaGeneratedAi.map((item: MediaGeneratedAiItem | string) => {
-        // Handle both object format (from API) and string format (new generated)
-        const fileId = typeof item === 'string' ? item : item.directus_files_id;
-        return `${CONFIG.serverUrl}/assets/${fileId}&key=system-large-contain`;
-      });
+      const imageUrls = mediaGeneratedAi.map(
+        (item: MediaGeneratedAiItem | string) => {
+          // Handle both object format (from API) and string format (new generated)
+          const fileId =
+            typeof item === "string" ? item : item.directus_files_id;
+          return `${CONFIG.serverUrl}/assets/${fileId}&key=system-large-contain`;
+        }
+      );
       setGeneratedImages(imageUrls);
     }
   }, [mediaGeneratedAi]);
@@ -294,13 +297,13 @@ export function StepContent({ currentContent }: Props) {
             {/* File Upload Section */}
             <Box>
               <Typography variant="h6" sx={{ mb: 2 }}>
-                Tệp được đính kèm
+                Hình ảnh được đính kèm
               </Typography>
               <RHFUpload
                 name="media"
                 multiple
                 accept={{
-                  "image/*": [".jpeg", ".jpg", ".png", ".gif"],
+                  "image/*": [".jpeg", ".jpg", ".png"],
                 }}
                 helperText="Chọn nhiều hình ảnh để đính kèm"
                 hidePreview={true}
@@ -364,6 +367,72 @@ export function StepContent({ currentContent }: Props) {
                       </Grid>
                     ))}
                   </Grid>
+                </Paper>
+              )}
+            </Box>
+
+            <Divider />
+
+            {/* Video Upload Section */}
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Video
+              </Typography>
+              <RHFUpload
+                name="video"
+                maxFiles={1}
+                accept={{
+                  "video/*": [".mp4", ".avi", ".mov"],
+                }}
+                helperText="Chỉ được chọn 1 video. Định dạng hỗ trợ: MP4, AVI, MOV"
+                hidePreview
+              />
+
+              {/* Video Preview */}
+              {watch("video") && watch("video").length > 0 && (
+                <Paper sx={{ p: 2, mt: 2 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                    Video đã chọn
+                  </Typography>
+                  <Box sx={{ position: "relative", display: "inline-block" }}>
+                    <video
+                      src={
+                        typeof watch("video")[0] === "string"
+                          ? `${CONFIG.serverUrl}/assets/${watch("video")[0]}`
+                          : watch("video")[0] instanceof File
+                          ? (watch("video")[0] as FileWithPreview).preview ||
+                            URL.createObjectURL(watch("video")[0])
+                          : ""
+                      }
+                      controls
+                      style={{
+                        width: "100%",
+                        maxWidth: "300px",
+                        height: "auto",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => setValue("video", [])}
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        minWidth: "auto",
+                        width: 32,
+                        height: 32,
+                        borderRadius: "50%",
+                        bgcolor: "rgba(255, 255, 255, 0.9)",
+                        "&:hover": {
+                          bgcolor: "rgba(255, 255, 255, 1)",
+                        },
+                      }}
+                    >
+                      <Iconify icon="mingcute:close-line" width={16} />
+                    </Button>
+                  </Box>
                 </Paper>
               )}
             </Box>

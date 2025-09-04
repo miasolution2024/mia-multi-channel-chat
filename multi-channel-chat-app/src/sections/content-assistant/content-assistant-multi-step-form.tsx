@@ -74,6 +74,7 @@ const ContentSchema = zod.object({
       })
     )
     .default([]),
+  video: zod.instanceof(File).array().default([]),
 
   // Step 4: Format
   additional_notes_step_4: zod.string().default(""),
@@ -135,6 +136,7 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
       customer_journey: [],
       content_tone: [],
       ai_rule_based: [],
+      additional_notes: "",
       additional_notes_step_1: "",
       status: POST_STATUS.DRAFT as string,
       id: null,
@@ -152,6 +154,7 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
       ai_notes_create_image_step_3: "",
       media: [],
       media_generated_ai: [],
+      video: [],
 
       // Step 4
       additional_notes_step_4: "",
@@ -216,6 +219,7 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
                 )
                 .filter((id: number) => id > 0)
             : [],
+          additional_notes: editData.additional_notes || "",
           additional_notes_step_1: editData.additional_notes_step_1 || "",
           status: (editData.status as string) || (POST_STATUS.DRAFT as string),
           id: typeof editData.id === "number" ? editData.id : null,
@@ -243,12 +247,13 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
             editData.ai_notes_create_image_step_3 || "",
           media: editData.media || [],
           media_generated_ai: editData.media_generated_ai || [],
+          video: [],
 
           // Step 4
           additional_notes_step_4: editData.additional_notes_step_4 || "",
           post_html_format: editData.post_html_format || "",
         };
-        reset(editValues);
+        reset(editValues as FormData);
         // Set cache with current edit data to prevent unnecessary API calls
         setCachedStep1Data(getStep1FormData(editValues as FormData));
         setCachedStep2Data(getStep2FormData(editValues as FormData));
@@ -404,6 +409,7 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
           };
 
           const response = await createPost(apiData);
+          console.log("response", response);
           if (response?.data) {
             methods.setValue(
               "outline_post",
@@ -701,7 +707,7 @@ export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
               size="large"
               sx={{ borderRadius: 2 }}
             >
-              {!editData ? "Tạo nội dung" : "Cập nhật"}
+              {!editData ? "Đăng bài" : "Cập nhật"}
             </Button>
           )}
         </Stack>
