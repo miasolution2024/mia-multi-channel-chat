@@ -22,7 +22,7 @@ export default function Layout({
       <RoleBasedGuard
         hasContent
         currentRole={user?.role?.name ?? "user"}
-        acceptRoles={["Administrator", "Admin"]}
+        acceptRoles={["Administrator", "Admin", "Employee"]}
         sx={{ py: 10 }}
       >
         <DashboardLayout>{children}</DashboardLayout>
