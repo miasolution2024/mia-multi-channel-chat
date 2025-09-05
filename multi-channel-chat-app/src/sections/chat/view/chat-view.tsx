@@ -38,13 +38,9 @@ export function ChatView({
 
   const conversationsNav = useCollapseNav();
 
-  // const participants = conversation
-  //   ? conversation.participants.filter(
-  //       (participant) => participant.participant_id !== `${user?.id}`
-  //     )
-  //   : [];
-
   const allParticipants = conversation ? conversation.participants : [];
+
+
 
   useEffect(() => {
     if (conversationError || !selectedConversationId) {

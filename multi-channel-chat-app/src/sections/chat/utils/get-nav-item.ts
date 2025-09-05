@@ -12,8 +12,7 @@ export function getNavItem({
   const { messages, participants } = conversation;
 
   const participantsInConversation = participants.filter(
-    (participant) =>
-      participant.participant_type === ParticipantType.CUSTOMER
+    (participant) => participant.participant_type === ParticipantType.CUSTOMER
   );
 
   const displayName = participantsInConversation
@@ -26,8 +25,10 @@ export function getNavItem({
 
   if (lastMessage) {
     const sender =
-      lastMessage.sender_id === currentUserId || lastMessage.sender_type === ParticipantType.CHATBOT
+      lastMessage.sender_id === currentUserId
         ? "You: "
+        : lastMessage.sender_type === ParticipantType.CHATBOT
+        ? "Bot: "
         : "";
 
     const message =

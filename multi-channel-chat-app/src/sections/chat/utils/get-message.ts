@@ -1,3 +1,4 @@
+import { User } from "@/models/auth/user";
 import { Message } from "@/models/message/message";
 import {
   Participant,
@@ -7,30 +8,42 @@ import {
 export function getMessage({
   message,
   participants,
-  currentUserId,
+  users,
 }: {
   message: Message;
   participants: Participant[];
-  currentUserId: string;
+  users: User[];
 }) {
   const sender = participants.find(
     (participant: Participant) =>
       participant.participant_id == message.sender_id
   );
 
-  const senderDetails =
-    message.sender_id === currentUserId
-      ? { type: "me", firstName: sender?.participant_name }
-      : {
-          firstName: sender?.participant_name,
-          participant_type: sender?.participant_type,
-          participant_avatar: sender?.participant_avatar,
-        };
- 
-  const me =
-    sender?.participant_type !== ParticipantType.CUSTOMER;
+  const userSender = users.find((user: User) => user.id == message.sender_id);
 
-  const type = message.type;
+  const senderDetails = {
+    firstName: "",
+    participant_avatar: "",
+  };
 
-  return { type, me, senderDetails };
+  switch (message.sender_type) {
+    case ParticipantType.CUSTOMER:
+    case ParticipantType.CHATBOT:
+      senderDetails.firstName = sender?.participant_name || "";
+      senderDetails.participant_avatar = sender?.participant_avatar || "";
+      break;
+    case ParticipantType.STAFF:
+      senderDetails.firstName = userSender
+        ? `${userSender.first_name} ${userSender?.last_name}`
+        : "";
+      break;
+    default:
+      break;
+  }
+
+  return {
+    type: message.type,
+    me: message.sender_type !== ParticipantType.CUSTOMER,
+    senderDetails,
+  };
 }

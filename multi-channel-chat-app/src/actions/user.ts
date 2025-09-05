@@ -52,29 +52,23 @@ export function useGetGroupsByUserId(userId?: string) {
   return memoizedValue;
 }
 
-export function useGetOmniChannelsByUserIdUrl(
-  channel: string,
-  userId?: string
-) {
-  if (!userId || !channel) return "";
+export function getUserGroupByIdsUrl(userGroupIds: string[]) {
+  if (!userGroupIds) return "";
   const queryParams = new URLSearchParams({
-    "filter[omni_channels][_some][omni_channels_id][source][_eq]": channel,
-    "filter[users][_some][directus_users_id][_eq]": userId,
+    "filter[id][_in]": userGroupIds.join(","),
     fields: [
       "*",
-      "omni_channels.omni_channels_id.page_id",
-      "omni_channels.omni_channels_id.id",
-      "omni_channels.omni_channels_id.page_name",
-      "omni_channels.omni_channels_id.source",
-      "omni_channels.omni_channels_id.sort",
+      "users.directus_users_id.id",
+      "users.directus_users_id.first_name",
+      "users.directus_users_id.last_name",
     ].join(","),
   }).toString();
 
   return `${endpoints.userGroups.list}?${queryParams}`;
 }
 
-export function useGetOmniChannelsByUserId(channel: string, userId?: string) {
-  const url = useGetOmniChannelsByUserIdUrl(channel, userId);
+export function useGetUsersByGroupIds(userGroupIds: string[]) {
+  const url = getUserGroupByIdsUrl(userGroupIds);
   const { data, isLoading, error, isValidating } = useSWR(
     url,
     fetcher,
@@ -83,16 +77,15 @@ export function useGetOmniChannelsByUserId(channel: string, userId?: string) {
 
   const memoizedValue = useMemo(
     () => ({
-      omniChannels: ((data?.data as UserGroup[]) || [])
-        .flatMap((g) => g.omni_channels.map((c) => c.omni_channels_id))
-        .filter((c) => c.source === channel)
-        .sort((c) => c.sort),
-      omniChannelsLoading: isLoading,
-      omniChannelsError: error,
-      omniChannelsValidating: isValidating,
-      omniChannelsEmpty: !isLoading && !data?.data.length,
+      users: ((data?.data as UserGroup[]) || []).flatMap((ug) =>
+        ug.users.map((u) => u.directus_users_id)
+      ),
+      usersLoading: isLoading,
+      usersError: error,
+      usersValidating: isValidating,
+      usersEmpty: !isLoading && !data?.data.length,
     }),
-    [data?.data, error, isLoading, isValidating, channel]
+    [data?.data, error, isLoading, isValidating]
   );
 
   return memoizedValue;

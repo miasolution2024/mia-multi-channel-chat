@@ -7,7 +7,10 @@ import { Lightbox, useLightBox } from "@/components/lightbox";
 import { ChatMessageItem } from "./chat-message-item";
 import { useMessagesScroll } from "./hooks/use-messages-scroll";
 import { Message, MessageType } from "@/models/message/message";
-import { Participant } from "@/models/participants/participant";
+import {
+  Participant,
+  ParticipantType,
+} from "@/models/participants/participant";
 import { useEffect, useRef, useState } from "react";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import {
@@ -19,7 +22,7 @@ import { websocketMessage } from "@/models/websocket-message";
 import { CONFIG } from "@/config-global";
 import NotificationSound from "@/components/notification-sound/notification-sound";
 import { uuidv4 } from "@/utils/uuidv4";
-import { useGetGroupsByUserId } from "@/actions/user";
+import { useGetGroupsByUserId, useGetUsersByGroupIds } from "@/actions/user";
 
 // ----------------------------------------------------------------------
 
@@ -47,6 +50,12 @@ export function ChatMessageList({
   const lightbox = useLightBox(slides);
 
   const { user } = useAuthContext();
+
+  const userGroupIds = participants
+    .filter((p) => p.participant_type === ParticipantType.STAFF)
+    .map((p) => p.participant_id);
+
+  const { users } = useGetUsersByGroupIds(userGroupIds);
 
   const { userGroups } = useGetGroupsByUserId(user?.id);
 
@@ -216,6 +225,7 @@ export function ChatMessageList({
           <ChatMessageItem
             key={message.id}
             message={message}
+            users={users}
             participants={participants}
             onOpenLightbox={() =>
               lightbox.onOpen(

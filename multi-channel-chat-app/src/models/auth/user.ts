@@ -5,7 +5,7 @@ export interface UserGroup {
   users: {
     id: number;
     user_groups_id: number;
-    directus_users_id: string;
+    directus_users_id: User;
   }[];
   omni_channels: {
     id: number;
@@ -23,8 +23,8 @@ export interface User {
   id: string;
   first_name?: string;
   last_name?: string;
-  full_name: string;
-  email: string;
+  full_name?: string;
+  email?: string;
   location?: string;
   title?: string;
   description?: string;

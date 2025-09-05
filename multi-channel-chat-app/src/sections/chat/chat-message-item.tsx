@@ -5,7 +5,6 @@ import Avatar from "@mui/material/Avatar";
 import Typography from "@mui/material/Typography";
 
 import { getMessage } from "./utils/get-message";
-import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { fDateTime, fToNow } from "@/utils/format-time";
 import { DirectusFile, Message, MessageType } from "@/models/message/message";
 import {
@@ -27,28 +26,29 @@ import { Iconify } from "@/components/iconify";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useCallback } from "react";
 import { toast } from "@/components/snackbar";
+import { User } from "@/models/auth/user";
 
 // ----------------------------------------------------------------------
 
 export function ChatMessageItem({
   message,
   participants,
+  users,
   onOpenLightbox,
 }: {
   message: Message;
   participants: Participant[];
+  users: User[];
   onOpenLightbox: () => void;
 }) {
-  const { user } = useAuthContext();
-
   const popover = usePopover();
 
   const { copy } = useCopyToClipboard();
 
   const { me, senderDetails, type } = getMessage({
     message,
+    users,
     participants,
-    currentUserId: `${user?.id}`,
   });
 
   const { firstName, participant_avatar } = senderDetails;
@@ -223,13 +223,13 @@ export function ChatMessageItem({
       {type === MessageType.TEXT && (
         <>
           {content}
-          {sender_type === ParticipantType.CHATBOT && (
+          {sender_type !== ParticipantType.CUSTOMER && (
             <Typography
               variant="caption"
               color="primary"
               sx={{ display: "block", mt: 0.5 }}
             >
-              Response by AI
+              Responsed by {firstName}
             </Typography>
           )}
         </>
