@@ -26,10 +26,9 @@ export function getMessage({
           participant_type: sender?.participant_type,
           participant_avatar: sender?.participant_avatar,
         };
-
+ 
   const me =
-    senderDetails.type === "me" ||
-    sender?.participant_type === ParticipantType.CHATBOT;
+    sender?.participant_type !== ParticipantType.CUSTOMER;
 
   const type = message.type;
 
