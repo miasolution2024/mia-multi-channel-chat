@@ -20,7 +20,7 @@ import { ChatPageFilter } from "./chat-nav-page-filter";
 import { ChatNavSearchResults } from "./chat-nav-search-results";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { paths } from "@/routes/path";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import useSWRInfinite from "swr/infinite";
 import {
   Conversation,
@@ -42,24 +42,19 @@ import { useGetCustomersByOmniChannel } from "@/actions/customer";
 import { Customer } from "@/models/customer/customer";
 import { useDebounce } from "@/hooks/use-debounce";
 import { SelectChangeEvent } from "@mui/material";
-import {
-  useGetGroupsByUserId,
-} from "@/actions/user";
+import { useGetGroupsByUserId } from "@/actions/user";
+import { ChatChannels } from "./chat-channels";
 
 // ----------------------------------------------------------------------
 
 const NAV_WIDTH = 320;
 
-const NAV_COLLAPSE_WIDTH = 96;
-
 export function ChatNav({
   collapseNav,
   selectedConversationId,
-  channel,
 }: {
   collapseNav: any;
   selectedConversationId: number;
-  channel: ConversationChannel;
 }) {
   const router = useRouter();
 
@@ -77,9 +72,14 @@ export function ChatNav({
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const debouncedQuery = useDebounce(searchQuery);
+  const [selectedPageId, setSelectedPageId] = useState("");
 
-  const [selectedPageId, setSelectedPageId] = useState<string>("");
+  const searchParams = useSearchParams();
+
+  const selectedChannel = (searchParams.get("channel") ||
+    ConversationChannel.FACEBOOK) as ConversationChannel;
+
+  const debouncedQuery = useDebounce(searchQuery);
 
   const { userGroups } = useGetGroupsByUserId(user?.id);
 
@@ -95,7 +95,11 @@ export function ChatNav({
       !user?.id
     )
       return null;
-    const url = getConversationsURL(channel, selectedPageId, participantIds);
+    const url = getConversationsURL(
+      selectedChannel,
+      selectedPageId,
+      participantIds
+    );
 
     return `${url}&page=${pageIndex + 1}`;
   };
@@ -111,7 +115,10 @@ export function ChatNav({
 
   const allIds = conversations.map((c) => c.id);
 
-  const { omniChannels } = useGetOmniChannelsByChannel(channel, user?.id);
+  const { omniChannels } = useGetOmniChannelsByChannel(
+    selectedChannel,
+    user?.id
+  );
 
   const { customers } = useGetCustomersByOmniChannel(
     selectedPageId,
@@ -208,11 +215,11 @@ export function ChatNav({
       if (data.event === "create") {
         console.log(`New conversation created`);
         setPlayNotification(true);
-        mutate(getConversationsURL(channel, selectedPageId, participantIds));
+        mutate(getConversationsURL(selectedChannel, selectedPageId, participantIds));
         mutate(getConversationsUnreadCountURL(participantIds));
       } else if (data.event === "update") {
         console.log(`Conversation updated updated!`);
-        mutate(getConversationsURL(channel, selectedPageId, participantIds));
+        mutate(getConversationsURL(selectedChannel, selectedPageId, participantIds));
         mutate(getConversationsUnreadCountURL(participantIds));
       }
 
@@ -363,31 +370,24 @@ export function ChatNav({
   );
 
   const renderContent = (
-    <>
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="center"
-        sx={{ p: 2.5, pb: 0 }}
-      >
-        {!collapseDesktop && (
-          <>
-            <ChatPageFilter
-              pages={omniChannels}
-              handleChange={handSelectPage}
-              pageId={selectedPageId}
-            />
-            <Box sx={{ flexGrow: 1 }} />
-          </>
-        )}
+    <Stack height="100%" direction="row">
+      <ChatChannels />
+
+      <Stack sx={{ width: NAV_WIDTH }}>
+        <Box sx={{ p: 2.5 }}>
+          <ChatPageFilter
+            pages={omniChannels}
+            handleChange={handSelectPage}
+            pageId={selectedPageId}
+          />
+          {renderSearchInput}
+        </Box>
+
+        <Scrollbar ref={chatNavRef} sx={{ pb: 1 }}>
+          {searchQuery && !!allIds.length ? renderListResults : renderList}
+        </Scrollbar>
       </Stack>
-
-      <Box sx={{ p: 2.5, pt: 0 }}>{!collapseDesktop && renderSearchInput}</Box>
-
-      <Scrollbar ref={chatNavRef} sx={{ pb: 1 }}>
-        {searchQuery && !!allIds.length ? renderListResults : renderList}
-      </Scrollbar>
-    </>
+    </Stack>
   );
 
   return (
@@ -400,7 +400,6 @@ export function ChatNav({
         sx={{
           minHeight: 0,
           flex: "1 1 auto",
-          width: NAV_WIDTH,
           display: { xs: "none", md: "flex" },
           borderRight: (theme: any) =>
             `solid 1px ${theme.vars.palette.divider}`,
@@ -408,7 +407,6 @@ export function ChatNav({
             theme.transitions.create(["width"], {
               duration: theme.transitions.duration.shorter,
             }),
-          ...(collapseDesktop && { width: NAV_COLLAPSE_WIDTH }),
         }}
       >
         {renderContent}
@@ -418,7 +416,6 @@ export function ChatNav({
         open={openMobile}
         onClose={onCloseMobile}
         slotProps={{ backdrop: { invisible: true } }}
-        PaperProps={{ sx: { width: NAV_WIDTH } }}
       >
         {renderContent}
       </Drawer>

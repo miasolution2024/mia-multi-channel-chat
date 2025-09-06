@@ -18,8 +18,7 @@ export function ChatPageFilter({
   return (
     <>
       <Select
-        label={null}
-        sx={{ width: 300 }}
+        sx={{ width: '100%' }}
         value={pageId}
         onChange={handleChange}
       >

@@ -11,6 +11,9 @@ import { CONFIG } from "@/config-global";
 import { useGetUnreadCountGroupByChannel } from "@/actions/conversation";
 import { useGetGroupsByUserId } from "@/actions/user";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
+import { paths } from "@/routes/path";
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // ----------------------------------------------------------------------
 
@@ -43,13 +46,30 @@ export const CHANNELS = [
   // },
 ];
 
-export function ChatChannels({
-  selectedChannel,
-  handleSelectChannel,
-}: {
-  selectedChannel: ConversationChannel;
-  handleSelectChannel: (channel: ConversationChannel) => void;
-}) {
+export function ChatChannels() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const currentChannel = (searchParams.get("channel") ||
+    ConversationChannel.FACEBOOK) as ConversationChannel;
+
+  const [selectedChannel, setSelectedChannel] =
+    useState<ConversationChannel>(currentChannel);
+
+  const handleSelectedChannel = (channel: ConversationChannel) => {
+    setSelectedChannel(channel);
+    const newSearchParams = new URLSearchParams();
+    for (const key of searchParams.keys()) {
+      if (key !== "channel") {
+        newSearchParams.append(key, searchParams.get(key) || "");
+      }
+    }
+    newSearchParams.set("channel", channel);
+    const newQueryString = newSearchParams.toString();
+
+    router.push(`${paths.dashboard.chat}?${newQueryString}`);
+  };
+
   const { user } = useAuthContext();
   const { userGroups } = useGetGroupsByUserId(user?.id);
 
@@ -58,7 +78,8 @@ export function ChatChannels({
     user?.id || "",
   ].filter((id) => !!id);
 
-  const { conversationUnRead } = useGetUnreadCountGroupByChannel(participantIds);
+  const { conversationUnRead } =
+    useGetUnreadCountGroupByChannel(participantIds);
 
   const renderList = (
     <nav>
@@ -73,7 +94,7 @@ export function ChatChannels({
             return (
               <Box key={index} component="li" sx={{ display: "flex" }}>
                 <ListItemButton
-                  onClick={() => handleSelectChannel(c.name)}
+                  onClick={() => handleSelectedChannel(c.name)}
                   sx={{
                     py: 1.5,
                     px: 2.5,
@@ -112,7 +133,6 @@ export function ChatChannels({
           minHeight: 0,
           flex: "1 1 auto",
           width: NAV_COLLAPSE_WIDTH,
-          display: { xs: "none", md: "flex" },
           borderRight: (theme: any) =>
             `solid 1px ${theme.vars.palette.divider}`,
           transition: (theme) =>

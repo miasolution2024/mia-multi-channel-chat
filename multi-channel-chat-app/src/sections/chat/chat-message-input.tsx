@@ -19,18 +19,17 @@ import { useBoolean } from "@/hooks/use-boolean";
 import { MultiFilePreview } from "@/components/upload";
 import { uploadFile } from "@/actions/upload";
 import { fileTypeByUrl, getMessageType } from "@/components/file-thumbnail";
+import { useSearchParams } from "next/navigation";
 
 // ----------------------------------------------------------------------
 
 export function ChatMessageInput({
   disabled,
   selectedConversationId,
-  selectedChannel,
   conversation,
 }: {
   disabled: boolean;
   selectedConversationId?: number;
-  selectedChannel: ConversationChannel;
   conversation?: Conversation;
 }) {
   const { user } = useAuthContext();
@@ -40,6 +39,10 @@ export function ChatMessageInput({
 
   const [message, setMessage] = useState("");
   const isSending = useBoolean();
+
+  const searchParams = useSearchParams();
+
+  const selectedChannel = (searchParams.get("channel") || ConversationChannel.FACEBOOK) as ConversationChannel;
 
   const myContact: User = useMemo(
     () => ({
