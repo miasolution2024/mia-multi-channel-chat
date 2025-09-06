@@ -15,7 +15,8 @@ import {
 export function getConversationsURL(
   channel: ConversationChannel,
   pageId: string,
-  participantIds: string[]
+  participantIds: string[],
+  isGetUnread: boolean
 ) {
   if (!participantIds || !pageId) return "";
   const queryParams = new URLSearchParams({
@@ -42,15 +43,18 @@ export function getConversationsURL(
     ].join(","),
   }).toString();
 
-  return `${endpoints.conversations.list}?${queryParams}`;
+  return isGetUnread
+    ? `${endpoints.conversations.list}?${queryParams}&filter[unread_count][_gt]=0`
+    : `${endpoints.conversations.list}?${queryParams}`;
 }
 
 export function useGetConversations(
   channel: ConversationChannel,
   pageId: string,
-  participantIds: string[]
+  participantIds: string[],
+  isGetUnread: boolean
 ) {
-  const url = getConversationsURL(channel, pageId, participantIds);
+  const url = getConversationsURL(channel, pageId, participantIds, isGetUnread);
 
   const { data, isLoading, error, isValidating } = useSWR(
     url,

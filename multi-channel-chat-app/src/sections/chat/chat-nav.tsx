@@ -41,13 +41,25 @@ import { useGetOmniChannelsByChannel } from "@/actions/omni-channel";
 import { useGetCustomersByOmniChannel } from "@/actions/customer";
 import { Customer } from "@/models/customer/customer";
 import { useDebounce } from "@/hooks/use-debounce";
-import { SelectChangeEvent } from "@mui/material";
+import { SelectChangeEvent, Tab, Tabs } from "@mui/material";
 import { useGetGroupsByUserId } from "@/actions/user";
 import { ChatChannels } from "./chat-channels";
+import { useTabs } from "@/hooks/use-tabs";
 
 // ----------------------------------------------------------------------
 
 const NAV_WIDTH = 320;
+
+const TABS = [
+  {
+    value: "all",
+    label: "All",
+  },
+  {
+    value: "unread",
+    label: "Unread",
+  },
+];
 
 export function ChatNav({
   collapseNav,
@@ -83,6 +95,8 @@ export function ChatNav({
 
   const { userGroups } = useGetGroupsByUserId(user?.id);
 
+  const tabs = useTabs("all");
+
   const participantIds = [
     ...(userGroups?.map((g) => g.id.toString()) || []),
     user?.id || "",
@@ -95,10 +109,12 @@ export function ChatNav({
       !user?.id
     )
       return null;
+
     const url = getConversationsURL(
       selectedChannel,
       selectedPageId,
-      participantIds
+      participantIds,
+      tabs.value !== "all"
     );
 
     return `${url}&page=${pageIndex + 1}`;
@@ -215,11 +231,25 @@ export function ChatNav({
       if (data.event === "create") {
         console.log(`New conversation created`);
         setPlayNotification(true);
-        mutate(getConversationsURL(selectedChannel, selectedPageId, participantIds));
+        mutate(
+          getConversationsURL(
+            selectedChannel,
+            selectedPageId,
+            participantIds,
+            tabs.value !== "all"
+          )
+        );
         mutate(getConversationsUnreadCountURL(participantIds));
       } else if (data.event === "update") {
         console.log(`Conversation updated updated!`);
-        mutate(getConversationsURL(selectedChannel, selectedPageId, participantIds));
+        mutate(
+          getConversationsURL(
+            selectedChannel,
+            selectedPageId,
+            participantIds,
+            tabs.value !== "all"
+          )
+        );
         mutate(getConversationsUnreadCountURL(participantIds));
       }
 
@@ -350,10 +380,19 @@ export function ChatNav({
     />
   );
 
+  const renderFilterUnread = !searchQuery && (
+    <Tabs value={tabs.value} onChange={tabs.onChange} sx={{ mt: 1 }}>
+      {TABS.map((tab) => (
+        <Tab key={tab.value} value={tab.value} label={tab.label} />
+      ))}
+    </Tabs>
+  );
+
   const renderSearchInput = (
     <ClickAwayListener onClickAway={handleClickAwaySearch}>
       <TextField
         fullWidth
+        size="small"
         value={searchQuery}
         onChange={(event) => handleSearchContacts(event.target.value)}
         placeholder="Search contacts..."
@@ -381,6 +420,7 @@ export function ChatNav({
             pageId={selectedPageId}
           />
           {renderSearchInput}
+          {renderFilterUnread}
         </Box>
 
         <Scrollbar ref={chatNavRef} sx={{ pb: 1 }}>
