@@ -26,8 +26,14 @@ import type {
 } from "@/components/custom-table/custom-table";
 import { usePopover } from "@/components/custom-popover";
 
-import { getContentTones, deleteContentTone } from "@/actions/content-tone";
+import {
+  getContentTones,
+  deleteContentTone,
+  getContentToneList,
+} from "@/actions/content-tone";
 import { ContentTone } from "../types";
+import { InputAdornment, TextField } from "@mui/material";
+import { useDebounce } from "@/hooks/use-debounce";
 
 // ----------------------------------------------------------------------
 
@@ -108,13 +114,34 @@ export function ContentToneListView() {
 
   const confirm = useBoolean();
 
+  const filters = useSetState({
+    tone_description: "",
+  });
+
+  const debouncedToneDescription = useDebounce(
+    filters.state.tone_description,
+    500
+  );
+
   useEffect(() => {
     const fetchTones = async () => {
       try {
         setLoading(true);
-        const data = await getContentTones(page + 1, pageSize); // Convert to 1-based for API
-        setTones(data.data || []);
-        setTotalCount(data.meta?.total_count || 0);
+        //const data = await getContentTones(page + 1, pageSize); // Convert to 1-based for API
+        const data = await getContentToneList({
+          tone_description: debouncedToneDescription || undefined,
+          page: page + 1,
+          pageSize,
+        });
+        setTones(
+          (data.data || []).map((item) => ({
+            id: item.id,
+            tone_description: item.tone_description,
+            // add other fields as needed to match ContentTone type
+          }))
+        );
+        setTotalCount(data.total || 0);
+        // setTotalCount(data.meta?.total_count || 0);
       } catch (error) {
         console.error("Error fetching content tones:", error);
         toast.error("Không thể tải danh sách văn phong AI");
@@ -124,23 +151,23 @@ export function ContentToneListView() {
     };
 
     fetchTones();
-  }, [page, pageSize]); // Re-fetch when page or pageSize changes
+  }, [page, pageSize, debouncedToneDescription]); // Re-fetch when page or pageSize changes
 
-  const filters = useSetState({
-    tone_description: "",
-  });
+  useEffect(() => {
+    if (page !== 0) setPage(0);
+  }, [debouncedToneDescription, page]);
 
-  const dataFiltered = tones.filter((tone) => {
-    if (
-      filters.state.tone_description &&
-      !tone.tone_description
-        .toLowerCase()
-        .includes(filters.state.tone_description.toLowerCase())
-    ) {
-      return false;
-    }
-    return true;
-  });
+  // const dataFiltered = tones.filter((tone) => {
+  //   if (
+  //     filters.state.tone_description &&
+  //     !tone.tone_description
+  //       .toLowerCase()
+  //       .includes(filters.state.tone_description.toLowerCase())
+  //   ) {
+  //     return false;
+  //   }
+  //   return true;
+  // });
 
   const canReset = !!filters.state.tone_description;
 
@@ -234,6 +261,25 @@ export function ContentToneListView() {
               flexWrap: { xs: "wrap", md: "nowrap" },
             }}
           >
+            <TextField
+              value={filters.state.tone_description}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                filters.setState({ tone_description: event.target.value })
+              }
+              placeholder="Tìm kiếm mô tả..."
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Iconify
+                      icon="eva:search-fill"
+                      sx={{ color: "text.disabled" }}
+                    />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ width: 240 }}
+            />
+
             {canReset && (
               <Button
                 color="error"
@@ -247,7 +293,7 @@ export function ContentToneListView() {
           </Box>
 
           <CustomTable
-            data={dataFiltered}
+            data={tones}
             loading={loading}
             tableConfig={TABLE_HEAD.map((col) => ({
               ...col,
