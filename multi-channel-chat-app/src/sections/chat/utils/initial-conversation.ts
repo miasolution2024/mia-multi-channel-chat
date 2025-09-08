@@ -27,7 +27,7 @@ export function initialConversation({
   messageData: MessageCreateRequest;
 } {
   const recipient = conversation?.participants.find(
-    (participant: Participant) => participant.participant_id !== me.id
+    (participant: Participant) => participant.participant_type === ParticipantType.CUSTOMER
   );
 
   const messageData: MessageCreateRequest = {
