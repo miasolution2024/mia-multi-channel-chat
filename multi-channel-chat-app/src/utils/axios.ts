@@ -172,6 +172,14 @@ export const endpoints = {
     list: "items/mc_messages",
     create: "items/mc_messages",
   },
+  appointments: {
+    list: "items/appointments",
+    create: "items/appointments",
+  },
+  fbComments: {
+    list: "items/ai_comment_replies",
+    create: "items/ai_comment_replies",
+  },
   upload: "/files",
   files: "/files",
   chat: "/api/chat",
