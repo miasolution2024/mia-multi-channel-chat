@@ -41,6 +41,7 @@ import { CreateContentAssistantRequest } from "./types/content-assistant-create"
 import { UpdateContentAssistantRequest } from "./types/content-assistant-update";
 import { createPost, PostRequest } from "@/actions/auto-mia";
 import { ContentAssistantApiResponse } from "@/actions/content-assistant";
+  import { useRouter } from "next/navigation";
 import { Content } from "./view/content-assistant-list-view";
 
 // ----------------------------------------------------------------------
@@ -52,6 +53,9 @@ interface ContentAssistantMultiStepFormProps {
 export function ContentAssistantMultiStepForm({
   editData,
 }: ContentAssistantMultiStepFormProps) {
+
+  const router = useRouter();
+  
   const getInitStep = (initStep: string | undefined) => {
     if (!initStep) return POST_STEP.RESEARCH_ANALYSIS;
     if ([POST_STEP.GENERATE_IMAGE, POST_STEP.WRITE_ARTICLE].includes(initStep))
@@ -98,7 +102,11 @@ export function ContentAssistantMultiStepForm({
     const subscription = methods.watch((data) => {
       if (data?.id && initialDataRef.current) {
         // Use the same logic as handleStepProcess to detect changes
-        const hasChanged = hasFormDataChanged(data as FormData, initialDataRef.current, activeStep);
+        const hasChanged = hasFormDataChanged(
+          data as FormData,
+          initialDataRef.current,
+          activeStep
+        );
         setHasDataChanged(hasChanged);
       } else {
         setHasDataChanged(false);
@@ -277,7 +285,7 @@ export function ContentAssistantMultiStepForm({
   );
 
   const handleNext = useCallback(async () => {
-    if(!activeStep) return;
+    if (!activeStep) return;
     const fieldsToValidate = getFieldsForStep(activeStep);
     const isStepValid = await methods.trigger(fieldsToValidate);
     if (!isStepValid) {
@@ -301,67 +309,78 @@ export function ContentAssistantMultiStepForm({
     }
   }, [activeStep, methods, handleStepProcess]);
 
-  const handleSaveDraft = useCallback(async (currentStep?: string) => {
-    try {
-      setIsNextLoading(true);
-      const formData = methods.getValues();
-      const stepToSave = currentStep || activeStep;
-      
-      if (!formData?.id) {
-        toast.error("Không thể lưu nháp khi chưa có ID");
-        return;
-      }
+  const handleSaveDraft = useCallback(
+    async (currentStep?: string) => {
+      try {
+        setIsNextLoading(true);
+        const formData = methods.getValues();
+        const stepToSave = currentStep || activeStep;
 
-      let stepData;
-      
-      // Build data based on current step
-      switch (stepToSave) {
-        case POST_STEP.RESEARCH_ANALYSIS:
-          stepData = buildStepResearchData(formData, false) as UpdateContentAssistantRequest;
-          break;
-        case POST_STEP.MAKE_OUTLINE:
-          stepData = buildStepOutlineData(formData) as UpdateContentAssistantRequest;
-          break;
-        case POST_STEP.WRITE_ARTICLE:
-          const dataMediaEdit = {
-            media: (editData?.media as FileWithApiProperties[]) || [],
-            media_generated_ai:
-              (editData?.media_generated_ai as MediaGeneratedAiItem[]) || [],
-            id: editData?.id?.toString(),
-          };
-          stepData = await buildStepWriteArticleData(formData, dataMediaEdit) as UpdateContentAssistantRequest;
-          break;
-        default:
-          toast.error("Step không hợp lệ để lưu nháp");
+        if (!formData?.id) {
+          toast.error("Không thể lưu nháp khi chưa có ID");
           return;
-      }
+        }
 
-      await updateContentAssistant(formData.id, stepData);
-      
-      // Reset hasDataChanged state since data is now saved
-      // Note: Don't update initialDataRef here to preserve N8N logic for handleNext
-      setHasDataChanged(false);
-      
-      setShowPublishModal(false);
-      toast.success("Đã lưu bản nháp thành công!");
-    } catch (error) {
-      console.error("Error saving draft:", error);
-      toast.error("Có lỗi xảy ra khi lưu bản nháp");
-    } finally {
-      setIsNextLoading(false);
-    }
-  }, [methods, editData, updateContentAssistant, activeStep]);
+        let stepData;
+
+        // Build data based on current step
+        switch (stepToSave) {
+          case POST_STEP.RESEARCH_ANALYSIS:
+            stepData = buildStepResearchData(
+              formData,
+              false
+            ) as UpdateContentAssistantRequest;
+            break;
+          case POST_STEP.MAKE_OUTLINE:
+            stepData = buildStepOutlineData(
+              formData
+            ) as UpdateContentAssistantRequest;
+            break;
+          case POST_STEP.WRITE_ARTICLE:
+            const dataMediaEdit = {
+              media: (editData?.media as FileWithApiProperties[]) || [],
+              media_generated_ai:
+                (editData?.media_generated_ai as MediaGeneratedAiItem[]) || [],
+              id: editData?.id?.toString(),
+            };
+            stepData = (await buildStepWriteArticleData(
+              formData,
+              dataMediaEdit
+            )) as UpdateContentAssistantRequest;
+            break;
+          default:
+            toast.error("Step không hợp lệ để lưu nháp");
+            return;
+        }
+
+        await updateContentAssistant(formData.id, stepData);
+
+        // Reset hasDataChanged state since data is now saved
+        // Note: Don't update initialDataRef here to preserve N8N logic for handleNext
+        setHasDataChanged(false);
+
+        setShowPublishModal(false);
+        toast.success("Đã lưu bản nháp thành công!");
+      } catch (error) {
+        console.error("Error saving draft:", error);
+        toast.error("Có lỗi xảy ra khi lưu bản nháp");
+      } finally {
+        setIsNextLoading(false);
+      }
+    },
+    [methods, editData, updateContentAssistant, activeStep]
+  );
 
   const handlePublish = async () => {
     try {
       setIsNextLoading(true);
       const formData = methods.getValues();
-      
+
       if (!formData?.id) {
         toast.error("Không thể đăng bài khi chưa có ID");
         return;
       }
-      
+
       // Save current step data first
       const dataMediaEdit = {
         media: (editData?.media as FileWithApiProperties[]) || [],
@@ -381,16 +400,19 @@ export function ContentAssistantMultiStepForm({
           },
         ];
 
-        await createPost(inputN8NData);
+        const responseN8N = await createPost(inputN8NData);
 
         // update current_step thành done
-         await updateContentAssistant(formData.id, {
-          current_step: POST_STEP.PUBLISHED
-         });
+        if (responseN8N?.success) {
+          await updateContentAssistant(formData.id, {
+            current_step: POST_STEP.PUBLISHED,
+          });
+          toast.success("Đã đăng bài thành công!");
+          router.push(`/dashboard/content-assistant`);
+        }
       }
 
       setShowPublishModal(false);
-      toast.success("Đã đăng bài thành công!");
     } catch (error) {
       console.error("Error publishing:", error);
       toast.error("Có lỗi xảy ra khi đăng bài");
@@ -416,7 +438,7 @@ export function ContentAssistantMultiStepForm({
   };
 
   const handleBack = () => {
-    if(!activeStep) return;
+    if (!activeStep) return;
     const steps = getSteps();
     const currentIndex = steps.indexOf(activeStep);
     if (currentIndex > 0) {
@@ -427,7 +449,7 @@ export function ContentAssistantMultiStepForm({
   const isLastStep = activeStep === POST_STEP.WRITE_ARTICLE;
   const isFirstStep = activeStep === POST_STEP.RESEARCH_ANALYSIS;
 
-  if(!activeStep) return null;
+  if (!activeStep) return null;
 
   return (
     <>
@@ -439,7 +461,7 @@ export function ContentAssistantMultiStepForm({
       <Form methods={methods} onSubmit={onSubmit}>
         <Stack spacing={4}>
           <ContentStepper currentStep={activeStep} />
-      
+
           <Box
             sx={{
               p: 3,

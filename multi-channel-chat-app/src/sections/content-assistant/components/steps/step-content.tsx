@@ -74,12 +74,11 @@ export function StepContent({ contentAssistantId }: StepContentProps) {
       // Build data for WRITE_ARTICLE step
       const formData = getValues() as FormData;
       const stepData = await buildStepWriteArticleData(formData);
-      console.log("stepData", stepData);
 
       // Save current form data to Directus
       const updateResponse = await updateContentAssistant(
         contentAssistantId,
-        stepData
+        {...stepData, is_generated_by_AI: true}
       );
 
       if (!updateResponse) {
