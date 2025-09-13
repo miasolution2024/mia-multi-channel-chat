@@ -251,17 +251,17 @@ export function useContentAssistantSaveDraft({
       const currentMedia = (currentFormData.media as (File | FileWithApiProperties)[]) || [];
       const newMediaFiles = getNewMediaFiles(
         currentMedia,
-        editData?.media || []
+        editData?.media as unknown as FileWithApiProperties[] || []
       );
 
       const deletedMediaIds = getDeletedMediaFiles(
         currentMedia,
-        editData?.media || []
+        editData?.media as unknown as FileWithApiProperties[] || []
       );
 
       const deletedMediaGeneratedAiIds = getDeletedMediaGeneratedAiFiles(
         (currentFormData.media_generated_ai as (string | MediaGeneratedAiItem)[]) || [],
-        (editData?.media_generated_ai as MediaGeneratedAiItem[]) || []
+        (editData?.media_generated_ai as unknown as MediaGeneratedAiItem[]) || []
       );
 
       let mediaArray: Array<{ id: string }> = [];
@@ -388,7 +388,7 @@ export function useContentAssistantSaveDraft({
     } finally {
       setIsSavingDraft(false);
     }
-  }, [watchMethod, activeStep]);
+  }, [watchMethod, activeStep, editData]);
 
   return {
     isSavingDraft,

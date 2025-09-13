@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
 import CardHeader from "@mui/material/CardHeader";
@@ -44,7 +44,7 @@ export function StepContent({ contentAssistantId }: StepContentProps) {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
 
   const { setValue, watch, getValues } = useFormContext();
-  const mediaGeneratedAi = watch("media_generated_ai") || [];
+  const mediaGeneratedAi = useMemo(() => watch("media_generated_ai") || [], [watch]);
 
   // Initialize generated images from existing mediaGeneratedAi data
   useEffect(() => {

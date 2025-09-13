@@ -129,7 +129,7 @@ export function AiRulesListView() {
     };
 
     fetchRules();
-  }, [page, pageSize]); // Re-fetch when page or pageSize changes
+  }, [page, pageSize,loading ]); // Re-fetch when page or pageSize changes
 
   const handleDeleteConfirm = useCallback(async () => {
     if (selectedRuleId) {

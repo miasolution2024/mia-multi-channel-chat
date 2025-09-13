@@ -350,7 +350,7 @@ export function ContentAssistantMultiStepForm({
     } finally {
       setIsNextLoading(false);
     }
-  }, [methods, editData, updateContentAssistant, activeStep, initialDataRef]);
+  }, [methods, editData, updateContentAssistant, activeStep]);
 
   const handlePublish = async () => {
     try {
