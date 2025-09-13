@@ -163,25 +163,25 @@ export const getDefaultValues = (
       customer_group:
         extractIds(editData.customer_group).length > 0
           ? extractIds(editData.customer_group)
-          : [3],
+          : [],
       customer_journey:
         extractIds(editData.customer_journey).length > 0
           ? extractIds(editData.customer_journey)
-          : [1],
+          : [],
       content_tone:
         extractIds(editData.content_tone).length > 0
           ? extractIds(editData.content_tone)
-          : [1],
+          : [],
       ai_rule_based:
         extractIds(editData.ai_rule_based).length > 0
           ? extractIds(editData.ai_rule_based)
-          : [231],
+          : [],
       ai_notes_make_outline: getString(apiData.ai_notes_make_outline),
       status: editData.status || (POST_STATUS.DRAFT as string),
       omni_channels:
         extractIds(apiData.omni_channels).length > 0
           ? extractIds(apiData.omni_channels)
-          : [1],
+          : [],
       // Step 2
       outline_post: getString(apiData.outline_post),
       post_goal: getString(apiData.post_goal),
