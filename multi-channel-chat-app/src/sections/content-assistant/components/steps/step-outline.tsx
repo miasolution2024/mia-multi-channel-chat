@@ -12,14 +12,13 @@ import { Iconify } from "@/components/iconify";
 // ----------------------------------------------------------------------
 
 export function StepOutline() {
-
   return (
     <Stack spacing={3}>
       {/* AI Notes Input - Prominent at top */}
       <Box sx={{ mb: 3 }}>
         <RHFTextField
-          name="additional_notes_step_2"
-          placeholder="Viết thêm mô tả chi tiết và lưu ý bài viết"
+          name="ai_notes_write_article"
+          placeholder="Viết thêm mô tả chi tiết khi tạo nội dung bài viết"
           multiline
           minRows={1}
           maxRows={4}

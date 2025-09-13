@@ -31,7 +31,7 @@ import {
   type ContentAssistantApiResponse,
   type MediaGeneratedAiItem,
 } from "@/actions/content-assistant";
-import { POST_TYPE_OPTIONS } from "@/constants/auto-post";
+import { POST_STEP, POST_TYPE_OPTIONS } from "@/constants/auto-post";
 
 // Tạo interface riêng cho table config
 interface ContentTableConfig {
@@ -81,6 +81,7 @@ interface OmniChannelsItem {
 // Định nghĩa interface cho Content
 export interface Content {
   id: number | string;
+  current_step?: string;
   topic: string; // Chủ đề
   post_type: string | null; // Loại bài viết
   main_seo_keyword: string; // Từ khoá SEO chính
@@ -95,22 +96,25 @@ export interface Content {
   status: string; // Trạng thái từ API
   description?: string; // Nội dung bài viết
   // Các trường bổ sung từ form
-  additional_notes_step_1?: string;
   outline_post?: string;
   post_goal?: string;
   post_notes?: string;
-  additional_notes_step_2?: string;
   content?: string;
-  additional_notes_step_3?: string;
-  ai_notes_create_image_step_3?: string;
   media?: File[];
   media_generated_ai?: MediaGeneratedAiItem[];
-  additional_notes_step_4?: string;
+  video: string;
   post_html_format?: string;
-  action?: string;
   [key: string]: unknown; // Index signature for compatibility
 }
 
+const mappingCurrentStep: Record<string, string> = {
+  [POST_STEP.RESEARCH_ANALYSIS]: "Tìm hiểu",
+  [POST_STEP.MAKE_OUTLINE]: "Lên dàn ý",
+  [POST_STEP.WRITE_ARTICLE]: "Viết bài",
+  [POST_STEP.GENERATE_IMAGE]: "Tạo sinh hình ảnh",
+  [POST_STEP.HTML_CODING]: "Tạo định dạng HTML",
+  [POST_STEP.PUBLISHED]: "Xuất bản",
+};
 const TABLE_CONFIG: ContentTableConfig[] = [
   { key: "id", id: "id", label: "ID" },
   { key: "topic", id: "topic", label: "Chủ đề", align: "left" },
@@ -123,6 +127,17 @@ const TABLE_CONFIG: ContentTableConfig[] = [
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
         {POST_TYPE_OPTIONS.find((option) => option.value === item.post_type)
           ?.label || "N/A"}
+      </Box>
+    ),
+  },
+  {
+    key: "current_step",
+    id: "current_step",
+    label: "Trạng thái hiện tại",
+    align: "left",
+    render: (item: Content) => (
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+        {item?.current_step ? mappingCurrentStep[item.current_step] : ""}
       </Box>
     ),
   },
@@ -388,9 +403,10 @@ export function ContentAssistantListView() {
       created_at: item.created_at,
       status: item.status || "draft",
       description: item.description,
-      action: item.action,
+      current_step: item.current_step,
       media: [],
       media_generated_ai: [],
+      
     }));
   };
 
@@ -398,7 +414,6 @@ export function ContentAssistantListView() {
     ? transformApiData(apiResponse.data)
     : [];
   const totalCount = apiResponse?.total || 0;
-
   // Use API data directly since filtering is handled server-side
   const displayData = tableData;
 
@@ -461,25 +476,6 @@ export function ContentAssistantListView() {
     }
     confirm.onFalse();
   }, [selected, confirm, fetchData, setIsDeleting]);
-
-  // const handleChangeStatus = useCallback(
-  //   async (id: string | number, newStatus: string) => {
-  //     try {
-  //       await updateContentAssistantStatus(id, newStatus);
-  //       // Refresh data
-  //       await fetchData();
-  //       toast.success("Đã cập nhật trạng thái!");
-  //     } catch (error) {
-  //       const errorMessage =
-  //         error instanceof Error
-  //           ? error.message
-  //           : "Lỗi khi cập nhật trạng thái!";
-  //       toast.error(errorMessage);
-  //       console.log(error);
-  //     }
-  //   },
-  //   [fetchData]
-  // );
 
   return (
     <>

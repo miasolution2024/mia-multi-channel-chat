@@ -17,11 +17,15 @@ import { useFormContext } from "react-hook-form";
 import { RHFTextField, RHFEditor, RHFUpload } from "@/components/hook-form";
 import { Iconify } from "@/components/iconify";
 import { LoadingOverlay } from "@/components/loading-overlay";
-import { createPost } from "@/actions/auto-mia";
-import { toast } from "@/components/snackbar";
-import { Content } from "../../view/content-assistant-list-view";
 import { CONFIG } from "@/config-global";
-import { MediaGeneratedAiItem } from "@/actions/content-assistant";
+import {
+  MediaGeneratedAiItem,
+  updateContentAssistant,
+  getContentAssistantById,
+} from "@/actions/content-assistant";
+import { createPost, PostRequest } from "@/actions/auto-mia";
+import { buildStepWriteArticleData, FormData } from "../../utils";
+import { toast } from "@/components/snackbar";
 
 // ----------------------------------------------------------------------
 
@@ -30,28 +34,26 @@ interface FileWithPreview extends File {
   preview?: string;
 }
 
-type Props = {
-  currentContent?: Content;
-};
+interface StepContentProps {
+  contentAssistantId?: string;
+}
 
-export function StepContent({ currentContent }: Props) {
+export function StepContent({ contentAssistantId }: StepContentProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
 
-  const { setValue, watch } = useFormContext();
+  const { setValue, watch, getValues } = useFormContext();
   const mediaGeneratedAi = watch("media_generated_ai") || [];
-  console.log("mediaGeneratedAi", mediaGeneratedAi);
 
   // Initialize generated images from existing mediaGeneratedAi data
   useEffect(() => {
     if (mediaGeneratedAi && mediaGeneratedAi.length > 0) {
       const imageUrls = mediaGeneratedAi.map(
         (item: MediaGeneratedAiItem | string) => {
-          // Handle both object format (from API) and string format (new generated)
           const fileId =
             typeof item === "string" ? item : item.directus_files_id;
-          return `${CONFIG.serverUrl}/assets/${fileId}&key=system-large-contain`;
+          return `${CONFIG.serverUrl}/assets/${fileId}`;
         }
       );
       setGeneratedImages(imageUrls);
@@ -61,44 +63,67 @@ export function StepContent({ currentContent }: Props) {
     setActiveTab(newValue);
   };
   const handleGenerateImage = async () => {
-    setIsGenerating(true);
-    try {
-      const formData = watch();
-      const apiData = {
-        id: currentContent?.id || formData.id || null,
-        step1: {},
-        step2: {},
-        step3: {
-          post_content: formData.post_content,
-          ai_notes_create_image_step_3: formData.ai_notes_create_image_step_3,
-          isGeneratedByAI: true,
-        },
-        step4: {},
-      };
+    if (!contentAssistantId) {
+      toast.error("Content Assistant ID not found");
+      return;
+    }
 
-      const response = await createPost(apiData);
-      if (response?.data?.media_generated_ai) {
-        setGeneratedImages(
-          response?.data?.media_generated_ai?.map((item) => {
-            return `${CONFIG.serverUrl}/assets/${item.directus_files_id}&key=system-large-contain`;
-          })
-        );
-        setValue(
-          "media_generated_ai",
-          response.data.media_generated_ai?.map(
-            (item) => item.directus_files_id
-          )
-        );
+    try {
+      setIsGenerating(true);
+
+      // Build data for WRITE_ARTICLE step
+      const formData = getValues() as FormData;
+      const stepData = await buildStepWriteArticleData(formData);
+      console.log("stepData", stepData);
+
+      // Save current form data to Directus
+      const updateResponse = await updateContentAssistant(
+        contentAssistantId,
+        stepData
+      );
+
+      if (!updateResponse) {
+        throw new Error("Failed to save data to Directus");
       }
 
-      if (response?.data) {
-        toast.success("Tạo sinh hình ảnh thành công!");
+      // Call N8N with specific parameters
+      const inputN8NData: PostRequest = [
+        {
+          id: parseInt(contentAssistantId),
+          startStep: 3,
+          endStep: 4,
+        },
+      ];
+
+      const n8nResponse = await createPost(inputN8NData);
+      console.log("n8nResponse gen ai image", n8nResponse);
+
+      if (!n8nResponse.success) {
+        throw new Error("Failed to generate images via N8N");
+      }
+
+      // Fetch updated data from Directus to get AI-generated images
+      const updatedDataResponse = await getContentAssistantById(
+        contentAssistantId
+      );
+
+      if (updatedDataResponse) {
+        // Update form with new AI-generated images
+        if (updatedDataResponse.media_generated_ai) {
+          setValue(
+            "media_generated_ai",
+            updatedDataResponse.media_generated_ai
+          );
+        }
+        toast.success("Images generated successfully!");
       } else {
-        toast.error("Có lỗi xảy ra khi tạo sinh hình ảnh!");
+        throw new Error("Failed to fetch updated data from Directus");
       }
     } catch (error) {
-      console.error("Error generating image:", error);
-      toast.error("Có lỗi xảy ra khi tạo sinh hình ảnh!");
+      console.error("Error generating images:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to generate images"
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -128,41 +153,6 @@ export function StepContent({ currentContent }: Props) {
 
       {activeTab === 0 && (
         <Card>
-          <Box sx={{ m: 3 }}>
-            <RHFTextField
-              name="additional_notes_step_3"
-              placeholder="💬 Viết thêm mô tả chi tiết và lưu ý bài viết"
-              multiline
-              minRows={1}
-              maxRows={4}
-              InputProps={{
-                startAdornment: (
-                  <Iconify
-                    icon="solar:magic-stick-3-bold"
-                    sx={{
-                      color: "primary.main",
-                      mr: 1,
-                      fontSize: 20,
-                    }}
-                  />
-                ),
-                sx: {
-                  alignItems: "flex-start",
-                },
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                  },
-                  "&.Mui-focused": {
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-                  },
-                },
-              }}
-            />
-          </Box>
           <CardHeader title="Nội dung bài viết" />
           <Stack spacing={3} sx={{ p: 3 }}>
             <RHFEditor
@@ -181,7 +171,7 @@ export function StepContent({ currentContent }: Props) {
             {/* AI Notes for Image Generation */}
             <Box>
               <RHFTextField
-                name="ai_notes_create_image_step_3"
+                name="ai_notes_create_image"
                 placeholder="Viết mô tả hình ảnh bạn hướng đến AI đề xuất"
                 multiline
                 minRows={1}
@@ -309,7 +299,7 @@ export function StepContent({ currentContent }: Props) {
                 hidePreview={true}
               />
               {/* Hiển thị ảnh đã upload */}
-              {watch("media")?.length > 0 && (
+              {Array.isArray(watch("media")) && watch("media").length > 0 && (
                 <Paper sx={{ p: 2, mt: 2 }}>
                   <Typography variant="subtitle2" sx={{ mb: 2 }}>
                     Hình ảnh đã tải lên ({watch("media").length})
@@ -338,7 +328,9 @@ export function StepContent({ currentContent }: Props) {
                             size="small"
                             color="error"
                             onClick={() => {
-                              const currentMedia = watch("media") || [];
+                              const currentMedia = Array.isArray(watch("media"))
+                                ? watch("media")
+                                : [];
                               const updatedMedia = currentMedia.filter(
                                 (_: File, i: number) => i !== index
                               );
@@ -389,7 +381,7 @@ export function StepContent({ currentContent }: Props) {
               />
 
               {/* Video Preview */}
-              {watch("video") && watch("video").length > 0 && (
+              {Array.isArray(watch("video")) && watch("video").length > 0 && (
                 <Paper sx={{ p: 2, mt: 2 }}>
                   <Typography variant="subtitle2" sx={{ mb: 2 }}>
                     Video đã chọn

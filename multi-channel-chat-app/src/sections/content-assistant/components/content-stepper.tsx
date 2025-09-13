@@ -1,67 +1,69 @@
-'use client';
+"use client";
 
-import Box from '@mui/material/Box';
-import Step from '@mui/material/Step';
-import Stepper from '@mui/material/Stepper';
-import StepLabel from '@mui/material/StepLabel';
-import Typography from '@mui/material/Typography';
+import Box from "@mui/material/Box";
+import Step from "@mui/material/Step";
+import Stepper from "@mui/material/Stepper";
+import StepLabel from "@mui/material/StepLabel";
+import Typography from "@mui/material/Typography";
+import { POST_STEP } from "@/constants/auto-post";
 
 // ----------------------------------------------------------------------
 
-const steps = [
+const STEPS = [
   {
-    label: 'Nghiên cứu & phân tích',
+    value: POST_STEP.RESEARCH_ANALYSIS,
+    label: "Nghiên cứu & phân tích",
+    stepNumber: 1,
   },
   {
-    label: 'Lên outline bài viết',
+    value: POST_STEP.MAKE_OUTLINE,
+    label: "Lên outline bài viết",
+    stepNumber: 2,
   },
   {
-    label: 'Viết bài',
+    value: POST_STEP.WRITE_ARTICLE,
+    label: "Viết bài",
+    stepNumber: 3,
   },
-  {
-    label: 'Xuất bản HTML',
-  },
-];
-
-const facebookSteps = [
-  {
-    label: 'Nghiên cứu & phân tích',
-  },
-  {
-    label: 'Lên outline bài viết',
-  },
-  {
-    label: 'Viết bài',
-  },
+  // {
+  //   value: POST_STEP.GENERATE_IMAGE,
+  //   label: "Tạo sinh hình ảnh",
+  //   stepNumber: 4,
+  // },
+  // {
+  //   value: POST_STEP.PUBLISHED,
+  //   label: "Đăng bài",
+  //   stepNumber: 6,
+  // },
 ];
 
 // ----------------------------------------------------------------------
 
 type Props = {
-  activeStep: number;
-  postType?: string;
+  currentStep: (typeof POST_STEP)[keyof typeof POST_STEP];
 };
 
-export function ContentStepper({ activeStep, postType }: Props) {
-  const currentSteps = postType === 'facebook_post' ? facebookSteps : steps;
-  
+export function ContentStepper({ currentStep }: Props) {
+  const activeStep =
+    STEPS.find((step) => step.value === currentStep)?.stepNumber || 0;
+
   return (
-    <Box sx={{ width: '100%', mb: 4 }}>
-      <Stepper activeStep={activeStep} alternativeLabel>
-        {currentSteps.map((step) => (
-          <Step key={step.label}>
+    <Box sx={{ width: "100%", mb: 4 }}>
+      <Stepper activeStep={activeStep - 1} alternativeLabel>
+        {STEPS.map((step) => (
+          <Step key={step.value}>
             <StepLabel
               sx={{
-                cursor: 'default',
-                '& .MuiStepLabel-label': {
-                  fontSize: '0.875rem',
+                cursor: "default",
+                "& .MuiStepLabel-label": {
+                  fontSize: "0.875rem",
                   fontWeight: 500,
                 },
-                '& .MuiStepIcon-text': {
-                  fill: 'white',
+                "& .MuiStepIcon-text": {
+                  fill: "white",
                 },
-                '& .MuiStepIcon-root': {
-                  fontSize: '2rem',
+                "& .MuiStepIcon-root": {
+                  fontSize: "2rem",
                 },
               }}
             >
@@ -77,5 +79,3 @@ export function ContentStepper({ activeStep, postType }: Props) {
     </Box>
   );
 }
-
-export { steps, facebookSteps };

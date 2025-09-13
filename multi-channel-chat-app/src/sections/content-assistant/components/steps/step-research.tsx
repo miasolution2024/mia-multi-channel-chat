@@ -97,7 +97,7 @@ export function StepResearch() {
       {/* AI Notes Input - Prominent at top */}
       <Box sx={{ mb: 3 }}>
         <RHFTextField
-          name="additional_notes_step_1"
+          name="ai_notes_make_outline"
           placeholder="💬 Viết thêm mô tả chi tiết và lưu ý bài viết..."
           multiline
           minRows={1}

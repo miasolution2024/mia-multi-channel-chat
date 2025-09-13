@@ -71,7 +71,7 @@ const transformApiData = (
     created_at: data.created_at,
     status: data.status || "draft",
     description: data.description,
-    action: data.action,
+    current_step: data.current_step,
     media: transformedMedia,
     media_generated_ai: data.media_generated_ai || [],
   };

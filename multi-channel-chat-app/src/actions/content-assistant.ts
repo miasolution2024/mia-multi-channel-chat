@@ -1,4 +1,6 @@
 import axiosInstance from "@/utils/axios";
+import { CreateContentAssistantRequest, CreateContentAssistantResponse } from "@/sections/content-assistant/types/content-assistant-create";
+import { UpdateContentAssistantRequest, UpdateContentAssistantResponse } from "@/sections/content-assistant/types/content-assistant-update";
 
 // Định nghĩa interface cho MediaGeneratedAi
 export interface MediaGeneratedAiItem {
@@ -10,55 +12,39 @@ export interface MediaGeneratedAiItem {
 // Định nghĩa interface cho API response
 export interface ContentAssistantApiResponse {
   id: number;
-  topic: string;
-  post_type: string | null;
-  main_seo_keyword: string;
-  secondary_seo_keywords?: string[];
-  customer_group: Array<{
-    customer_group_id: {
-      id: number;
-      name: string;
-    };
-  }>;
-  customer_journey: Array<{
-    customer_journey_id: {
-      id: number;
-      name: string;
-    };
-  }>;
-  ai_rule_based: Array<{
-    ai_rule_based_id: {
-      id: number;
-      content: string;
-    };
-  }>;
-  content_tone: Array<{
-    content_tone_id: {
-      id: number;
-      tone_name: string | null;
-      tone_description: string;
-    };
-  }>;
-  additional_notes?: string;
-  created_at?: string;
   status: string;
-  description?: string;
-  // Extended fields
-  additional_notes_step_1?: string;
-  omni_channels: Array<{
-    omni_channels_id: number;
-  }>;
-  outline_post?: string;
-  post_goal?: string;
-  post_notes?: string;
-  additional_notes_step_2?: string;
-  content?: string;
-  ai_notes_create_image_step_3?: string;
-  media?: File[];
-  media_generated_ai?: MediaGeneratedAiItem[];
-  additional_notes_step_4?: string;
-  post_html_format?: string;
-  action?: string;
+  user_created: string;
+  date_created: string;
+  user_updated: string;
+  date_updated: string;
+  post_type: string | null;
+  topic: string;
+  main_seo_keyword: string;
+  secondary_seo_keywords: string[];
+  phase_goal: string | null;
+  post_notes: string | null;
+  scheduled_post_time: string | null;
+  ai_content_schedule: string | null;
+  post_title: string | null;
+  post_html_format: string | null;
+  post_content: string | null;
+  outline_post: string | null;
+  post_goal: string | null;
+  video: string | null;
+  platform_post_id: string | null;
+  ai_notes_create_image: string | null;
+  is_generated_by_AI: boolean;
+  current_step: string;
+  ai_notes_make_outline: string;
+  ai_notes_write_article: string | null;
+  ai_notes_html_coding: string | null;
+  customer_journey: number[];
+  content_tone: number[];
+  media: unknown[];
+  customer_group: number[];
+  media_generated_ai: MediaGeneratedAiItem[];
+  ai_rule_based: number[];
+  omni_channels: number[];
 }
 
 export interface ContentAssistantListResponse {
@@ -104,14 +90,18 @@ export async function getContentAssistantList(
       'ai_rule_based.ai_rule_based_id.id',
       'ai_rule_based.ai_rule_based_id.content',
       'id',
-      'action',
+      'current_step',
       'outline_post',
       'post_goal' ,
       'post_notes',
       'post_content',
       'media.*',
       'media_generated_ai.*',
-      'post_html_format'
+      'post_html_format',
+      'ai_notes_make_outline',
+      'ai_notes_write_article',
+      'ai_notes_create_image',
+      'video'
     ];
     
     fields.forEach(field => {
@@ -174,7 +164,7 @@ export async function getContentAssistantById(
 ): Promise<ContentAssistantApiResponse> {
   try {
     const response = await axiosInstance.get(`/items/ai_content_suggestions/${id}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error('Error fetching content assistant:', error);
     throw new Error('Không thể tải thông tin nội dung');
@@ -243,6 +233,33 @@ export async function updateContentAssistant(
     return response.data;
   } catch (error) {
     console.error('Error updating content assistant:', error);
+    throw new Error('Không thể cập nhật nội dung');
+  }
+}
+
+// Tạo content assistant mới với API structure mới
+export async function createNewContentAssistant(
+  data: CreateContentAssistantRequest
+): Promise<CreateContentAssistantResponse> {
+  try {
+    const response = await axiosInstance.post('/items/ai_content_suggestions', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating new content assistant:', error);
+    throw new Error('Không thể tạo nội dung mới');
+  }
+}
+
+// Cập nhật content assistant với API structure mới
+export async function updateNewContentAssistant(
+  id: string | number,
+  data: UpdateContentAssistantRequest
+): Promise<UpdateContentAssistantResponse> {
+  try {
+    const response = await axiosInstance.patch(`/items/ai_content_suggestions/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating new content assistant:', error);
     throw new Error('Không thể cập nhật nội dung');
   }
 }

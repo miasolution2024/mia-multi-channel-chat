@@ -54,8 +54,6 @@ export function Upload({
 
   const hasError = isDragReject || !!error;
 
-  console.log("hasFile", hasFile);
-
   const renderMultiPreview = hasFiles && (
     <>
       <MultiFilePreview
