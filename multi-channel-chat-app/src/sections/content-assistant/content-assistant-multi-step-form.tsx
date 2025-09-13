@@ -66,6 +66,7 @@ export function ContentAssistantMultiStepForm({
   );
   const [isNextLoading, setIsNextLoading] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [hasDataChanged, setHasDataChanged] = useState(false);
   const { createContentAssistant, isLoading: isCreating } =
     useCreateContentAssistant();
   const { updateContentAssistant, isLoading: isUpdating } =
@@ -91,6 +92,20 @@ export function ContentAssistantMultiStepForm({
       initialDataRef.current = { ...currentData };
     }
   }, [methods]);
+
+  // Watch for form changes to enable/disable save draft
+  useEffect(() => {
+    const subscription = methods.watch((data) => {
+      if (data?.id && initialDataRef.current) {
+        // Use the same logic as handleStepProcess to detect changes
+        const hasChanged = hasFormDataChanged(data as FormData, initialDataRef.current, activeStep);
+        setHasDataChanged(hasChanged);
+      } else {
+        setHasDataChanged(false);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [methods, activeStep]);
 
   const { handleSubmit } = methods;
 
@@ -243,6 +258,8 @@ export function ContentAssistantMultiStepForm({
           }
         }
 
+        // Update initialDataRef only when successfully moving to next step
+        initialDataRef.current = { ...data };
         setActiveStep(nextStep);
       } catch (error) {
         console.error("Error in handleStepProcess:", error);
@@ -284,25 +301,47 @@ export function ContentAssistantMultiStepForm({
     }
   }, [activeStep, methods, handleStepProcess]);
 
-  const handleSaveDraft = useCallback(async () => {
+  const handleSaveDraft = useCallback(async (currentStep?: string) => {
     try {
       setIsNextLoading(true);
-      const dataMediaEdit = {
-        media: (editData?.media as FileWithApiProperties[]) || [],
-        media_generated_ai:
-          (editData?.media_generated_ai as MediaGeneratedAiItem[]) || [],
-        id: editData?.id?.toString(),
-      };
       const formData = methods.getValues();
-      const stepData = await buildStepWriteArticleData(formData, dataMediaEdit);
-
-      if (formData?.id) {
-        await updateContentAssistant(
-          formData.id,
-          stepData as UpdateContentAssistantRequest
-        );
+      const stepToSave = currentStep || activeStep;
+      
+      if (!formData?.id) {
+        toast.error("Không thể lưu nháp khi chưa có ID");
+        return;
       }
 
+      let stepData;
+      
+      // Build data based on current step
+      switch (stepToSave) {
+        case POST_STEP.RESEARCH_ANALYSIS:
+          stepData = buildStepResearchData(formData, false) as UpdateContentAssistantRequest;
+          break;
+        case POST_STEP.MAKE_OUTLINE:
+          stepData = buildStepOutlineData(formData) as UpdateContentAssistantRequest;
+          break;
+        case POST_STEP.WRITE_ARTICLE:
+          const dataMediaEdit = {
+            media: (editData?.media as FileWithApiProperties[]) || [],
+            media_generated_ai:
+              (editData?.media_generated_ai as MediaGeneratedAiItem[]) || [],
+            id: editData?.id?.toString(),
+          };
+          stepData = await buildStepWriteArticleData(formData, dataMediaEdit) as UpdateContentAssistantRequest;
+          break;
+        default:
+          toast.error("Step không hợp lệ để lưu nháp");
+          return;
+      }
+
+      await updateContentAssistant(formData.id, stepData);
+      
+      // Reset hasDataChanged state since data is now saved
+      // Note: Don't update initialDataRef here to preserve N8N logic for handleNext
+      setHasDataChanged(false);
+      
       setShowPublishModal(false);
       toast.success("Đã lưu bản nháp thành công!");
     } catch (error) {
@@ -311,32 +350,43 @@ export function ContentAssistantMultiStepForm({
     } finally {
       setIsNextLoading(false);
     }
-  }, [methods, editData, updateContentAssistant]);
+  }, [methods, editData, updateContentAssistant, activeStep, initialDataRef]);
 
   const handlePublish = async () => {
     try {
       setIsNextLoading(true);
       const formData = methods.getValues();
-      const stepData = await buildStepWriteArticleData(formData);
-      if (formData?.id) {
-        const response = await updateContentAssistant(formData.id, stepData);
+      
+      if (!formData?.id) {
+        toast.error("Không thể đăng bài khi chưa có ID");
+        return;
+      }
+      
+      // Save current step data first
+      const dataMediaEdit = {
+        media: (editData?.media as FileWithApiProperties[]) || [],
+        media_generated_ai:
+          (editData?.media_generated_ai as MediaGeneratedAiItem[]) || [],
+        id: editData?.id?.toString(),
+      };
+      const stepData = await buildStepWriteArticleData(formData, dataMediaEdit);
+      const response = await updateContentAssistant(formData.id, stepData);
 
-        if (response?.data?.id) {
-          const inputN8NData: PostRequest = [
-            {
-              id: response.data.id,
-              startStep: 4,
-              endStep: 6,
-            },
-          ];
+      if (response?.data?.id) {
+        const inputN8NData: PostRequest = [
+          {
+            id: response.data.id,
+            startStep: 4,
+            endStep: 6,
+          },
+        ];
 
-          await createPost(inputN8NData);
+        await createPost(inputN8NData);
 
-          // update current_step thành done
-           await updateContentAssistant(formData.id, {
-            current_step: POST_STEP.PUBLISHED
-           });
-        }
+        // update current_step thành done
+         await updateContentAssistant(formData.id, {
+          current_step: POST_STEP.PUBLISHED
+         });
       }
 
       setShowPublishModal(false);
@@ -389,7 +439,7 @@ export function ContentAssistantMultiStepForm({
       <Form methods={methods} onSubmit={onSubmit}>
         <Stack spacing={4}>
           <ContentStepper currentStep={activeStep} />
-
+      
           <Box
             sx={{
               p: 3,
@@ -416,6 +466,19 @@ export function ContentAssistantMultiStepForm({
             >
               Quay lại
             </Button>
+
+            {/* Show Save Draft button only when there's an ID and data has changed */}
+            {methods.getValues().id && hasDataChanged && (
+              <Button
+                size="large"
+                variant="outlined"
+                onClick={() => handleSaveDraft()}
+                disabled={isProcessing}
+                sx={{ minWidth: 150, borderRadius: 2 }}
+              >
+                {isProcessing ? "Đang lưu..." : "Lưu nháp"}
+              </Button>
+            )}
 
             <Button
               size="large"
