@@ -108,12 +108,11 @@ export async function getContentAssistantList(
       params.append('fields[]', field);
     });
     
-    // Set sorting
-    params.append('sort[]', '-date_updated');
-    
     // Set meta to get all metadata
     params.append('meta', '*');
-    
+    // Set sorting
+    params.append('sort[]', '-date_updated');
+
     // Set page
     if (filters.page !== undefined) {
       params.append('page', filters.page.toString());
@@ -143,7 +142,7 @@ export async function getContentAssistantList(
     }
 
     const response = await axiosInstance.get(
-      `/items/ai_content_suggestions?${params.toString()}`
+      `/items/ai_content_suggestions?${params}`
     );
 
     return {

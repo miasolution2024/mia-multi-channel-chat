@@ -4,6 +4,7 @@ import { uploadFile } from "@/actions/upload";
 import { CONFIG } from "@/config-global";
 import { ContentAssistantApiResponse } from "@/actions/content-assistant";
 import { Content } from "@/sections/content-assistant/view/content-assistant-list-view";
+import { CONTENT_STEP_TO_START_STEP } from "@/constants/content-assistant-steps";
 
 // Type definitions
 export interface MediaGeneratedAiItem {
@@ -57,6 +58,7 @@ const ContentSchema = zod.object({
   media: zod.array(zod.any()).default([]),
   video: zod.array(zod.any()).default([]),
   media_generated_ai: zod.array(zod.any()).default([]),
+  is_generated_by_AI: zod.boolean().default(false),
 });
 
 export type FormData = zod.infer<typeof ContentSchema>;
@@ -247,6 +249,7 @@ export const buildStepOutlineData = (formData: FormData) => {
     post_goal: formData.post_goal,
     post_notes: formData.post_notes || "",
     ai_notes_write_article: formData.ai_notes_write_article || "",
+    is_generated_by_AI: false,
   };
 };
 
@@ -261,12 +264,9 @@ export const buildStepWriteArticleData = async (
   // Process media data for upload and deletion
   const { mediaArray, deletedMediaIds, deletedMediaGeneratedAiIds, videoId } =
     await processMediaDataForUpdate(formData, editData);
-  console.log("mediaArray", mediaArray);
-  console.log("deletedMediaIds", deletedMediaIds);
-  console.log("deletedMediaGeneratedAiIds", deletedMediaGeneratedAiIds);
-  console.log("edit data media", editData?.media);
 
   return {
+    is_generated_by_AI: formData?.is_generated_by_AI || false,
     current_step: POST_STEP.WRITE_ARTICLE,
     post_content: formData.post_content || "",
     ai_notes_create_image: formData.ai_notes_create_image || "",
@@ -378,7 +378,6 @@ export const getDeletedMediaFiles = (
         if (!isFromApi) return false;
 
         const stillExists = currentFileNames.includes(originalFile.path);
-        console.log(`Original file ${originalFile.path} (${originalFile.idItem}) still exists:`, stillExists);
         return !stillExists;
       })
       .map((file) => file.idItem)
@@ -455,29 +454,10 @@ export const processMediaDataForUpdate = async (
     (formData.media as (File | FileWithApiProperties)[]) || [];
   const newMediaFiles = getNewMediaFiles(currentMedia, editData?.media || []);
 
-  console.log("currentMedia", currentMedia);
-  console.log("editData?.media (original)", editData?.media);
-
   const deletedMediaIds = getDeletedMediaFiles(
     currentMedia,
     editData?.media || []
   );
-  console.log("deletedMediaIds", deletedMediaIds);
-  
-  // Debug: Check what files are being compared
-  console.log("Files comparison debug:");
-  (editData?.media || []).forEach((originalFile, index) => {
-    const stillExists = currentMedia.some((currentFile) => {
-      if (currentFile instanceof File) return false;
-      return currentFile.idItem === originalFile.idItem;
-    });
-    console.log(`Original file ${index}:`, {
-      path: originalFile.path,
-      idItem: originalFile.idItem,
-      stillExists
-    });
-  });
-
   const deletedMediaGeneratedAiIds = getDeletedMediaGeneratedAiFiles(
     (formData.media_generated_ai as (string | MediaGeneratedAiItem)[]) || [],
     (editData?.media_generated_ai as MediaGeneratedAiItem[]) || []
@@ -642,4 +622,10 @@ export const buildStepResearchData = (formData: FormData, isCreate = false) => {
       omni_channels_id: item,
     })),
   };
+};
+
+// Get startStep based on current_step
+export const getStartStepFromCurrentStep = (currentStep?: string): number => {
+  if (!currentStep) return 1; // Default to research step
+  return CONTENT_STEP_TO_START_STEP[currentStep] || 1;
 };

@@ -248,7 +248,6 @@ export function ContentAssistantMultiStepForm({
 
           // Get latest data after N8N processing
           const detailResponse = await getContentAssistant(response.data.id);
-          console.log("detailResponse", detailResponse);
 
           if (detailResponse) {
             if (currentStep === POST_STEP.RESEARCH_ANALYSIS) {
@@ -310,11 +309,11 @@ export function ContentAssistantMultiStepForm({
   }, [activeStep, methods, handleStepProcess]);
 
   const handleSaveDraft = useCallback(
-    async (currentStep?: string) => {
+    async ({hideToast = false} : {hideToast?: boolean}) => {
       try {
         setIsNextLoading(true);
         const formData = methods.getValues();
-        const stepToSave = currentStep || activeStep;
+        const stepToSave = activeStep;
 
         if (!formData?.id) {
           toast.error("Không thể lưu nháp khi chưa có ID");
@@ -360,7 +359,9 @@ export function ContentAssistantMultiStepForm({
         setHasDataChanged(false);
 
         setShowPublishModal(false);
-        toast.success("Đã lưu bản nháp thành công!");
+        if(!hideToast){
+          toast.success("Đã lưu bản nháp thành công!");
+        }
       } catch (error) {
         console.error("Error saving draft:", error);
         toast.error("Có lỗi xảy ra khi lưu bản nháp");
@@ -494,7 +495,7 @@ export function ContentAssistantMultiStepForm({
               <Button
                 size="large"
                 variant="outlined"
-                onClick={() => handleSaveDraft()}
+                onClick={() => handleSaveDraft({})}
                 disabled={isProcessing}
                 sx={{ minWidth: 150, borderRadius: 2 }}
               >
@@ -522,7 +523,9 @@ export function ContentAssistantMultiStepForm({
       <PublishModal
         open={showPublishModal}
         onClose={() => setShowPublishModal(false)}
-        onSaveDraft={handleSaveDraft}
+        onSaveDraft={ async () => {
+          await handleSaveDraft({hideToast: true});
+        }}
         onPublish={handlePublish}
         isSavingDraft={isNextLoading}
         isPublishing={isNextLoading}

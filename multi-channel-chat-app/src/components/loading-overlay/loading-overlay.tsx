@@ -10,6 +10,7 @@ type Props = {
   title?: string;
   description?: string;
   showProgress?: boolean;
+  timeDescription?: string;
 };
 
 export function LoadingOverlay({
@@ -17,12 +18,13 @@ export function LoadingOverlay({
   title = "Đang xử lý...",
   description = "Quá trình này có thể mất 1-2 phút. Vui lòng không tắt trình duyệt.",
   showProgress = true,
+  timeDescription = "Quá trình này có thể mất 1-2 phút. Vui lòng không tắt trình duyệt.",
 }: Props) {
   return (
     <Backdrop
       sx={{
         color: "#fff",
-        zIndex: (theme) => theme.zIndex.drawer + 1,
+        zIndex: (theme) => theme.zIndex.modal + 1,
         backgroundColor: "rgba(0, 0, 0, 0.8)",
         backdropFilter: "blur(4px)",
       }}
@@ -88,7 +90,7 @@ export function LoadingOverlay({
               display: "block",
             }}
           >
-            Quá trình này có thể mất 1-2 phút. Vui lòng không tắt trình duyệt.
+           {timeDescription}
           </Typography>
         </Box>
       </Box>

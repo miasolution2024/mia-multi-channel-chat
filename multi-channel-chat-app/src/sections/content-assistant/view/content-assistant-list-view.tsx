@@ -15,12 +15,14 @@ import MenuList from "@mui/material/MenuList";
 import Popover from "@mui/material/Popover";
 
 import { useSetState } from "@/hooks/use-set-state";
+import { useDebounce } from "@/hooks/use-debounce";
 import { paths } from "@/routes/path";
 import { DashboardContent } from "@/layouts/dashboard";
 import { CustomBreadcrumbs } from "@/components/custom-breadcrumbs";
 import { Iconify } from "@/components/iconify";
 import { toast } from "@/components/snackbar";
 import { ConfirmDialog } from "@/components/custom-dialog";
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { useBoolean } from "@/hooks/use-boolean";
 import { CustomTable } from "@/components/custom-table";
 import type { TableConfig } from "@/components/custom-table/custom-table";
@@ -31,7 +33,9 @@ import {
   type ContentAssistantApiResponse,
   type MediaGeneratedAiItem,
 } from "@/actions/content-assistant";
-import { POST_STEP, POST_TYPE_OPTIONS } from "@/constants/auto-post";
+import { createPost, type PostRequest } from "@/actions/auto-mia";
+import { POST_STATUS, POST_STEP, POST_TYPE_OPTIONS } from "@/constants/auto-post";
+import { getStartStepFromCurrentStep } from "../utils";
 
 // Tạo interface riêng cho table config
 interface ContentTableConfig {
@@ -277,14 +281,14 @@ interface ContentActionMenuProps {
   content: Content;
   onEdit: (id: string | number) => void;
   onDelete: (id: string | number) => void;
-  onChangeStatus: (id: string | number, status: string) => void;
+  onPublish: (id: string | number) => void;
 }
 
 function ContentActionMenu({
   content,
   onEdit,
   onDelete,
-  onChangeStatus,
+  onPublish,
 }: ContentActionMenuProps) {
   const popover = usePopover();
 
@@ -313,20 +317,16 @@ function ContentActionMenu({
 
           <MenuItem
             onClick={() => {
-              const newStatus =
-                content.status === "published" ? "draft" : "published";
-              onChangeStatus(content.id, newStatus);
+              onPublish(content.id);
               popover.onClose();
             }}
           >
             <Iconify
               icon={
-                content.status === "published"
-                  ? "solar:eye-closed-bold"
-                  : "solar:eye-bold"
+                   "solar:upload-bold"
               }
             />
-            {content.status === "published" ? "Ẩn" : "Xuất bản"}
+            {"Xuất bản"}
           </MenuItem>
 
           <MenuItem
@@ -348,6 +348,9 @@ function ContentActionMenu({
 export function ContentAssistantListView() {
   const router = useRouter();
   const confirm = useBoolean();
+  const publishConfirm = useBoolean();
+  const [publishingId, setPublishingId] = useState<string | number | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [selected, setSelected] = useState<string[]>([]);
@@ -359,13 +362,14 @@ export function ContentAssistantListView() {
   const [isLoading, setIsLoading] = useState(true);
 
   const filters = useSetState({ topic: "", status: [] });
+  const debouncedTopic = useDebounce(filters.state.topic, 500);
 
   // Fetch data function
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await getContentAssistantList({
-        topic: filters.state.topic,
+        topic: debouncedTopic,
         status: filters.state.status,
         page: page + 1, // API sử dụng 1-based pagination
         pageSize,
@@ -377,7 +381,7 @@ export function ContentAssistantListView() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters.state.topic, filters.state.status, page, pageSize]);
+  }, [debouncedTopic, filters.state.status, page, pageSize]);
 
   // API call với useEffect
   useEffect(() => {
@@ -480,6 +484,46 @@ export function ContentAssistantListView() {
     confirm.onFalse();
   }, [selected, confirm, fetchData, setIsDeleting]);
 
+  const handlePublish = (id: string | number) => {
+    setPublishingId(id);
+    publishConfirm.onTrue();
+  };
+
+  const handleConfirmPublish = async () => {
+    if (!publishingId) return;
+    
+    // Find the item to get current_step
+    const currentItem = apiResponse?.data.find((item: ContentAssistantApiResponse) => item.id === publishingId);
+    const startStep = getStartStepFromCurrentStep(currentItem?.current_step);
+    
+    try {
+      setIsPublishing(true);
+      const inputN8NData: PostRequest = [
+        {
+          id: Number(publishingId),
+          startStep,
+          endStep: 6,
+        },
+      ];
+
+      const response = await createPost(inputN8NData);
+
+      if (response?.success) {
+        toast.success("Đã xuất bản thành công!");
+        fetchData(); // Reload table
+      } else {
+        toast.error(response?.message || "Có lỗi xảy ra khi xuất bản");
+      }
+    } catch (error) {
+      console.error("Error publishing:", error);
+      toast.error("Có lỗi xảy ra khi xuất bản");
+    } finally {
+      setIsPublishing(false);
+      publishConfirm.onFalse();
+      setPublishingId(null);
+    }
+  };
+
   return (
     <>
       <DashboardContent>
@@ -557,14 +601,15 @@ export function ContentAssistantListView() {
             defaultSelected={selected}
             moreOptions={(item) => {
               const contentItem = item as Content;
-              return (
+              const isPublished = contentItem.status === POST_STATUS.PUBLISHED;
+              return !isPublished ? (
                 <ContentActionMenu
                   content={contentItem}
                   onEdit={handleEditRow}
                   onDelete={handleDeleteRow}
-                  onChangeStatus={() => {}}
+                  onPublish={handlePublish}
                 />
-              );
+              ) : null;
             }}
           />
         </Card>
@@ -580,6 +625,30 @@ export function ContentAssistantListView() {
             Xóa
           </Button>
         }
+      />
+
+      <ConfirmDialog
+        open={publishConfirm.value}
+        onClose={publishConfirm.onFalse}
+        title="Xuất bản"
+        content="Bạn có chắc chắn muốn xuất bản nội dung này?"
+        action={
+          <>
+            <Button variant="outlined" onClick={publishConfirm.onFalse}>
+              Hủy
+            </Button>
+            <Button variant="contained" color="primary" onClick={handleConfirmPublish}>
+              Xuất bản
+            </Button>
+          </>
+        }
+      />
+
+      <LoadingOverlay
+        open={isPublishing}
+        title="Đang xử lý..."
+        description="Đang xuất bản nội dung"
+        timeDescription="Quá trình này có thể mất tầm 5 phút. Vui lòng không tắt trình duyệt."
       />
     </>
   );

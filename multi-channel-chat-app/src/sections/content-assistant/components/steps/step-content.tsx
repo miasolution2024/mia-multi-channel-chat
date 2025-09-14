@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
 import CardHeader from "@mui/material/CardHeader";
@@ -21,7 +21,7 @@ import { CONFIG } from "@/config-global";
 import {
   MediaGeneratedAiItem,
   updateContentAssistant,
-  getContentAssistantById,
+  getContentAssistantList,
 } from "@/actions/content-assistant";
 import { createPost, PostRequest } from "@/actions/auto-mia";
 import { buildStepWriteArticleData, FormData } from "../../utils";
@@ -44,7 +44,7 @@ export function StepContent({ contentAssistantId }: StepContentProps) {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
 
   const { setValue, watch, getValues } = useFormContext();
-  const mediaGeneratedAi = useMemo(() => watch("media_generated_ai") || [], [watch]);
+  const mediaGeneratedAi = watch("media_generated_ai")
 
   // Initialize generated images from existing mediaGeneratedAi data
   useEffect(() => {
@@ -73,7 +73,10 @@ export function StepContent({ contentAssistantId }: StepContentProps) {
 
       // Build data for WRITE_ARTICLE step
       const formData = getValues() as FormData;
-      const stepData = await buildStepWriteArticleData(formData);
+      const stepData = await buildStepWriteArticleData({
+        ...formData, 
+        is_generated_by_AI: true,
+      });
 
       // Save current form data to Directus
       const updateResponse = await updateContentAssistant(
@@ -95,23 +98,27 @@ export function StepContent({ contentAssistantId }: StepContentProps) {
       ];
 
       const n8nResponse = await createPost(inputN8NData);
-      console.log("n8nResponse gen ai image", n8nResponse);
 
       if (!n8nResponse.success) {
         throw new Error("Failed to generate images via N8N");
       }
 
       // Fetch updated data from Directus to get AI-generated images
-      const updatedDataResponse = await getContentAssistantById(
-        contentAssistantId
+      const updatedDataResponse = await getContentAssistantList(
+        {
+          id: Number(contentAssistantId),
+        }
       );
-
-      if (updatedDataResponse) {
+      if (updatedDataResponse.data[0]) {
         // Update form with new AI-generated images
-        if (updatedDataResponse.media_generated_ai) {
+        if (updatedDataResponse.data[0].media_generated_ai) {
+          const imageIds = updatedDataResponse.data[0].media_generated_ai?.map(item => item.directus_files_id)
           setValue(
             "media_generated_ai",
-            updatedDataResponse.media_generated_ai
+            imageIds, 
+            {
+              shouldDirty: true,
+            }
           );
         }
         toast.success("Images generated successfully!");
