@@ -220,7 +220,7 @@ const TABLE_CONFIG: ContentTableConfig[] = [
         {item.content_tone.map((tone, index) => (
           <Chip
             key={index}
-            label={tone.content_tone_id.tone_name || "N/A"}
+            label={tone.content_tone_id.tone_description || "N/A"}
             size="small"
             variant="outlined"
             color="secondary"
@@ -422,7 +422,6 @@ export function ContentAssistantListView() {
     : [];
   const totalCount = apiResponse?.total || 0;
   // Use API data directly since filtering is handled server-side
-  const displayData = tableData;
 
   const handleResetFilters = useCallback(() => {
     filters.setState({
@@ -431,9 +430,6 @@ export function ContentAssistantListView() {
     });
     setPage(0); // Reset to first page when filters change
   }, [filters]);
-
-  // Since filtering is handled server-side, use displayData directly
-  const dataFiltered = displayData;
 
   const canReset = !!filters.state.topic || filters.state.status.length > 0;
 
@@ -582,7 +578,7 @@ export function ContentAssistantListView() {
           )}
 
           <CustomTable
-            data={dataFiltered}
+            data={tableData}
             loading={isLoading || isDeleting}
             tableConfig={TABLE_CONFIG as TableConfig[]}
             count={totalCount}

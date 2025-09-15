@@ -108,6 +108,10 @@ export function ContentAssistantMultiStepForm({
           activeStep
         );
         setHasDataChanged(hasChanged);
+      } else if (!data?.id) {
+        // For new records (no id), check if any required fields have content
+        const hasContent = !!(data?.topic?.trim() || data?.post_type || data?.main_seo_keyword?.trim());
+        setHasDataChanged(hasContent);
       } else {
         setHasDataChanged(false);
       }
@@ -314,10 +318,38 @@ export function ContentAssistantMultiStepForm({
         setIsNextLoading(true);
         const formData = methods.getValues();
         const stepToSave = activeStep;
+        const isUpdate = !!formData?.id;
+        let response;
 
-        if (!formData?.id) {
-          toast.error("Không thể lưu nháp khi chưa có ID");
-          return;
+        if (!isUpdate) {
+          // Create new content assistant if no ID exists
+          if (stepToSave !== POST_STEP.RESEARCH_ANALYSIS) {
+            return;
+          }
+          
+          // Validate form before saving draft for new records
+          const fieldsToValidate = getFieldsForStep(stepToSave);
+          const isStepValid = await methods.trigger(fieldsToValidate);
+          if (!isStepValid) {
+            toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
+            return;
+          }
+          
+          const createData = buildStepResearchData(
+            formData,
+            true
+          ) as CreateContentAssistantRequest;
+          response = await createContentAssistant(createData);
+
+          if (response?.data?.id) {
+            methods.setValue("id", response.data.id);
+            // Set initial data reference for new record
+            const updatedData = { ...formData, id: response.data.id };
+            initialDataRef.current = updatedData;
+          } else {
+            toast.error("Có lỗi xảy ra khi tạo content assistant");
+            return;
+          }
         }
 
         let stepData;
@@ -352,7 +384,8 @@ export function ContentAssistantMultiStepForm({
             return;
         }
 
-        await updateContentAssistant(formData.id, stepData);
+        const contentId = isUpdate ? formData.id! : response!.data!.id;
+        await updateContentAssistant(contentId, stepData);
 
         // Reset hasDataChanged state since data is now saved
         // Note: Don't update initialDataRef here to preserve N8N logic for handleNext
@@ -369,7 +402,7 @@ export function ContentAssistantMultiStepForm({
         setIsNextLoading(false);
       }
     },
-    [methods, editData, updateContentAssistant, activeStep]
+    [methods, editData, updateContentAssistant, activeStep, createContentAssistant]
   );
 
   const handlePublish = async () => {
@@ -432,7 +465,7 @@ export function ContentAssistantMultiStepForm({
       case POST_STEP.MAKE_OUTLINE:
         return <StepOutline />;
       case POST_STEP.WRITE_ARTICLE:
-        return <StepContent contentAssistantId={contentAssistantId} />;
+        return <StepContent contentAssistantId={contentAssistantId} hasDataChanged={hasDataChanged} />;
       default:
         return null;
     }
@@ -490,8 +523,8 @@ export function ContentAssistantMultiStepForm({
               Quay lại
             </Button>
 
-            {/* Show Save Draft button only when there's an ID and data has changed */}
-            {methods.getValues().id && hasDataChanged && (
+            {/* Show Save Draft button when data has changed */}
+            {hasDataChanged && (
               <Button
                 size="large"
                 variant="outlined"

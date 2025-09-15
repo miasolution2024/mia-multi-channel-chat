@@ -36,9 +36,10 @@ interface FileWithPreview extends File {
 
 interface StepContentProps {
   contentAssistantId?: string;
+  hasDataChanged?: boolean;
 }
 
-export function StepContent({ contentAssistantId }: StepContentProps) {
+export function StepContent({ contentAssistantId, hasDataChanged }: StepContentProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -73,21 +74,24 @@ export function StepContent({ contentAssistantId }: StepContentProps) {
 
       // Build data for WRITE_ARTICLE step
       const formData = getValues() as FormData;
+      
+      // Check if there are data changes to determine if we should exclude media
+      // If no data changes, exclude media information from the update
+      const shouldExcludeMedia = !hasDataChanged; // Exclude media if no data changes
+      
       const stepData = await buildStepWriteArticleData({
         ...formData, 
         is_generated_by_AI: true,
-      });
+      }, undefined, shouldExcludeMedia);
 
       // Save current form data to Directus
       const updateResponse = await updateContentAssistant(
         contentAssistantId,
         {...stepData, is_generated_by_AI: true}
       );
-
       if (!updateResponse) {
         throw new Error("Failed to save data to Directus");
       }
-
       // Call N8N with specific parameters
       const inputN8NData: PostRequest = [
         {
@@ -143,7 +147,7 @@ export function StepContent({ contentAssistantId }: StepContentProps) {
     const updatedMedia = mediaGeneratedAi.filter(
       (item: MediaGeneratedAiItem | string) => {
         const fileId = typeof item === "string" ? item : item.directus_files_id;
-        const imageUrl = `${CONFIG.serverUrl}/assets/${fileId}&key=system-large-contain`;
+        const imageUrl = `${CONFIG.serverUrl}/assets/${fileId}`;
         return imageUrl !== removedImageUrl;
       }
     );

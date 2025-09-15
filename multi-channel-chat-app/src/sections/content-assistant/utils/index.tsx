@@ -259,45 +259,63 @@ export const buildStepWriteArticleData = async (
     media?: FileWithApiProperties[];
     media_generated_ai?: MediaGeneratedAiItem[];
     id?: string;
-  }
+  },
+  excludeMedia = false
 ) => {
-  // Process media data for upload and deletion
-  const { mediaArray, deletedMediaIds, deletedMediaGeneratedAiIds, videoId } =
-    await processMediaDataForUpdate(formData, editData);
+  // Process media data for upload and deletion only if not excluding media
+  let mediaArray: Array<{ id: string }> = [];
+  let deletedMediaIds: string[] = [];
+  let deletedMediaGeneratedAiIds: string[] = [];
+  let videoId = null;
 
-  return {
+  if (!excludeMedia) {
+    const processedData = await processMediaDataForUpdate(formData, editData);
+    mediaArray = processedData.mediaArray;
+    deletedMediaIds = processedData.deletedMediaIds;
+    deletedMediaGeneratedAiIds = processedData.deletedMediaGeneratedAiIds;
+    videoId = processedData.videoId;
+  }
+
+  const result: Record<string, unknown> = {
     is_generated_by_AI: formData?.is_generated_by_AI || false,
     current_step: POST_STEP.WRITE_ARTICLE,
     post_content: formData.post_content || "",
     ai_notes_create_image: formData.ai_notes_create_image || "",
-    media: {
+  };
+
+  // Only include media fields if not excluding media
+  if (!excludeMedia) {
+    result.media = {
       create: mediaArray.map((item) => ({
         ai_content_suggestions_id: editData?.id || formData.id,
         directus_files_id: { id: item.id },
       })),
       update: [],
       delete: deletedMediaIds,
-    },
-    video: videoId,
-    media_generated_ai: {
-      create: Array.isArray(formData.media_generated_ai)
-        ? formData.media_generated_ai
-            .filter((item: string | MediaGeneratedAiItem) => {
-              // Include all string items (new generated images)
-              if (typeof item === "string") {
-                return true;
-              }
-              return false; // Don't include existing objects in create
-            })
-            .map((fileId: string) => ({
-              ai_content_suggestions_id: editData?.id || formData.id,
-              directus_files_id: { id: fileId },
-            }))
-        : [],
+    };
+    result.video = videoId;
+    result.media_generated_ai = {
+      // create: Array.isArray(formData.media_generated_ai)
+      //   ? formData.media_generated_ai
+      //       .filter((item: string | MediaGeneratedAiItem) => {
+      //         // Include all string items (new generated images)
+      //         if (typeof item === "string") {
+      //           return true;
+      //         }
+      //         return false; // Don't include existing objects in create
+      //       })
+      //       .map((fileId: string) => ({
+      //         ai_content_suggestions_id: editData?.id || formData.id,
+      //         directus_files_id: { id: fileId },
+      //       }))
+      //   : [],
+      create: [], // ảnh AI tạo ra đã được lưu ở n8n
       update: [],
       delete: deletedMediaGeneratedAiIds,
-    },
-  };
+    };
+  }
+
+  return result;
 };
 
 // Helper function to upload files
@@ -509,6 +527,15 @@ export const hasFormDataChanged = (
       "post_goal",
       "post_notes",
       "ai_notes_write_article",
+    ];
+  } else if (step === POST_STEP.WRITE_ARTICLE) {
+    fieldsToCompare = [
+      "post_content",
+      "ai_notes_create_image",
+      "media",
+      "video",
+      "media_generated_ai",
+      "is_generated_by_AI",
     ];
   } else {
     // Default to RESEARCH_ANALYSIS fields
