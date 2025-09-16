@@ -63,6 +63,7 @@ export function StepContent({ contentAssistantId, hasDataChanged }: StepContentP
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
+
   const handleGenerateImage = async () => {
     if (!contentAssistantId) {
       toast.error("Content Assistant ID not found");

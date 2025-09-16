@@ -454,6 +454,12 @@ export const getNewMediaFiles = (
     // Only include File objects (new uploads)
     if (!(file instanceof File)) return false;
 
+    // Check if this is a transformed media file (has idItem property)
+    // These are existing media files that were transformed from API data
+    if ('idItem' in file && file.idItem) {
+      return false; // Exclude transformed media files from upload
+    }
+
     // Check if this file is not in the original media
     return !originalMedia.some((originalFile) => {
       // Compare by file name and size if available
@@ -657,4 +663,28 @@ export const buildStepResearchData = (formData: FormData, isCreate = false) => {
 export const getStartStepFromCurrentStep = (currentStep?: string): number => {
   if (!currentStep) return 1; // Default to research step
   return CONTENT_STEP_TO_START_STEP[currentStep] || 1;
+};
+
+export const transformMediaItems = (mediaItems: MediaGeneratedAiItem[]): File[] => {
+  return mediaItems.map((mediaItem: MediaGeneratedAiItem) => {
+    const imageUrl = `${CONFIG.serverUrl}/assets/${mediaItem.directus_files_id}`;
+    // Create a File-like object that RHFUpload can handle
+    const file = new File([], `image-${mediaItem.id}`, {
+      type: "image/jpeg",
+    });
+    // Add custom properties for preview
+    Object.defineProperty(file, "preview", {
+      value: imageUrl,
+      writable: false,
+    });
+    Object.defineProperty(file, "idItem", {
+      value: mediaItem.id,
+      writable: false,
+    });
+    Object.defineProperty(file, "path", {
+      value: `image-${mediaItem.id}`,
+      writable: false,
+    });
+    return file;
+  });
 };

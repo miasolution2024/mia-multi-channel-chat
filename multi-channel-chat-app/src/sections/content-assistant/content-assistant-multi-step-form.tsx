@@ -33,6 +33,7 @@ import {
   hasFormDataChanged,
   FileWithApiProperties,
   MediaGeneratedAiItem,
+  transformMediaItems,
 } from "./utils";
 import { useCreateContentAssistant } from "./hooks/use-create-content-assistant";
 import { useUpdateContentAssistant } from "./hooks/use-update-content-assistant";
@@ -40,9 +41,10 @@ import { useGetContentAssistantById } from "./hooks/use-get-content-assistant-by
 import { CreateContentAssistantRequest } from "./types/content-assistant-create";
 import { UpdateContentAssistantRequest } from "./types/content-assistant-update";
 import { createPost, PostRequest } from "@/actions/auto-mia";
-import { ContentAssistantApiResponse } from "@/actions/content-assistant";
+import { ContentAssistantApiResponse, getContentAssistantList } from "@/actions/content-assistant";
   import { useRouter } from "next/navigation";
 import { Content } from "./view/content-assistant-list-view";
+
 
 // ----------------------------------------------------------------------
 
@@ -77,11 +79,11 @@ export function ContentAssistantMultiStepForm({
     useUpdateContentAssistant();
   const { getContentAssistant } = useGetContentAssistantById();
 
+
   const isProcessing = isCreating || isUpdating || isNextLoading;
   const initialDataRef = useRef<FormData | null>(null);
 
   const defaultValues = getDefaultValues(editData);
-  console.log('defaultValues', defaultValues)
 
   const methods = useForm<FormData>({
     resolver: zodResolver(ContentSchema),
@@ -388,8 +390,25 @@ export function ContentAssistantMultiStepForm({
         const contentId = isUpdate ? formData.id! : response!.data!.id;
         await updateContentAssistant(contentId, stepData);
 
+        // Refresh data from server after successful save to update media field
+        try {
+          const refreshedData = await getContentAssistantList(
+        {
+          id: Number(contentId),
+        }
+      );
+          if (refreshedData.data[0]) {
+            // Use getDefaultValues to properly transform the data
+            const newImageData = transformMediaItems(refreshedData.data[0].media as unknown as MediaGeneratedAiItem[]);
+            if (newImageData) {
+              methods.setValue('media', newImageData);
+            }
+          }
+        } catch (error) {
+          console.error("Error refreshing data after save:", error);
+        }
+
         // Reset hasDataChanged state since data is now saved
-        // Note: Don't update initialDataRef here to preserve N8N logic for handleNext
         setHasDataChanged(false);
 
         setShowPublishModal(false);

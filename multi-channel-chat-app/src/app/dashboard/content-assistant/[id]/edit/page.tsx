@@ -20,7 +20,7 @@ interface ApiResponseWrapper {
 // ----------------------------------------------------------------------
 
 // Helper function to transform media items to File-like objects
-const transformMediaItems = (mediaItems: MediaGeneratedAiItem[]): File[] => {
+ const transformMediaItems = (mediaItems: MediaGeneratedAiItem[]): File[] => {
   return mediaItems.map((mediaItem: MediaGeneratedAiItem) => {
     const imageUrl = `${CONFIG.serverUrl}/assets/${mediaItem.directus_files_id}`;
     // Create a File-like object that RHFUpload can handle

@@ -63,7 +63,6 @@ export function useContentAssistantSaveDraft({
     setIsSavingDraft(true);
     try {
       const currentFormData = watchMethod();
-      console.log('currentFormData media', currentFormData?.media)
 
       // Upload media files if any
       const uploadMediaFiles = async (
