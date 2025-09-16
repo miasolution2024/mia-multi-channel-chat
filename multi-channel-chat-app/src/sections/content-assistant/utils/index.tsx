@@ -130,12 +130,14 @@ export const getDefaultValues = (
               const nested = obj.ai_rule_based_id as Record<string, unknown>;
               if (nested.id && typeof nested.id === "number") return nested.id;
             }
-            if (
-              obj.omni_channels_id &&
-              typeof obj.omni_channels_id === "object"
-            ) {
-              const nested = obj.omni_channels_id as Record<string, unknown>;
-              if (nested.id && typeof nested.id === "number") return nested.id;
+            if (obj.omni_channels_id) {
+              if (typeof obj.omni_channels_id === "number") {
+                return obj.omni_channels_id;
+              }
+              if (typeof obj.omni_channels_id === "object") {
+                const nested = obj.omni_channels_id as Record<string, unknown>;
+                if (nested.id && typeof nested.id === "number") return nested.id;
+              }
             }
           }
           return 0;
@@ -181,8 +183,8 @@ export const getDefaultValues = (
       ai_notes_make_outline: getString(apiData.ai_notes_make_outline),
       status: editData.status || (POST_STATUS.DRAFT as string),
       omni_channels:
-        extractIds(apiData.omni_channels).length > 0
-          ? extractIds(apiData.omni_channels)
+        extractIds(editData.omni_channels).length > 0
+          ? extractIds(editData.omni_channels)
           : [],
       // Step 2
       outline_post: getString(apiData.outline_post),

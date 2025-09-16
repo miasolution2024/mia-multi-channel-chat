@@ -81,6 +81,7 @@ export function ContentAssistantMultiStepForm({
   const initialDataRef = useRef<FormData | null>(null);
 
   const defaultValues = getDefaultValues(editData);
+  console.log('defaultValues', defaultValues)
 
   const methods = useForm<FormData>({
     resolver: zodResolver(ContentSchema),
@@ -511,7 +512,16 @@ export function ContentAssistantMultiStepForm({
             direction="row"
             spacing={2}
             justifyContent="center"
-            sx={{ mb: 2 }}
+            sx={{ 
+              position: 'sticky',
+              bottom: 0,
+              backgroundColor: 'background.paper',
+              py: 2,
+              mb: 2,
+              zIndex: 1000,
+              // borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+              // boxShadow: (theme) => `0 -2px 8px ${alpha(theme.palette.grey[500], 0.08)}`,
+            }}
           >
             <Button
               size="large"
