@@ -25,6 +25,7 @@ export function getConversationsURL(
     "filter[omni_channel][page_id][_eq]": pageId,
     "filter[channel][_eq]": channel,
     sort: "-last_message_at",
+    "deep[messages][_limit]": "-1",
     fields: [
       "*",
       "participants.participant_id",
@@ -78,6 +79,7 @@ export function useGetConversations(
 
 export function getConversationDetailURL(conversationId: number) {
   const queryParams = new URLSearchParams({
+    "deep[messages][_limit]": "-1",
     fields: [
       "*",
       "participants.*",
