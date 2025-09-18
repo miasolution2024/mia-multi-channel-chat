@@ -5,13 +5,15 @@ import { useTheme } from "@mui/material/styles";
 
 import { DashboardContent } from "@/layouts/dashboard";
 
-import { EcommerceYearlySales } from "../ecommerce-yearly-sales";
 import { EcommerceBestSalesman } from "../ecommerce-best-salesman";
-import { EcommerceSaleByGender } from "../ecommerce-sale-by-gender";
+// import { EcommerceSaleByGender } from "../ecommerce-sale-by-gender";
 import { EcommerceSalesOverview } from "../ecommerce-sales-overview";
 import { EcommerceWidgetSummary } from "../ecommerce-widget-summary";
 import { EcommerceLatestProducts } from "../ecommerce-latest-products";
 import { EcommerceCurrentBalance } from "../ecommerce-current-balance";
+import { EcommerceYearlySales } from "../ecommerce-yearly-sales";
+import { EcommerceChannelSales } from "../ecommerce-channel-sales";
+import { EcommerceStatusSales } from "../ecommerce-status-sales";
 import { Grid2 as Grid, Typography } from "@mui/material";
 import { AnalyticsWidgetSummary } from "../widget-summary";
 import { CONFIG } from "@/config-global";
@@ -219,23 +221,23 @@ export function OverviewEcommerceView() {
         100;
 
   return (
-    <DashboardContent maxWidth="xl">
-      <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
+    <DashboardContent maxWidth='xl'>
+      <Typography variant='h4' sx={{ mb: { xs: 3, md: 5 } }}>
         Hi, Welcome back 👋
       </Typography>
       <Grid container spacing={3}>
         {messagesCount && (
           <Grid size={{ xs: 12, md: 3, sm: 6 }}>
             <AnalyticsWidgetSummary
-              title="Daily Messages"
+              title='Daily Messages'
               percent={percentMessageChange}
               total={totalMessages}
-              color="error"
+              color='error'
               icon={
                 <Image
                   width={48}
                   height={48}
-                  alt="icon"
+                  alt='icon'
                   src={`${CONFIG.assetsDir}/assets/icons/glass/ic-glass-message.svg`}
                 />
               }
@@ -246,15 +248,15 @@ export function OverviewEcommerceView() {
         {customersCount && (
           <Grid size={{ xs: 12, md: 3, sm: 6 }}>
             <AnalyticsWidgetSummary
-              title="Monthly Customers"
+              title='Monthly Customers'
               percent={percentCustomerChange}
               total={totalCustomers}
-              color="secondary"
+              color='secondary'
               icon={
                 <Image
                   width={48}
                   height={48}
-                  alt="icon"
+                  alt='icon'
                   src={`${CONFIG.assetsDir}/assets/icons/glass/ic-glass-users.svg`}
                 />
               }
@@ -266,14 +268,14 @@ export function OverviewEcommerceView() {
         {appointmentsCount && (
           <Grid size={{ xs: 12, md: 3, sm: 6 }}>
             <AnalyticsWidgetSummary
-              title="Appointments"
+              title='Appointments'
               total={totalAppointments}
-              color="warning"
+              color='warning'
               icon={
                 <Image
                   width={48}
                   height={48}
-                  alt="icon"
+                  alt='icon'
                   src={`${CONFIG.assetsDir}/assets/icons/glass/ic-glass-buy.svg`}
                 />
               }
@@ -284,7 +286,7 @@ export function OverviewEcommerceView() {
         {fbCommentsCount && (
           <Grid size={{ xs: 12, md: 3, sm: 6 }}>
             <AnalyticsWidgetSummary
-              title="Monthly Comments"
+              title='Monthly Comments'
               percent={percentCommentsChange}
               total={totalComments}
               color='info'
@@ -292,7 +294,7 @@ export function OverviewEcommerceView() {
                 <Image
                   width={48}
                   height={48}
-                  alt="icon"
+                  alt='icon'
                   src={`${CONFIG.assetsDir}/assets/icons/glass/ic-glass-bag.svg`}
                 />
               }
@@ -303,7 +305,7 @@ export function OverviewEcommerceView() {
 
         <Grid size={{ xs: 12, md: 4 }}>
           <EcommerceWidgetSummary
-            title="Product sold"
+            title='Product sold'
             percent={2.6}
             total={765}
             chart={{
@@ -324,7 +326,7 @@ export function OverviewEcommerceView() {
 
         <Grid size={{ xs: 12, md: 4 }}>
           <EcommerceWidgetSummary
-            title="Total balance"
+            title='Total balance'
             percent={-0.1}
             total={18765}
             chart={{
@@ -349,7 +351,7 @@ export function OverviewEcommerceView() {
 
         <Grid size={{ xs: 12, md: 4 }}>
           <EcommerceWidgetSummary
-            title="Sales profit"
+            title='Sales profit'
             percent={0.6}
             total={4876}
             chart={{
@@ -373,80 +375,57 @@ export function OverviewEcommerceView() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <EcommerceSaleByGender
-            title="Sale by gender"
-            total={2324}
+          <EcommerceChannelSales
+            title='Omnichannel statistics'
+            subheader='Channel customers overview'
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6, lg: 8 }}>
+          {/*number of customer */}
+          <EcommerceYearlySales
+            title='Statistics'
             chart={{
               series: [
-                { label: "Mens", value: 25 },
-                { label: "Womens", value: 50 },
-                { label: "Kids", value: 75 },
+                { name: "Daily", categories: [], data: [] },
+                { name: "Weekly", categories: [], data: [] },
+                { name: "Monthly", categories: [], data: [] },
               ],
             }}
           />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 8 }}>
+          {/*number of customer */}
           <EcommerceYearlySales
-            title="Yearly sales"
-            subheader="(+43%) than last year"
+            title='Statistics'
             chart={{
-              categories: [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-              ],
               series: [
-                {
-                  name: "2022",
-                  data: [
-                    {
-                      name: "Total income",
-                      data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                    },
-                    {
-                      name: "Total expenses",
-                      data: [10, 34, 13, 56, 77, 88, 99, 77, 45, 13, 56, 77],
-                    },
-                  ],
-                },
-                {
-                  name: "2023",
-                  data: [
-                    {
-                      name: "Total income",
-                      data: [51, 35, 41, 10, 91, 69, 62, 148, 91, 69, 62, 49],
-                    },
-                    {
-                      name: "Total expenses",
-                      data: [56, 13, 34, 10, 77, 99, 88, 45, 77, 99, 88, 77],
-                    },
-                  ],
-                },
+                { name: "Daily", categories: [], data: [] },
+                { name: "Weekly", categories: [], data: [] },
+                { name: "Monthly", categories: [], data: [] },
               ],
             }}
           />
         </Grid>
 
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
+          <EcommerceStatusSales
+            title='Status statistics'
+            subheader='Customers status overview'
+          />
+        </Grid>
+
         <Grid size={{ xs: 12, md: 6, lg: 6 }}>
           <EcommerceSalesOverview
-            title="Sales overview"
+            title='Sales overview'
             data={_ecommerceSalesOverview}
           />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <EcommerceCurrentBalance
-            title="Current balance"
+            title='Current balance'
             earning={25500}
             refunded={1600}
             orderTotal={287650}
@@ -456,7 +435,7 @@ export function OverviewEcommerceView() {
 
         <Grid size={{ xs: 12, md: 6, lg: 8 }}>
           <EcommerceBestSalesman
-            title="Best salesman"
+            title='Best salesman'
             tableData={_ecommerceBestSalesman}
             headLabel={[
               { id: "name", label: "Seller" },
@@ -470,7 +449,7 @@ export function OverviewEcommerceView() {
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <EcommerceLatestProducts
-            title="Latest products"
+            title='Latest products'
             list={_ecommerceLatestProducts}
           />
         </Grid>
