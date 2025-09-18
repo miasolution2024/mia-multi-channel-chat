@@ -11,7 +11,7 @@ import { EcommerceSalesOverview } from "../ecommerce-sales-overview";
 import { EcommerceWidgetSummary } from "../ecommerce-widget-summary";
 import { EcommerceLatestProducts } from "../ecommerce-latest-products";
 import { EcommerceCurrentBalance } from "../ecommerce-current-balance";
-import { EcommerceYearlySales } from "../ecommerce-yearly-sales";
+import { EcommerceCustomerSales } from "../ecommerce-customer-sales";
 import { EcommerceChannelSales } from "../ecommerce-channel-sales";
 import { EcommerceStatusSales } from "../ecommerce-status-sales";
 import { Grid2 as Grid, Typography } from "@mui/material";
@@ -383,7 +383,7 @@ export function OverviewEcommerceView() {
 
         <Grid size={{ xs: 12, md: 6, lg: 8 }}>
           {/*number of customer */}
-          <EcommerceYearlySales
+          <EcommerceCustomerSales
             title='Statistics'
             chart={{
               series: [
@@ -397,7 +397,7 @@ export function OverviewEcommerceView() {
 
         <Grid size={{ xs: 12, md: 6, lg: 8 }}>
           {/*number of customer */}
-          <EcommerceYearlySales
+          <EcommerceCustomerSales
             title='Statistics'
             chart={{
               series: [

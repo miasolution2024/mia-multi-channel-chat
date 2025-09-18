@@ -47,7 +47,7 @@ interface EcommerceYearlySalesProps {
   [key: string]: any; // for ...other props
 }
 
-export function EcommerceYearlySales({
+export function EcommerceCustomerSales({
   title,
   subheader,
   chart,
