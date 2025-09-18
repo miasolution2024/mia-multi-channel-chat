@@ -194,16 +194,18 @@ export function StepResearch() {
               }))}
             />
 
-            <RHFMultiSelect
-              name="customer_journey"
-              label="Hành trình khách hàng"
-              required
-              sx={{ width: "100%" }}
-              options={customerJourneysData?.map((item: CustomerJourney) => ({
-                value: item.id,
-                label: item.name,
-              }))}
-            />
+            <RHFSelect
+               name="customer_journey" 
+               label="Hành trình khách hàng" 
+               required 
+               sx={{ width: "100%" }}
+             >
+               {customerJourneysData?.map((item: CustomerJourney) => (
+                 <MenuItem key={item.id} value={item.id}>
+                   {item.name}
+                 </MenuItem>
+               ))}
+             </RHFSelect>
             <RHFMultiSelect
               required
               name="omni_channels"

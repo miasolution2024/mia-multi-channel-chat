@@ -301,14 +301,14 @@ export function useContentAssistantSaveDraft({
         },
         customer_journey: {
           create: getItemsToCreate(
-            currentFormData.customer_journey as number[],
+            currentFormData.customer_journey ? [currentFormData.customer_journey as number] : [],
             (editData?.customer_journey as EditDataRelationItem[]) || [],
             'customer_journey_id',
             aiContentSuggestionsId
           ),
           update: [],
           delete: getItemsToDelete(
-            currentFormData.customer_journey as number[],
+            currentFormData.customer_journey ? [currentFormData.customer_journey as number] : [],
             (editData?.customer_journey as EditDataRelationItem[]) || []
           ),
         },

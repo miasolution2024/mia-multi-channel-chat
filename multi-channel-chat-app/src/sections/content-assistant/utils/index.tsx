@@ -34,10 +34,9 @@ const ContentSchema = zod.object({
     .min(1, { message: "Từ khoá SEO chính là bắt buộc!" }),
   secondary_seo_keywords: zod.string().array().default([]),
   customer_group: zod.number().array().min(1, "Nhóm khách hàng là bắt buộc"),
-  customer_journey: zod
-    .number()
-    .array()
-    .min(1, { message: "Hành trình khách hàng là bắt buộc!" }),
+  customer_journey: zod.number({
+    required_error: "Hành trình khách hàng là bắt buộc",
+  }),
   ai_rule_based: zod.number().array().default([]),
   content_tone: zod.number().array().default([]),
   ai_notes_make_outline: zod.string().default(""),
@@ -170,8 +169,8 @@ export const getDefaultValues = (
           : [],
       customer_journey:
         extractIds(editData.customer_journey).length > 0
-          ? extractIds(editData.customer_journey)
-          : [],
+          ? extractIds(editData.customer_journey)[0]
+          : undefined,
       content_tone:
         extractIds(editData.content_tone).length > 0
           ? extractIds(editData.content_tone)
@@ -208,7 +207,7 @@ export const getDefaultValues = (
     main_seo_keyword: "",
     secondary_seo_keywords: [],
     customer_group: [],
-    customer_journey: [],
+    customer_journey: undefined,
     content_tone: [],
     ai_rule_based: [],
     ai_notes_make_outline: "",
@@ -610,10 +609,10 @@ export const buildStepResearchData = (formData: FormData, isCreate = false) => {
         delete: [],
       },
       customer_journey: {
-        create: (formData.customer_journey || []).map((id) => ({
+        create: formData.customer_journey ? [{
           ai_content_suggestions_id: "+",
-          customer_journey_id: { id },
-        })),
+          customer_journey_id: { id: formData.customer_journey },
+        }] : [],
         update: [],
         delete: [],
       },
@@ -639,10 +638,9 @@ export const buildStepResearchData = (formData: FormData, isCreate = false) => {
       formData.customer_group?.map((item) => ({
         customer_group_id: item,
       })) || [],
-    customer_journey:
-      formData.customer_journey?.map((item) => ({
-        customer_journey_id: item,
-      })) || [],
+    customer_journey: formData.customer_journey ? [{
+      customer_journey_id: formData.customer_journey,
+    }] : [],
     ai_rule_based:
       formData.ai_rule_based?.map((item) => ({
         ai_rule_based_id: item,
