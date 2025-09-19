@@ -12,7 +12,7 @@ import {
   ParticipantType,
 } from "@/models/participants/participant";
 import { CONFIG } from "@/config-global";
-import { FileThumbnail } from "@/components/file-thumbnail";
+import { FileThumbnail, getMessageType } from "@/components/file-thumbnail";
 import {
   IconButton,
   ListItemText,
@@ -24,9 +24,10 @@ import { fData } from "@/utils/format-number";
 import { CustomPopover, usePopover } from "@/components/custom-popover";
 import { Iconify } from "@/components/iconify";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "@/components/snackbar";
 import { User } from "@/models/auth/user";
+import ChatAudioVideo from "./chat-audio-video";
 
 // ----------------------------------------------------------------------
 
@@ -41,21 +42,39 @@ export function ChatMessageItem({
   users: User[];
   onOpenLightbox: () => void;
 }) {
+  const [isOpenDialog, setIsOpenDialog] = useState(false);
+
   const popover = usePopover();
 
   const { copy } = useCopyToClipboard();
 
-  const { me, senderDetails, type } = getMessage({
+  const {
+    me,
+    senderDetails,
+    type: originalType,
+  } = getMessage({
     message,
     users,
     participants,
   });
+
+  const type = useMemo(() => {
+    if (message.attachments && message.attachments.length > 0) {
+      const firstAttachment = message.attachments[0]?.directus_files_id;
+      if (firstAttachment?.filename_download) {
+        return getMessageType(firstAttachment.filename_download);
+      }
+    }
+    return originalType || MessageType.TEXT;
+  }, [message.attachments, originalType]);
 
   const { firstName, participant_avatar } = senderDetails;
 
   const { content, attachments, date_created, sender_type } = message;
 
   const firstAttachment = attachments[0]?.directus_files_id;
+
+  const handleCloseDialog = () => setIsOpenDialog(false);
 
   const handleCopy = useCallback(
     (file: DirectusFile) => {
@@ -64,6 +83,11 @@ export function ChatMessageItem({
     },
     [copy]
   );
+
+  const handleReceiveUrl = useCallback((file: DirectusFile | undefined) => {
+    if (!file) return "";
+    return `${CONFIG.serverUrl}/assets/${file.id}`;
+  }, []);
 
   const handleDownload = (file: DirectusFile) => {
     if (!file) return;
@@ -77,7 +101,7 @@ export function ChatMessageItem({
   const renderInfo = (
     <Typography
       noWrap
-      variant="caption"
+      variant='caption'
       sx={{ mb: 1, color: "text.disabled", ...(!me && { mr: "auto" }) }}
     >
       {!me && `${firstName}, `}
@@ -97,9 +121,12 @@ export function ChatMessageItem({
     >
       <IconButton
         color={popover.open ? "inherit" : "default"}
-        onClick={popover.onOpen}
+        onClick={(event) => {
+          event.stopPropagation();
+          popover.onOpen(event);
+        }}
       >
-        <Iconify icon="eva:more-vertical-fill" />
+        <Iconify icon='eva:more-vertical-fill' />
       </IconButton>
     </Box>
   );
@@ -107,7 +134,14 @@ export function ChatMessageItem({
   const renderAttachment = firstAttachment && (
     <>
       <Paper
-        variant="outlined"
+        variant='outlined'
+        onClick={
+          type === MessageType.AUDIO || type === MessageType.VIDEO
+            ? () => {
+                setIsOpenDialog(true);
+              }
+            : undefined
+        }
         sx={{
           gap: 2,
           borderRadius: 2,
@@ -169,7 +203,7 @@ export function ChatMessageItem({
               handleCopy(firstAttachment);
             }}
           >
-            <Iconify icon="eva:link-2-fill" />
+            <Iconify icon='eva:link-2-fill' />
             Copy Link
           </MenuItem>
 
@@ -179,18 +213,49 @@ export function ChatMessageItem({
               handleDownload(firstAttachment);
             }}
           >
-            <Iconify icon="solar:download-minimalistic-linear" />
+            <Iconify icon='solar:download-minimalistic-linear' />
             Download
           </MenuItem>
         </MenuList>
       </CustomPopover>
+
+      {type === MessageType.VIDEO ? (
+        <>
+          <Box
+            sx={{
+              width: "100%",
+              height: 150,
+              borderRadius: 1,
+              overflow: "hidden",
+              background: "#00000005",
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <video
+              src={`${CONFIG.serverUrl}/assets/${firstAttachment.id}`}
+              width={120}
+              height={150}
+              style={{ objectFit: "cover" }}
+              preload='metadata'
+              muted
+              controls={false}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </Box>
+        </>
+      ) : (
+        <></>
+      )}
     </>
   );
 
   const renderImage = firstAttachment && (
     <Box
-      component="img"
-      alt="attachment"
+      component='img'
+      alt='attachment'
       src={`${CONFIG.serverUrl}/assets/${firstAttachment.id}`}
       onClick={() => onOpenLightbox()}
       sx={{
@@ -225,8 +290,8 @@ export function ChatMessageItem({
           {content}
           {sender_type !== ParticipantType.CUSTOMER && (
             <Typography
-              variant="caption"
-              color="primary"
+              variant='caption'
+              color='primary'
               sx={{ display: "block", mt: 0.5 }}
             >
               Responsed by {firstName}
@@ -277,7 +342,7 @@ export function ChatMessageItem({
 
   return (
     <Stack
-      direction="row"
+      direction='row'
       justifyContent={me ? "flex-end" : "unset"}
       sx={{ mb: 5 }}
     >
@@ -293,8 +358,8 @@ export function ChatMessageItem({
         {renderInfo}
 
         <Stack
-          direction="row"
-          alignItems="center"
+          direction='row'
+          alignItems='center'
           sx={{
             position: "relative",
             "&:hover": { "& .message-actions": { opacity: 1 } },
@@ -304,6 +369,12 @@ export function ChatMessageItem({
           {/* {renderActions} */}
         </Stack>
       </Stack>
+      <ChatAudioVideo
+        isOpenDialog={isOpenDialog}
+        onClose={handleCloseDialog}
+        itemType={type === MessageType.AUDIO ? "audio" : "video"}
+        itemUrl={firstAttachment ? handleReceiveUrl(firstAttachment) : ""}
+      />
     </Stack>
   );
 }
