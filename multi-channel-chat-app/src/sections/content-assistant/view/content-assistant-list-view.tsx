@@ -484,8 +484,7 @@ export function ContentAssistantListView() {
       video: item.video || "",
       media: [],
       media_generated_ai: [],
-      services: (item.services ||
-        []) as unknown as Content["services"],
+      services: (item.services || []) as unknown as Content["services"],
     }));
   };
 
@@ -593,7 +592,6 @@ export function ContentAssistantListView() {
       Promise.all(promises)
         .then(() => {
           // Optionally refresh data after all complete
-          fetchData();
           setBulkCreatingIds([]);
         })
         .catch((error) => {
@@ -605,6 +603,10 @@ export function ContentAssistantListView() {
       toast.success(
         `Đã bắt đầu tạo ${selected.length} bài viết. Quá trình sẽ hoàn thành trong khoảng 10 phút.`
       );
+      await fetchData();
+      setPage(0); // Reset to first page after refresh
+      handleResetFilters();
+
       setSelected([]); // Clear selection
     } catch (error) {
       console.error("Error starting bulk creation:", error);
