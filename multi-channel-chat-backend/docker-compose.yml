@@ -25,10 +25,10 @@ services:
       SECRET: ${DIRECTUS_SECRET}
 
       DB_CLIENT: "pg"
-      DB_HOST: ${DATABASE_HOST}
-      DB_PORT: ${DATABASE_PORT}
-      DB_DATABASE: ${DATABASE_NAME}
-      DB_USER: ${DATABASE_USER}
+      DB_HOST: 109.123.239.55
+      DB_PORT: 5444
+      DB_DATABASE: donghan-directus-db
+      DB_USER: postgres
       DB_PASSWORD: ${DATABASE_PASSWORD}
 
       CACHE_ENABLED: "true"
