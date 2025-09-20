@@ -25,16 +25,16 @@ services:
       SECRET: ${DIRECTUS_SECRET}
 
       DB_CLIENT: pg
-      DB_HOST: 109.123.239.55
-      DB_PORT: 5444
-      DB_DATABASE: donghan-directus-db
-      DB_USER: postgres
+      DB_HOST: "109.123.239.55"
+      DB_PORT: "5444"
+      DB_DATABASE: "donghan-directus-db"
+      DB_USER: "postgres"
       DB_PASSWORD: ${DATABASE_PASSWORD}
 
       CACHE_ENABLED: "true"
       CACHE_AUTO_PURGE: "true"
       CACHE_STORE: "redis"
-      REDIS: redis://cache:6379
+      REDIS: "redis://cache:6379"
 
       ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
       ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
