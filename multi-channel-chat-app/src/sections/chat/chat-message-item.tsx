@@ -24,9 +24,10 @@ import { fData } from "@/utils/format-number";
 import { CustomPopover, usePopover } from "@/components/custom-popover";
 import { Iconify } from "@/components/iconify";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "@/components/snackbar";
 import { User } from "@/models/auth/user";
+import ChatAudioVideo from "./chat-audio-video";
 
 // ----------------------------------------------------------------------
 
@@ -41,6 +42,8 @@ export function ChatMessageItem({
   users: User[];
   onOpenLightbox: () => void;
 }) {
+  const [isOpenDialog, setIsOpenDialog] = useState(false);
+
   const popover = usePopover();
 
   const { copy } = useCopyToClipboard();
@@ -57,6 +60,8 @@ export function ChatMessageItem({
 
   const firstAttachment = attachments[0]?.directus_files_id;
 
+  const handleCloseDialog = () => setIsOpenDialog(false);
+
   const handleCopy = useCallback(
     (file: DirectusFile) => {
       toast.success("Copied!");
@@ -64,6 +69,11 @@ export function ChatMessageItem({
     },
     [copy]
   );
+
+  const handleReceiveUrl = useCallback((file: DirectusFile | undefined) => {
+    if (!file) return "";
+    return `${CONFIG.serverUrl}/assets/${file.id}`;
+  }, []);
 
   const handleDownload = (file: DirectusFile) => {
     if (!file) return;
@@ -97,7 +107,10 @@ export function ChatMessageItem({
     >
       <IconButton
         color={popover.open ? "inherit" : "default"}
-        onClick={popover.onOpen}
+        onClick={(event) => {
+          event.stopPropagation();
+          popover.onOpen(event);
+        }}
       >
         <Iconify icon="eva:more-vertical-fill" />
       </IconButton>
@@ -108,6 +121,13 @@ export function ChatMessageItem({
     <>
       <Paper
         variant="outlined"
+        onClick={
+          type === MessageType.AUDIO || type === MessageType.VIDEO
+            ? () => {
+              setIsOpenDialog(true);
+            }
+            : undefined
+        }
         sx={{
           gap: 2,
           borderRadius: 2,
@@ -184,6 +204,37 @@ export function ChatMessageItem({
           </MenuItem>
         </MenuList>
       </CustomPopover>
+
+      {type === MessageType.VIDEO ? (
+        <>
+          <Box
+            sx={{
+              width: "100%",
+              height: 150,
+              borderRadius: 1,
+              overflow: "hidden",
+              background: "#00000005",
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <video
+              src={`${CONFIG.serverUrl}/assets/${firstAttachment.id}`}
+              width={120}
+              height={150}
+              style={{ objectFit: "cover" }}
+              preload="metadata"
+              muted
+              controls={false}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </Box>
+        </>
+      ) : (
+        <></>
+      )}
     </>
   );
 
@@ -304,6 +355,16 @@ export function ChatMessageItem({
           {/* {renderActions} */}
         </Stack>
       </Stack>
+      {(type === MessageType.AUDIO || type === MessageType.VIDEO) && (
+        <ChatAudioVideo
+          isOpenDialog={isOpenDialog}
+          onClose={handleCloseDialog}
+          itemType={
+            type
+          }
+          itemUrl={firstAttachment ? handleReceiveUrl(firstAttachment) : ""}
+        />
+      )}
     </Stack>
   );
 }
