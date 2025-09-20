@@ -4,6 +4,7 @@ import { ContentToneFormData } from "@/sections/content-tone/types";
 export interface ContentToneFilters {
   tone_name?: string;
   tone_description?: string;
+  // searchTerm?: string;
   page?: number;
   pageSize?: number;
   id?: string;
@@ -64,8 +65,26 @@ export async function getContentToneList(
       params.append("page", filters.page.toString());
     else params.append("page", "1");
 
-    //Add id filter if provided
-    if (filters.id) params.append("filter[id][_eq]", filters.id.toString());
+    // if (filters.searchTerm) {
+    //   params.append(
+    //     "filter[_or][0][tone_description][_contains]",
+    //     filters.searchTerm
+    //   );
+    //   params.append("filter[_or][1][id][_contains]", filters.searchTerm);
+    // }
+
+    // //Add id filter if provided
+    // if (filters.id && !filters.searchTerm)
+    //   params.append("filter[id][_eq]", filters.id);
+
+    // //Add tone_description filter if provided
+    // if (filters.tone_description && !filters.searchTerm)
+    //   params.append(
+    //     "filter[tone_description][_contains]",
+    //     filters.tone_description
+    //   );
+
+    if (filters.id) params.append("filter[id][_eq]", filters.id);
 
     //Add tone_description filter if provided
     if (filters.tone_description)
