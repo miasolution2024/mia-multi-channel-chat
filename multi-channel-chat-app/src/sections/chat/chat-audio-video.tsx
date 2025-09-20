@@ -24,7 +24,7 @@ const ChatAudioVideo: React.FC<ChatAudioVideoProps> = ({
   const dialogStyles: React.CSSProperties = {
     maxWidth: itemType === MessageType.VIDEO ? "90vw" : "80vw",
     maxHeight: itemType === MessageType.VIDEO ? "90vh" : undefined,
-    width: itemType === MessageType.VIDEO ? "auto" : "100%",
+    width: itemType === MessageType.VIDEO ? "auto" : "500px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",

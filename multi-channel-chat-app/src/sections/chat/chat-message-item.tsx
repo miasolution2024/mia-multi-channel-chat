@@ -124,8 +124,8 @@ export function ChatMessageItem({
         onClick={
           type === MessageType.AUDIO || type === MessageType.VIDEO
             ? () => {
-                setIsOpenDialog(true);
-              }
+              setIsOpenDialog(true);
+            }
             : undefined
         }
         sx={{
@@ -355,14 +355,16 @@ export function ChatMessageItem({
           {/* {renderActions} */}
         </Stack>
       </Stack>
-      <ChatAudioVideo
-        isOpenDialog={isOpenDialog}
-        onClose={handleCloseDialog}
-        itemType={
-          type === MessageType.AUDIO ? MessageType.AUDIO : MessageType.VIDEO
-        }
-        itemUrl={firstAttachment ? handleReceiveUrl(firstAttachment) : ""}
-      />
+      {(type === MessageType.AUDIO || type === MessageType.VIDEO) && (
+        <ChatAudioVideo
+          isOpenDialog={isOpenDialog}
+          onClose={handleCloseDialog}
+          itemType={
+            type
+          }
+          itemUrl={firstAttachment ? handleReceiveUrl(firstAttachment) : ""}
+        />
+      )}
     </Stack>
   );
 }
