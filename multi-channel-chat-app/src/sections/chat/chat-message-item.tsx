@@ -12,7 +12,7 @@ import {
   ParticipantType,
 } from "@/models/participants/participant";
 import { CONFIG } from "@/config-global";
-import { FileThumbnail, getMessageType } from "@/components/file-thumbnail";
+import { FileThumbnail } from "@/components/file-thumbnail";
 import {
   IconButton,
   ListItemText,
@@ -24,7 +24,7 @@ import { fData } from "@/utils/format-number";
 import { CustomPopover, usePopover } from "@/components/custom-popover";
 import { Iconify } from "@/components/iconify";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "@/components/snackbar";
 import { User } from "@/models/auth/user";
 import ChatAudioVideo from "./chat-audio-video";
@@ -48,25 +48,11 @@ export function ChatMessageItem({
 
   const { copy } = useCopyToClipboard();
 
-  const {
-    me,
-    senderDetails,
-    type: originalType,
-  } = getMessage({
+  const { me, senderDetails, type } = getMessage({
     message,
     users,
     participants,
   });
-
-  const type = useMemo(() => {
-    if (message.attachments && message.attachments.length > 0) {
-      const firstAttachment = message.attachments[0]?.directus_files_id;
-      if (firstAttachment?.filename_download) {
-        return getMessageType(firstAttachment.filename_download);
-      }
-    }
-    return originalType || MessageType.TEXT;
-  }, [message.attachments, originalType]);
 
   const { firstName, participant_avatar } = senderDetails;
 

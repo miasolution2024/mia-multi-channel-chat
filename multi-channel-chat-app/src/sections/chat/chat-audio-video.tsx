@@ -22,14 +22,14 @@ const ChatAudioVideo: React.FC<ChatAudioVideoProps> = ({
   const dialogStyles: React.CSSProperties = {
     maxWidth: itemType === "video" ? "90vw" : "80vw",
     maxHeight: itemType === "video" ? "90vh" : undefined,
-    width: "100%",
+    width: itemType === "video" ? "auto" : "100%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: 0,
     background: "transparent",
     boxShadow: "none",
-    borderRadius: itemType === "audio" ? 12 : 8,
+    borderRadius: itemType === "audio" ? 12 : 0,
     overflow: "visible",
   };
 
