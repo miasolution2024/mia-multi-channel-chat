@@ -34,6 +34,7 @@ const ContentSchema = zod.object({
     .min(1, { message: "Từ khoá SEO chính là bắt buộc!" }),
   secondary_seo_keywords: zod.string().array().default([]),
   customer_group: zod.number().array().min(1, "Nhóm khách hàng là bắt buộc"),
+  services: zod.number().array().default([]),
   customer_journey: zod.number({
     required_error: "Hành trình khách hàng là bắt buộc",
   }),
@@ -71,6 +72,7 @@ export const getFieldsForStep = (step: string): (keyof FormData)[] => {
         "post_type",
         "main_seo_keyword",
         "customer_group",
+        "services",
         "customer_journey",
         "omni_channels",
       ];
@@ -113,6 +115,13 @@ export const getDefaultValues = (
               typeof obj.customer_journey_id === "object"
             ) {
               const nested = obj.customer_journey_id as Record<string, unknown>;
+              if (nested.id && typeof nested.id === "number") return nested.id;
+            }
+            if (
+              obj.services_id &&
+              typeof obj.services_id === "object"
+            ) {
+              const nested = obj.services_id as Record<string, unknown>;
               if (nested.id && typeof nested.id === "number") return nested.id;
             }
             if (
@@ -167,6 +176,10 @@ export const getDefaultValues = (
         extractIds(editData.customer_group).length > 0
           ? extractIds(editData.customer_group)
           : [],
+      services:
+        extractIds(editData.services).length > 0
+          ? extractIds(editData.services)
+          : [],
       customer_journey:
         extractIds(editData.customer_journey).length > 0
           ? extractIds(editData.customer_journey)[0]
@@ -207,6 +220,7 @@ export const getDefaultValues = (
     main_seo_keyword: "",
     secondary_seo_keywords: [],
     customer_group: [],
+    services: [],
     customer_journey: undefined,
     content_tone: [],
     ai_rule_based: [],
@@ -235,6 +249,7 @@ export const getStep1FormData = (formData: FormData) => {
     main_seo_keyword: formData.main_seo_keyword,
     secondary_seo_keywords: formData.secondary_seo_keywords,
     customer_group: formData.customer_group,
+    services: formData.services,
     customer_journey: formData.customer_journey,
     content_tone: formData.content_tone,
     ai_rule_based: formData.ai_rule_based,
@@ -624,6 +639,14 @@ export const buildStepResearchData = (formData: FormData, isCreate = false) => {
         update: [],
         delete: [],
       },
+      services: {
+        create: (formData.services || []).map((id: number) => ({
+          ai_content_suggestions_id: "+",
+          services_id: { id },
+        })),
+        update: [],
+        delete: [],
+      },
     };
   }
 
@@ -637,6 +660,10 @@ export const buildStepResearchData = (formData: FormData, isCreate = false) => {
     customer_group:
       formData.customer_group?.map((item) => ({
         customer_group_id: item,
+      })) || [],
+    services:
+      formData.services?.map((item: number) => ({
+        services_id: item,
       })) || [],
     customer_journey: formData.customer_journey ? [{
       customer_journey_id: formData.customer_journey,

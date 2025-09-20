@@ -57,6 +57,16 @@ export interface CreateContentAssistantRequest {
     update: unknown[];
     delete: unknown[];
   };
+  services?: {
+    create: Array<{
+      ai_content_suggestions_id: string;
+      services_id: {
+        id: number;
+      };
+    }>;
+    update: unknown[];
+    delete: unknown[];
+  };
 }
 
 export interface CreateContentAssistantResponse {

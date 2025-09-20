@@ -23,6 +23,8 @@ export interface TableConfig<T = Record<string, unknown>> {
   label: string;
   align?: "left" | "center" | "right";
   render?: (item: T, index: number) => React.ReactNode;
+  sticky?: "left" | "right";
+  width?: number;
 }
 
 export interface DataItem {
@@ -57,6 +59,7 @@ export interface CustomTableProps<T = DataItem> {
   groupBy?: string;
   groupByLabel?: string;
   optionHandleStatus?: (status: string) => void;
+  canSelectRow?: (item: T) => boolean;
 }
 
 export default function CustomTable({
@@ -75,6 +78,7 @@ export default function CustomTable({
   onSelect,
   moreOptions,
   defaultSelected = [],
+  canSelectRow,
 }: Omit<
   CustomTableProps,
   "csvConfig" | "csvNameFile" | "csvData" | "csvOnClick" | "csvFetchingData"
@@ -86,12 +90,44 @@ export default function CustomTable({
     data.length === 0 && !loading && !errorMsg && !firstLoading;
   const _colSpan = tableConfig.length + (onSelect ? 1 : 0);
 
+  // Calculate selectable items
+  const selectableItems = data.filter((item) => !canSelectRow || canSelectRow(item));
+  const selectableCount = selectableItems.length;
+
+  // Calculate right positions for sticky columns
+  const calculateStickyRightPositions = () => {
+    const positions: Record<number, number> = {};
+    let currentRight = 0;
+    
+    // Action column (moreOptions) is always at right: 0
+    if (moreOptions) {
+      currentRight = 30; // Approximate width of action column
+    }
+    
+    // Calculate positions for right-sticky columns from right to left
+    const rightStickyColumns = tableConfig
+      .map((col, index) => ({ ...col, originalIndex: index }))
+      .filter(col => col.sticky === "right")
+      .reverse(); // Process from rightmost to leftmost
+    
+    rightStickyColumns.forEach((col) => {
+      positions[col.originalIndex] = currentRight;
+      currentRight += col.width || 150; // Default width if not specified
+    });
+    
+    return positions;
+  };
+
+  const stickyRightPositions = calculateStickyRightPositions();
+
   const handleSelectAllClick = (
     event: React.ChangeEvent<HTMLInputElement>,
     key: string
   ) => {
     if (event.target.checked) {
-      const newSelecteds = data.map((n) => n[key] as string | number);
+      const newSelecteds = data
+        .filter((item) => !canSelectRow || canSelectRow(item))
+        .map((n) => n[key] as string | number);
       setSelected(newSelecteds);
       return;
     }
@@ -138,10 +174,10 @@ export default function CustomTable({
                       <Checkbox
                         size="small"
                         indeterminate={
-                          selected.length > 0 && selected.length < data.length
+                          selected.length > 0 && selected.length < selectableCount
                         }
                         checked={
-                          data.length > 0 && selected.length === data.length
+                          selectableCount > 0 && selected.length === selectableCount
                         }
                         onChange={(e) => {
                           handleSelectAllClick(e, checkKey || "id");
@@ -155,13 +191,33 @@ export default function CustomTable({
                   <TableCell
                     key={index}
                     align={item.align}
-                    sx={{ whiteSpace: "nowrap" }}
+                    sx={{ 
+                      whiteSpace: "nowrap",
+                      ...(item.width && {
+                        width: item.width,
+                        minWidth: item.width,
+                        maxWidth: item.width,
+                      }),
+                      ...(item.sticky && {
+                        position: "sticky",
+                        [item.sticky]: item.sticky === "right" ? stickyRightPositions[index] : 0,
+                        zIndex: 1,
+                      })
+                    }}
                   >
                     {item.label}
                   </TableCell>
                 ))}
                 {moreOptions && (
-                  <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                  <TableCell 
+                    align="right" 
+                    sx={{ 
+                      whiteSpace: "nowrap",
+                      position: "sticky",
+                      right: 0,
+                      zIndex: 1,
+                    }}
+                  >
                     {/* CSV Export functionality would go here */}
                   </TableCell>
                 )}
@@ -199,6 +255,8 @@ export default function CustomTable({
                                 : (item.id as string | number)
                             ) !== -1) ? (
                             <CheckboxEmpty />
+                          ) : canSelectRow && !canSelectRow(item) ? (
+                            <div style={{ width: 38, height: 38 }} />
                           ) : (
                             <Checkbox
                               size="small"
@@ -219,7 +277,20 @@ export default function CustomTable({
                         <TableCell
                           key={i}
                           align={x.align}
-                          sx={{ whiteSpace: "nowrap" }}
+                          sx={{ 
+                            whiteSpace: "nowrap",
+                            ...(x.width && {
+                              width: x.width,
+                              minWidth: x.width,
+                              maxWidth: x.width,
+                            }),
+                            ...(x.sticky && {
+                              position: "sticky",
+                              [x.sticky]: x.sticky === "right" ? stickyRightPositions[i] : 0,
+                              backgroundColor: "background.paper",
+                              zIndex: 1,
+                            })
+                          }}
                         >
                           {loading ||
                           (updateList?.length > 0 &&
@@ -237,7 +308,16 @@ export default function CustomTable({
                         </TableCell>
                       ))}
                       {moreOptions && (
-                        <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                        <TableCell 
+                          align="right" 
+                          sx={{ 
+                            whiteSpace: "nowrap",
+                            position: "sticky",
+                            right: 0,
+                            backgroundColor: "background.paper",
+                            zIndex: 1,
+                          }}
+                        >
                           {loading ||
                           (updateList?.length > 0 &&
                             updateList?.indexOf(

@@ -57,6 +57,16 @@ export interface UpdateContentAssistantRequest {
     update: unknown[];
     delete: unknown[];
   };
+  services?: {
+    create: Array<{
+      ai_content_suggestions_id: string;
+      services_id: {
+        id: number;
+      };
+    }>;
+    update: unknown[];
+    delete: unknown[];
+  };
   // Additional fields for update
   phase_goal?: string;
   post_notes?: string;
@@ -73,6 +83,7 @@ export interface UpdateContentAssistantRequest {
   current_step?: string;
   ai_notes_write_article?: string;
   ai_notes_html_coding?: string;
+  status?: string;
 }
 
 export interface UpdateContentAssistantResponse {

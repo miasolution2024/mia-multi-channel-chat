@@ -23,6 +23,8 @@ import { getCustomerJourneys } from "@/actions/customer-journey";
 import { CustomerJourney } from "@/sections/customer-journey/types";
 import { MenuItem } from "@mui/material";
 import { getOmniChannels, OmniChannel } from "@/actions/omni-channels";
+import { getServices } from "@/actions/services";
+import {  Services } from "@/sections/services/types";
 
 // ----------------------------------------------------------------------
 
@@ -36,6 +38,7 @@ export function StepResearch() {
     CustomerJourney[]
   >([]);
   const [omniChannelsData, setOmniChannelsData] = useState<OmniChannel[]>([]);
+  const [servicesData, setservicesData] = useState<Services[]>([]);
 
   const { watch, setValue } = useFormContext();
   const contentTones = watch("content_tone") || [];
@@ -87,9 +90,19 @@ export function StepResearch() {
       }
     };
 
+    const fetchServices = async () => {
+      try {
+        const response = await getServices(1, 100);
+        setservicesData(response.data || []);
+      } catch (error) {
+        console.error("Error fetching customer services:", error);
+      }
+    };
+
     fetchCustomerGroups();
     fetchCustomerJourneys();
     fetchOmniChannels();
+    fetchServices();
   }, []);
 
   return (
@@ -194,6 +207,8 @@ export function StepResearch() {
               }))}
             />
 
+           
+
             <RHFSelect
                name="customer_journey" 
                label="Hành trình khách hàng" 
@@ -206,6 +221,19 @@ export function StepResearch() {
                  </MenuItem>
                ))}
              </RHFSelect>
+              
+          </Stack>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <RHFMultiSelect
+              name="services"
+              label="Dịch vụ"
+              required
+              sx={{ width: "100%" }}
+              options={servicesData?.map((item: Services) => ({
+                value: item.id,
+                label: item.name,
+              }))}
+            />
             <RHFMultiSelect
               required
               name="omni_channels"
@@ -216,7 +244,7 @@ export function StepResearch() {
                 label: item.page_name,
               }))}
             />
-          </Stack>
+            </Stack>
         </Stack>
       </Card>
 

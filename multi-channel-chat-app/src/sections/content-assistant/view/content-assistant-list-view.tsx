@@ -13,6 +13,9 @@ import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
 import Popover from "@mui/material/Popover";
+import Select from "@mui/material/Select";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
 
 import { useSetState } from "@/hooks/use-set-state";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -34,8 +37,15 @@ import {
   type MediaGeneratedAiItem,
 } from "@/actions/content-assistant";
 import { createPost, type PostRequest } from "@/actions/auto-mia";
-import { POST_STATUS, POST_STEP, POST_TYPE_OPTIONS } from "@/constants/auto-post";
+import {
+  POST_STATUS,
+  POST_STEP,
+  POST_TYPE_OPTIONS,
+  POST_STATUS_OPTIONS,
+} from "@/constants/auto-post";
 import { getStartStepFromCurrentStep } from "../utils";
+import { Stack } from "@mui/material";
+import { useUpdateContentAssistant } from "../hooks/use-update-content-assistant";
 
 // Tạo interface riêng cho table config
 interface ContentTableConfig {
@@ -44,6 +54,8 @@ interface ContentTableConfig {
   label: string;
   align?: "left" | "center" | "right";
   render?: (item: Content) => React.ReactNode;
+  sticky?: "left" | "right";
+  width?: number;
 }
 
 // ----------------------------------------------------------------------
@@ -71,6 +83,13 @@ interface CustomerJourneyItem {
   };
 }
 
+interface ServicesItem {
+  services_id: {
+    id: number;
+    name: string;
+  };
+}
+
 interface AiRuleBasedItem {
   ai_rule_based_id: {
     id: number;
@@ -92,6 +111,7 @@ export interface Content {
   secondary_seo_keywords?: string[]; // Từ khoá SEO phụ
   customer_group: CustomerGroupItem[]; // Nhóm khách hàng
   customer_journey: CustomerJourneyItem[]; // Hành trình khách hàng
+  services: ServicesItem[]; // Dịch vụ
   ai_rule_based: AiRuleBasedItem[]; // Quy tắc AI
   content_tone: ContentToneItem[]; // Tonal
   omni_channels?: OmniChannelsItem[]; // Kênh omni
@@ -111,6 +131,30 @@ export interface Content {
   [key: string]: unknown; // Index signature for compatibility
 }
 
+const getAIContentStatusLabelAndColor = (
+  status: string
+): {
+  label: string;
+  color:
+    | "success"
+    | "default"
+    | "warning"
+    | "primary"
+    | "secondary"
+    | "error"
+    | "info";
+} => {
+  switch (status) {
+    case POST_STATUS.PUBLISHED:
+      return { label: "Đã xuất bản", color: "success" };
+    case POST_STATUS.DRAFT:
+      return { label: "Nháp", color: "default" };
+    case POST_STATUS.IN_PROGRESS:
+      return { label: "Đang viết bài", color: "warning" };
+    default:
+      return { label: "N/A", color: "default" };
+  }
+};
 const mappingCurrentStep: Record<string, string> = {
   [POST_STEP.RESEARCH_ANALYSIS]: "Tìm hiểu",
   [POST_STEP.MAKE_OUTLINE]: "Lên dàn ý",
@@ -137,7 +181,7 @@ const TABLE_CONFIG: ContentTableConfig[] = [
   {
     key: "current_step",
     id: "current_step",
-    label: "Trạng thái hiện tại",
+    label: "Giai đoạn hiện tại",
     align: "left",
     render: (item: Content) => (
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
@@ -260,18 +304,38 @@ const TABLE_CONFIG: ContentTableConfig[] = [
     ),
   },
   {
+    key: "services",
+    id: "services",
+    label: "Dịch vụ",
+    align: "left",
+    render: (item: Content) => (
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+        {item.services.map((group, index) => (
+          <Chip
+            key={index}
+            label={group.services_id.name}
+            size="small"
+            variant="outlined"
+          />
+        ))}
+      </Box>
+    ),
+  },
+  {
     key: "status",
     id: "status",
     label: "Trạng thái",
     align: "center",
     render: (item: Content) => (
       <Chip
-        label={item.status === "published" ? "Đã xuất bản" : "Nháp"}
-        color={item.status === "published" ? "success" : "warning"}
+        label={getAIContentStatusLabelAndColor(item.status).label}
+        color={getAIContentStatusLabelAndColor(item.status).color}
         variant="outlined"
         size="small"
       />
     ),
+    sticky: "right",
+    width: 180,
   },
 ];
 
@@ -321,11 +385,7 @@ function ContentActionMenu({
               popover.onClose();
             }}
           >
-            <Iconify
-              icon={
-                   "solar:upload-bold"
-              }
-            />
+            <Iconify icon={"solar:upload-bold"} />
             {"Xuất bản"}
           </MenuItem>
 
@@ -349,8 +409,14 @@ export function ContentAssistantListView() {
   const router = useRouter();
   const confirm = useBoolean();
   const publishConfirm = useBoolean();
-  const [publishingId, setPublishingId] = useState<string | number | null>(null);
+  const bulkCreateConfirm = useBoolean();
+  const { updateContentAssistant } = useUpdateContentAssistant();
+  const [publishingId, setPublishingId] = useState<string | number | null>(
+    null
+  );
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isBulkCreating, setIsBulkCreating] = useState(false);
+  const [bulkCreatingIds, setBulkCreatingIds] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [selected, setSelected] = useState<string[]>([]);
@@ -361,7 +427,7 @@ export function ContentAssistantListView() {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const filters = useSetState({ topic: "", status: [] });
+  const filters = useSetState({ topic: "", status: [] as string[] });
   const debouncedTopic = useDebounce(filters.state.topic, 500);
 
   // Fetch data function
@@ -399,11 +465,16 @@ export function ContentAssistantListView() {
       post_type: item.post_type,
       main_seo_keyword: item.main_seo_keyword || "",
       secondary_seo_keywords: item.secondary_seo_keywords || [],
-      customer_group: (item.customer_group || []) as unknown as Content['customer_group'],
-      customer_journey: (item.customer_journey || []) as unknown as Content['customer_journey'],
-      ai_rule_based: (item.ai_rule_based || []) as unknown as Content['ai_rule_based'],
-      content_tone: (item.content_tone || []) as unknown as Content['content_tone'],
-      omni_channels: (item.omni_channels || []) as unknown as Content['omni_channels'],
+      customer_group: (item.customer_group ||
+        []) as unknown as Content["customer_group"],
+      customer_journey: (item.customer_journey ||
+        []) as unknown as Content["customer_journey"],
+      ai_rule_based: (item.ai_rule_based ||
+        []) as unknown as Content["ai_rule_based"],
+      content_tone: (item.content_tone ||
+        []) as unknown as Content["content_tone"],
+      omni_channels: (item.omni_channels ||
+        []) as unknown as Content["omni_channels"],
       status: item.status || "draft",
       current_step: item.current_step,
       outline_post: item.outline_post ?? undefined,
@@ -413,7 +484,8 @@ export function ContentAssistantListView() {
       video: item.video || "",
       media: [],
       media_generated_ai: [],
-      
+      services: (item.services ||
+        []) as unknown as Content["services"],
     }));
   };
 
@@ -480,6 +552,74 @@ export function ContentAssistantListView() {
     confirm.onFalse();
   }, [selected, confirm, fetchData, setIsDeleting]);
 
+  const handleBulkCreatePosts = async () => {
+    if (selected.length === 0) return;
+
+    try {
+      setIsBulkCreating(true);
+      setBulkCreatingIds(selected);
+
+      // Process each selected item
+      const promises = selected.map(async (id) => {
+        const currentItem = apiResponse?.data.find(
+          (item: ContentAssistantApiResponse) => String(item.id) === String(id)
+        );
+        const startStep = getStartStepFromCurrentStep(
+          currentItem?.current_step
+        );
+
+        // Update status to IN_PROGRESS before calling createPost
+        try {
+          await updateContentAssistant(id, {
+            status: POST_STATUS.IN_PROGRESS,
+          });
+        } catch (error) {
+          console.error(`Failed to update status for item ${id}:`, error);
+          throw error; // Re-throw to prevent createPost from being called
+        }
+
+        const inputN8NData: PostRequest = [
+          {
+            id: Number(id),
+            startStep,
+            endStep: 4,
+          },
+        ];
+
+        return createPost(inputN8NData);
+      });
+
+      // Start all processes without waiting for completion
+      Promise.all(promises)
+        .then(() => {
+          // Optionally refresh data after all complete
+          fetchData();
+          setBulkCreatingIds([]);
+        })
+        .catch((error) => {
+          console.error("Some posts failed to create:", error);
+          setBulkCreatingIds([]);
+        });
+
+      // Show immediate success message
+      toast.success(
+        `Đã bắt đầu tạo ${selected.length} bài viết. Quá trình sẽ hoàn thành trong khoảng 10 phút.`
+      );
+      setSelected([]); // Clear selection
+    } catch (error) {
+      console.error("Error starting bulk creation:", error);
+      toast.error("Có lỗi xảy ra khi bắt đầu tạo bài viết");
+      setBulkCreatingIds([]);
+    } finally {
+      setIsBulkCreating(false);
+    }
+  };
+
+  const handleConfirmBulkCreate = async () => {
+    await handleBulkCreatePosts();
+    bulkCreateConfirm.onFalse();
+  };
+
   const handlePublish = (id: string | number) => {
     setPublishingId(id);
     publishConfirm.onTrue();
@@ -487,11 +627,13 @@ export function ContentAssistantListView() {
 
   const handleConfirmPublish = async () => {
     if (!publishingId) return;
-    
+
     // Find the item to get current_step
-    const currentItem = apiResponse?.data.find((item: ContentAssistantApiResponse) => item.id === publishingId);
+    const currentItem = apiResponse?.data.find(
+      (item: ContentAssistantApiResponse) => item.id === publishingId
+    );
     const startStep = getStartStepFromCurrentStep(currentItem?.current_step);
-    
+
     try {
       setIsPublishing(true);
       const inputN8NData: PostRequest = [
@@ -542,40 +684,96 @@ export function ContentAssistantListView() {
           sx={{ mb: { xs: 3, md: 5 } }}
         />
         <Card>
-          {/* Thanh công cụ tìm kiếm */}
-          <Box sx={{ p: 2.5 }}>
-            <TextField
-              value={filters.state.topic}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                filters.setState({ topic: event.target.value })
-              }
-              placeholder="Tìm kiếm chủ đề..."
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Iconify
-                      icon="eva:search-fill"
-                      sx={{ color: "text.disabled" }}
-                    />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ width: 240 }}
-            />
-          </Box>
+          <Stack
+            direction={"row"}
+            sx={{ p: 2.5 }}
+            spacing={2}
+            justifyContent={"space-between"}
+          >
+            <Stack direction={"row"} spacing={2}>
+              <TextField
+                size="small"
+                value={filters.state.topic}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  filters.setState({ topic: event.target.value })
+                }
+                placeholder="Tìm kiếm chủ đề..."
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Iconify
+                        icon="eva:search-fill"
+                        sx={{ color: "text.disabled" }}
+                      />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ width: 240 }}
+              />
 
-          {canReset && (
-            <Box sx={{ p: 2.5, pt: 0 }}>
+              <FormControl sx={{ width: 200 }} size="small">
+                <InputLabel>Trạng thái</InputLabel>
+                <Select
+                  size="small"
+                  multiple
+                  value={filters.state.status}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    filters.setState({
+                      status:
+                        typeof value === "string" ? value.split(",") : value,
+                    });
+                  }}
+                  label="Trạng thái"
+                  renderValue={(selected) => (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {selected.map((value) => (
+                        <Chip
+                          key={value}
+                          label={
+                            POST_STATUS_OPTIONS.find(
+                              (option) => option.value === value
+                            )?.label || value
+                          }
+                          size="small"
+                        />
+                      ))}
+                    </Box>
+                  )}
+                >
+                  {POST_STATUS_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {canReset && (
+                <Box sx={{ p: 2.5, pt: 0 }}>
+                  <Button
+                    color="error"
+                    sx={{ flexShrink: 0 }}
+                    onClick={handleResetFilters}
+                    startIcon={<Iconify icon="eva:trash-2-outline" />}
+                  >
+                    Xóa
+                  </Button>
+                </Box>
+              )}
+            </Stack>
+
+            {selected.length > 0 && (
               <Button
-                color="error"
-                sx={{ flexShrink: 0 }}
-                onClick={handleResetFilters}
-                startIcon={<Iconify icon="eva:trash-2-outline" />}
+                size="large"
+                variant="contained"
+                color="primary"
+                onClick={bulkCreateConfirm.onTrue}
+                disabled={isBulkCreating}
               >
-                Xóa
+                Tạo bài viết tự động ({selected.length})
               </Button>
-            </Box>
-          )}
+            )}
+          </Stack>
 
           <CustomTable
             data={tableData}
@@ -589,16 +787,21 @@ export function ContentAssistantListView() {
               setPageSize(parseInt(event.target.value, 10));
               setPage(0); // Reset to first page when page size changes
             }}
+            updateList={bulkCreatingIds.map((id) => String(id))}
             firstLoading={false}
             checkKey="id"
             onSelect={(selectedIds) =>
               setSelected(selectedIds.map((id) => String(id)))
             }
             defaultSelected={selected}
+            canSelectRow={(item) => {
+              const contentItem = item as Content;
+              return contentItem.status === POST_STATUS.DRAFT;
+            }}
             moreOptions={(item) => {
               const contentItem = item as Content;
-              const isPublished = contentItem.status === POST_STATUS.PUBLISHED;
-              return !isPublished ? (
+              const isDraft = contentItem.status === POST_STATUS.DRAFT;
+              return isDraft ? (
                 <ContentActionMenu
                   content={contentItem}
                   onEdit={handleEditRow}
@@ -633,8 +836,30 @@ export function ContentAssistantListView() {
             <Button variant="outlined" onClick={publishConfirm.onFalse}>
               Hủy
             </Button>
-            <Button variant="contained" color="primary" onClick={handleConfirmPublish}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleConfirmPublish}
+            >
               Xuất bản
+            </Button>
+          </>
+        }
+      />
+
+      <ConfirmDialog
+        open={bulkCreateConfirm.value}
+        onClose={bulkCreateConfirm.onFalse}
+        title="Tạo bài viết tự động"
+        content={`Bạn có chắc chắn muốn tạo ${selected.length} bài viết tự động? Quá trình này có thể mất khoảng 10 phút.`}
+        action={
+          <>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleConfirmBulkCreate}
+            >
+              Tạo bài viết
             </Button>
           </>
         }

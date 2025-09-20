@@ -1,7 +1,23 @@
 export const POST_STATUS = {
   DRAFT: "draft",
   PUBLISHED: "published",
+  IN_PROGRESS: 'in_progress'
 };
+
+export const POST_STATUS_OPTIONS = [
+  {
+    value: POST_STATUS.DRAFT,
+    label: "Bản nháp"
+  },
+  {
+    value: POST_STATUS.PUBLISHED,
+    label: "Đã xuất bản"
+  },
+  {
+    value: POST_STATUS.IN_PROGRESS,
+    label: "Đang viết bài"
+  }
+];
 
 export const POST_TYPE = {
   SOCIAL_POST: "social_post",

@@ -45,6 +45,7 @@ export interface ContentAssistantApiResponse {
   media_generated_ai: MediaGeneratedAiItem[];
   ai_rule_based: number[];
   omni_channels: number[];
+  services: number[];
 }
 
 export interface ContentAssistantListResponse {
@@ -86,6 +87,8 @@ export async function getContentAssistantList(
       'content_tone.content_tone_id.tone_description',
       'customer_journey.customer_journey_id.id',
       'customer_journey.customer_journey_id.name',
+      'services.services_id.id',
+      'services.services_id.name',
       'omni_channels.omni_channels_id',
       'ai_rule_based.ai_rule_based_id.id',
       'ai_rule_based.ai_rule_based_id.content',

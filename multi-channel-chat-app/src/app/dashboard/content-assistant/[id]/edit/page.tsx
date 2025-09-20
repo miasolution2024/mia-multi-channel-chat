@@ -65,6 +65,7 @@ const transformApiData = (
     secondary_seo_keywords: data.secondary_seo_keywords || [],
     customer_group: (data.customer_group || []) as unknown as Content['customer_group'],
     customer_journey: (data.customer_journey || []) as unknown as Content['customer_journey'],
+    services: (data.services || []) as unknown as Content['services'],
     ai_rule_based: (data.ai_rule_based || []) as unknown as Content['ai_rule_based'],
     content_tone: (data.content_tone || []) as unknown as Content['content_tone'],
     omni_channels: (data.omni_channels || []) as unknown as Content['omni_channels'],
