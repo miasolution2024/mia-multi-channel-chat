@@ -87,7 +87,7 @@ export function ChatMessageItem({
   const renderInfo = (
     <Typography
       noWrap
-      variant='caption'
+      variant="caption"
       sx={{ mb: 1, color: "text.disabled", ...(!me && { mr: "auto" }) }}
     >
       {!me && `${firstName}, `}
@@ -112,7 +112,7 @@ export function ChatMessageItem({
           popover.onOpen(event);
         }}
       >
-        <Iconify icon='eva:more-vertical-fill' />
+        <Iconify icon="eva:more-vertical-fill" />
       </IconButton>
     </Box>
   );
@@ -120,7 +120,7 @@ export function ChatMessageItem({
   const renderAttachment = firstAttachment && (
     <>
       <Paper
-        variant='outlined'
+        variant="outlined"
         onClick={
           type === MessageType.AUDIO || type === MessageType.VIDEO
             ? () => {
@@ -189,7 +189,7 @@ export function ChatMessageItem({
               handleCopy(firstAttachment);
             }}
           >
-            <Iconify icon='eva:link-2-fill' />
+            <Iconify icon="eva:link-2-fill" />
             Copy Link
           </MenuItem>
 
@@ -199,7 +199,7 @@ export function ChatMessageItem({
               handleDownload(firstAttachment);
             }}
           >
-            <Iconify icon='solar:download-minimalistic-linear' />
+            <Iconify icon="solar:download-minimalistic-linear" />
             Download
           </MenuItem>
         </MenuList>
@@ -225,7 +225,7 @@ export function ChatMessageItem({
               width={120}
               height={150}
               style={{ objectFit: "cover" }}
-              preload='metadata'
+              preload="metadata"
               muted
               controls={false}
               onClick={(e) => e.stopPropagation()}
@@ -240,8 +240,8 @@ export function ChatMessageItem({
 
   const renderImage = firstAttachment && (
     <Box
-      component='img'
-      alt='attachment'
+      component="img"
+      alt="attachment"
       src={`${CONFIG.serverUrl}/assets/${firstAttachment.id}`}
       onClick={() => onOpenLightbox()}
       sx={{
@@ -276,8 +276,8 @@ export function ChatMessageItem({
           {content}
           {sender_type !== ParticipantType.CUSTOMER && (
             <Typography
-              variant='caption'
-              color='primary'
+              variant="caption"
+              color="primary"
               sx={{ display: "block", mt: 0.5 }}
             >
               Responsed by {firstName}
@@ -328,7 +328,7 @@ export function ChatMessageItem({
 
   return (
     <Stack
-      direction='row'
+      direction="row"
       justifyContent={me ? "flex-end" : "unset"}
       sx={{ mb: 5 }}
     >
@@ -344,8 +344,8 @@ export function ChatMessageItem({
         {renderInfo}
 
         <Stack
-          direction='row'
-          alignItems='center'
+          direction="row"
+          alignItems="center"
           sx={{
             position: "relative",
             "&:hover": { "& .message-actions": { opacity: 1 } },
@@ -358,7 +358,9 @@ export function ChatMessageItem({
       <ChatAudioVideo
         isOpenDialog={isOpenDialog}
         onClose={handleCloseDialog}
-        itemType={type === MessageType.AUDIO ? "audio" : "video"}
+        itemType={
+          type === MessageType.AUDIO ? MessageType.AUDIO : MessageType.VIDEO
+        }
         itemUrl={firstAttachment ? handleReceiveUrl(firstAttachment) : ""}
       />
     </Stack>

@@ -3,11 +3,12 @@
 import { Dialog, DialogContent } from "@mui/material";
 import React from "react";
 import { VideoPlayer, AudioPlayer } from "react-video-audio-player";
+import { MessageType } from "@/models/message/message";
 
 interface ChatAudioVideoProps {
   isOpenDialog: boolean;
   onClose: () => void;
-  itemType: "audio" | "video";
+  itemType: MessageType.AUDIO | MessageType.VIDEO;
   itemUrl: string;
 }
 
@@ -17,19 +18,20 @@ const ChatAudioVideo: React.FC<ChatAudioVideoProps> = ({
   itemType,
   itemUrl,
 }) => {
-  if (itemType !== "audio" && itemType !== "video") return null;
+  if (itemType !== MessageType.AUDIO && itemType !== MessageType.VIDEO)
+    return null;
 
   const dialogStyles: React.CSSProperties = {
-    maxWidth: itemType === "video" ? "90vw" : "80vw",
-    maxHeight: itemType === "video" ? "90vh" : undefined,
-    width: itemType === "video" ? "auto" : "100%",
+    maxWidth: itemType === MessageType.VIDEO ? "90vw" : "80vw",
+    maxHeight: itemType === MessageType.VIDEO ? "90vh" : undefined,
+    width: itemType === MessageType.VIDEO ? "auto" : "100%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: 0,
     background: "transparent",
     boxShadow: "none",
-    borderRadius: itemType === "audio" ? 12 : 0,
+    borderRadius: itemType === MessageType.AUDIO ? 12 : 0,
     overflow: "visible",
   };
 
@@ -42,7 +44,7 @@ const ChatAudioVideo: React.FC<ChatAudioVideoProps> = ({
       <DialogContent
         style={{
           width: "100%",
-          padding: itemType === "video" ? 0 : 5,
+          padding: itemType === MessageType.VIDEO ? 0 : 5,
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -51,7 +53,7 @@ const ChatAudioVideo: React.FC<ChatAudioVideoProps> = ({
           position: "relative",
         }}
       >
-        {itemType === "audio" ? (
+        {itemType === MessageType.AUDIO ? (
           <div style={{ width: "100%", maxWidth: 500 }}>
             <AudioPlayer controls style={{ width: "100%" }} src={itemUrl} />
           </div>
