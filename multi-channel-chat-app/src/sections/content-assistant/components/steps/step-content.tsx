@@ -39,7 +39,10 @@ interface StepContentProps {
   hasDataChanged?: boolean;
 }
 
-export function StepContent({ contentAssistantId, hasDataChanged }: StepContentProps) {
+export function StepContent({
+  contentAssistantId,
+  hasDataChanged,
+}: StepContentProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -47,9 +50,12 @@ export function StepContent({ contentAssistantId, hasDataChanged }: StepContentP
   const { setValue, watch, getValues } = useFormContext();
   const mediaGeneratedAi = watch("media_generated_ai");
   const videoData = watch("video");
-  
+
   // Check if video data exists
-  const hasVideo = videoData && ((Array.isArray(videoData) && videoData.length > 0) || (!Array.isArray(videoData) && videoData));
+  const hasVideo =
+    videoData &&
+    ((Array.isArray(videoData) && videoData.length > 0) ||
+      (!Array.isArray(videoData) && videoData));
 
   // Initialize generated images from existing mediaGeneratedAi data
   useEffect(() => {
@@ -79,21 +85,25 @@ export function StepContent({ contentAssistantId, hasDataChanged }: StepContentP
 
       // Build data for WRITE_ARTICLE step
       const formData = getValues() as FormData;
-      
+
       // Check if there are data changes to determine if we should exclude media
       // If no data changes, exclude media information from the update
       const shouldExcludeMedia = !hasDataChanged; // Exclude media if no data changes
-      
-      const stepData = await buildStepWriteArticleData({
-        ...formData, 
-        is_generated_by_AI: true,
-      }, undefined, shouldExcludeMedia);
+
+      const stepData = await buildStepWriteArticleData(
+        {
+          ...formData,
+          is_generated_by_AI: true,
+        },
+        undefined,
+        shouldExcludeMedia
+      );
 
       // Save current form data to Directus
-      const updateResponse = await updateContentAssistant(
-        contentAssistantId,
-        {...stepData, is_generated_by_AI: true}
-      );
+      const updateResponse = await updateContentAssistant(contentAssistantId, {
+        ...stepData,
+        is_generated_by_AI: true,
+      });
       if (!updateResponse) {
         throw new Error("Failed to save data to Directus");
       }
@@ -113,22 +123,18 @@ export function StepContent({ contentAssistantId, hasDataChanged }: StepContentP
       }
 
       // Fetch updated data from Directus to get AI-generated images
-      const updatedDataResponse = await getContentAssistantList(
-        {
-          id: Number(contentAssistantId),
-        }
-      );
+      const updatedDataResponse = await getContentAssistantList({
+        id: Number(contentAssistantId),
+      });
       if (updatedDataResponse.data[0]) {
         // Update form with new AI-generated images
         if (updatedDataResponse.data[0].media_generated_ai) {
-          const imageIds = updatedDataResponse.data[0].media_generated_ai?.map(item => item.directus_files_id)
-          setValue(
-            "media_generated_ai",
-            imageIds, 
-            {
-              shouldDirty: true,
-            }
+          const imageIds = updatedDataResponse.data[0].media_generated_ai?.map(
+            (item) => item.directus_files_id
           );
+          setValue("media_generated_ai", imageIds, {
+            shouldDirty: true,
+          });
         }
         toast.success("Images generated successfully!");
       } else {
@@ -163,7 +169,7 @@ export function StepContent({ contentAssistantId, hasDataChanged }: StepContentP
     <Box>
       <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
         <Tab label="Bài viết" />
-        <Tab label="Tệp đính kèm" />
+        {!hasVideo && <Tab label="Tệp đính kèm" />}
       </Tabs>
 
       {activeTab === 0 && (
@@ -179,210 +185,204 @@ export function StepContent({ contentAssistantId, hasDataChanged }: StepContentP
         </Card>
       )}
 
-      {activeTab === 1 && (
+      {activeTab === 1 && !hasVideo && (
         <Card>
           <CardHeader title="Tệp đính kèm" />
           <Stack spacing={3} sx={{ p: 3 }}>
             {/* AI Notes for Image Generation */}
-            {!hasVideo && (
-              <Box>
-                <RHFTextField
-                  name="ai_notes_create_image"
-                  placeholder="Viết mô tả hình ảnh bạn hướng đến AI đề xuất"
-                  multiline
-                  minRows={1}
-                  maxRows={4}
-                  InputProps={{
-                    startAdornment: (
-                      <Iconify
-                        icon="solar:magic-stick-3-bold"
-                        sx={{
-                          color: "primary.main",
-                          mr: 1,
-                          fontSize: 20,
-                        }}
-                      />
-                    ),
-                    sx: {
-                      alignItems: "flex-start",
+            <Box>
+              <RHFTextField
+                name="ai_notes_create_image"
+                placeholder="Viết mô tả hình ảnh bạn hướng đến AI đề xuất"
+                multiline
+                minRows={1}
+                maxRows={4}
+                InputProps={{
+                  startAdornment: (
+                    <Iconify
+                      icon="solar:magic-stick-3-bold"
+                      sx={{
+                        color: "primary.main",
+                        mr: 1,
+                        fontSize: 20,
+                      }}
+                    />
+                  ),
+                  sx: {
+                    alignItems: "flex-start",
+                  },
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
                     },
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                      },
-                      "&.Mui-focused": {
-                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-                      },
+                    "&.Mui-focused": {
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
                     },
-                  }}
-                />
-              </Box>
-            )}
+                  },
+                }}
+              />
+            </Box>
 
-            {!hasVideo && <Divider />}
+            <Divider />
 
             {/* Image Generation Section */}
-            {!hasVideo && (
-              <Box>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Tạo sinh hình ảnh tự động
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Tạo sinh hình ảnh ngay dựa trên bài viết đã thực hiện. Bạn có
-                  thể điều chỉnh prompt ở trên để AI tạo sinh hình ảnh theo mong
-                  muốn chính xác nhất.
-                </Typography>
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Tạo sinh hình ảnh tự động
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Tạo sinh hình ảnh ngay dựa trên bài viết đã thực hiện. Bạn có
+                thể điều chỉnh prompt ở trên để AI tạo sinh hình ảnh theo mong
+                muốn chính xác nhất.
+              </Typography>
 
-                <Button
-                  variant="contained"
-                  onClick={handleGenerateImage}
-                  startIcon={<Iconify icon="solar:gallery-add-bold" />}
-                  disabled={isGenerating}
-                  sx={{ mb: 3 }}
-                >
-                  Tạo sinh hình ảnh
-                </Button>
+              <Button
+                variant="contained"
+                onClick={handleGenerateImage}
+                startIcon={<Iconify icon="solar:gallery-add-bold" />}
+                disabled={isGenerating}
+                sx={{ mb: 3 }}
+              >
+                Tạo sinh hình ảnh
+              </Button>
 
-                {/* Hiển thị ảnh đã generate */}
-                {generatedImages.length > 0 && (
-                  <Paper sx={{ p: 2, mt: 2 }}>
-                    <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                      Hình ảnh đã tạo sinh ({generatedImages.length})
-                    </Typography>
-                    <Grid container spacing={2}>
-                      {generatedImages.map((url, index) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
-                          <Box sx={{ position: "relative" }}>
-                            <Box
-                              component="img"
-                              src={url}
-                              alt={`Generated ${index + 1}`}
-                              sx={{
-                                width: "100%",
-                                height: 200,
-                                objectFit: "cover",
-                                borderRadius: 1,
-                                border: "1px solid",
-                                borderColor: "divider",
-                              }}
+              {/* Hiển thị ảnh đã generate */}
+              {generatedImages.length > 0 && (
+                <Paper sx={{ p: 2, mt: 2 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                    Hình ảnh đã tạo sinh ({generatedImages.length})
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {generatedImages.map((url, index) => (
+                      <Grid item xs={12} sm={6} md={4} key={index}>
+                        <Box sx={{ position: "relative" }}>
+                          <Box
+                            component="img"
+                            src={url}
+                            alt={`Generated ${index + 1}`}
+                            sx={{
+                              width: "100%",
+                              height: 200,
+                              objectFit: "cover",
+                              borderRadius: 1,
+                              border: "1px solid",
+                              borderColor: "divider",
+                            }}
+                          />
+                          <Button
+                            size="small"
+                            color="error"
+                            onClick={() => handleRemoveImage(index)}
+                            sx={{
+                              position: "absolute",
+                              top: 8,
+                              right: 8,
+                              minWidth: "auto",
+                              width: 32,
+                              height: 32,
+                              borderRadius: "50%",
+                              bgcolor: "rgba(255, 255, 255, 0.9)",
+                              "&:hover": {
+                                bgcolor: "rgba(255, 255, 255, 1)",
+                              },
+                            }}
+                          >
+                            <Iconify
+                              icon="solar:trash-bin-minimalistic-bold"
+                              width={16}
                             />
-                            <Button
-                              size="small"
-                              color="error"
-                              onClick={() => handleRemoveImage(index)}
-                              sx={{
-                                position: "absolute",
-                                top: 8,
-                                right: 8,
-                                minWidth: "auto",
-                                width: 32,
-                                height: 32,
-                                borderRadius: "50%",
-                                bgcolor: "rgba(255, 255, 255, 0.9)",
-                                "&:hover": {
-                                  bgcolor: "rgba(255, 255, 255, 1)",
-                                },
-                              }}
-                            >
-                              <Iconify
-                                icon="solar:trash-bin-minimalistic-bold"
-                                width={16}
-                              />
-                            </Button>
-                          </Box>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Paper>
-                )}
-              </Box>
-            )}
+                          </Button>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Paper>
+              )}
+            </Box>
 
-            {!hasVideo && <Divider />}
+            <Divider />
 
             {/* File Upload Section */}
-            {!hasVideo && (
-              <Box>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Hình ảnh được đính kèm
-                </Typography>
-                <RHFUpload
-                  name="media"
-                  multiple
-                  accept={{
-                    "image/*": [".jpeg", ".jpg", ".png"],
-                  }}
-                  helperText="Chọn nhiều hình ảnh để đính kèm"
-                  hidePreview={true}
-                />
-                {/* Hiển thị ảnh đã upload */}
-                {Array.isArray(watch("media")) && watch("media").length > 0 && (
-                  <Paper sx={{ p: 2, mt: 2 }}>
-                    <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                      Hình ảnh đã tải lên ({watch("media").length})
-                    </Typography>
-                    <Grid container spacing={2}>
-                      {watch("media").map((file: File, index: number) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
-                          <Box sx={{ position: "relative" }}>
-                            <Box
-                              component="img"
-                              src={
-                                (file as FileWithPreview).preview ||
-                                URL.createObjectURL(file)
-                              }
-                              alt={`Uploaded ${index + 1}`}
-                              sx={{
-                                width: "100%",
-                                height: 200,
-                                objectFit: "cover",
-                                borderRadius: 1,
-                                border: "1px solid",
-                                borderColor: "divider",
-                              }}
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Hình ảnh được đính kèm
+              </Typography>
+              <RHFUpload
+                name="media"
+                multiple
+                accept={{
+                  "image/*": [".jpeg", ".jpg", ".png"],
+                }}
+                helperText="Chọn nhiều hình ảnh để đính kèm"
+                hidePreview={true}
+              />
+              {/* Hiển thị ảnh đã upload */}
+              {Array.isArray(watch("media")) && watch("media").length > 0 && (
+                <Paper sx={{ p: 2, mt: 2 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                    Hình ảnh đã tải lên ({watch("media").length})
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {watch("media").map((file: File, index: number) => (
+                      <Grid item xs={12} sm={6} md={4} key={index}>
+                        <Box sx={{ position: "relative" }}>
+                          <Box
+                            component="img"
+                            src={
+                              (file as FileWithPreview).preview ||
+                              URL.createObjectURL(file)
+                            }
+                            alt={`Uploaded ${index + 1}`}
+                            sx={{
+                              width: "100%",
+                              height: 200,
+                              objectFit: "cover",
+                              borderRadius: 1,
+                              border: "1px solid",
+                              borderColor: "divider",
+                            }}
+                          />
+                          <Button
+                            size="small"
+                            color="error"
+                            onClick={() => {
+                              const currentMedia = Array.isArray(watch("media"))
+                                ? watch("media")
+                                : [];
+                              const updatedMedia = currentMedia.filter(
+                                (_: File, i: number) => i !== index
+                              );
+                              setValue("media", updatedMedia);
+                            }}
+                            sx={{
+                              position: "absolute",
+                              top: 8,
+                              right: 8,
+                              minWidth: "auto",
+                              width: 32,
+                              height: 32,
+                              borderRadius: "50%",
+                              bgcolor: "rgba(255, 255, 255, 0.9)",
+                              "&:hover": {
+                                bgcolor: "rgba(255, 255, 255, 1)",
+                              },
+                            }}
+                          >
+                            <Iconify
+                              icon="solar:trash-bin-minimalistic-bold"
+                              width={16}
                             />
-                            <Button
-                              size="small"
-                              color="error"
-                              onClick={() => {
-                                const currentMedia = Array.isArray(watch("media"))
-                                  ? watch("media")
-                                  : [];
-                                const updatedMedia = currentMedia.filter(
-                                  (_: File, i: number) => i !== index
-                                );
-                                setValue("media", updatedMedia);
-                              }}
-                              sx={{
-                                position: "absolute",
-                                top: 8,
-                                right: 8,
-                                minWidth: "auto",
-                                width: 32,
-                                height: 32,
-                                borderRadius: "50%",
-                                bgcolor: "rgba(255, 255, 255, 0.9)",
-                                "&:hover": {
-                                  bgcolor: "rgba(255, 255, 255, 1)",
-                                },
-                              }}
-                            >
-                              <Iconify
-                                icon="solar:trash-bin-minimalistic-bold"
-                                width={16}
-                              />
-                            </Button>
-                          </Box>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Paper>
-                )}
-              </Box>
-            )}
+                          </Button>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Paper>
+              )}
+            </Box>
 
             <Divider />
 
