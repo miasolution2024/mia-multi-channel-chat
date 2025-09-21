@@ -45,7 +45,11 @@ export function StepContent({ contentAssistantId, hasDataChanged }: StepContentP
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
 
   const { setValue, watch, getValues } = useFormContext();
-  const mediaGeneratedAi = watch("media_generated_ai")
+  const mediaGeneratedAi = watch("media_generated_ai");
+  const videoData = watch("video");
+  
+  // Check if video data exists
+  const hasVideo = videoData && ((Array.isArray(videoData) && videoData.length > 0) || (!Array.isArray(videoData) && videoData));
 
   // Initialize generated images from existing mediaGeneratedAi data
   useEffect(() => {
@@ -180,265 +184,209 @@ export function StepContent({ contentAssistantId, hasDataChanged }: StepContentP
           <CardHeader title="Tệp đính kèm" />
           <Stack spacing={3} sx={{ p: 3 }}>
             {/* AI Notes for Image Generation */}
-            <Box>
-              <RHFTextField
-                name="ai_notes_create_image"
-                placeholder="Viết mô tả hình ảnh bạn hướng đến AI đề xuất"
-                multiline
-                minRows={1}
-                maxRows={4}
-                InputProps={{
-                  startAdornment: (
-                    <Iconify
-                      icon="solar:magic-stick-3-bold"
-                      sx={{
-                        color: "primary.main",
-                        mr: 1,
-                        fontSize: 20,
-                      }}
-                    />
-                  ),
-                  sx: {
-                    alignItems: "flex-start",
-                  },
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+            {!hasVideo && (
+              <Box>
+                <RHFTextField
+                  name="ai_notes_create_image"
+                  placeholder="Viết mô tả hình ảnh bạn hướng đến AI đề xuất"
+                  multiline
+                  minRows={1}
+                  maxRows={4}
+                  InputProps={{
+                    startAdornment: (
+                      <Iconify
+                        icon="solar:magic-stick-3-bold"
+                        sx={{
+                          color: "primary.main",
+                          mr: 1,
+                          fontSize: 20,
+                        }}
+                      />
+                    ),
+                    sx: {
+                      alignItems: "flex-start",
                     },
-                    "&.Mui-focused": {
-                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                      },
+                      "&.Mui-focused": {
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                      },
                     },
-                  },
-                }}
-              />
-            </Box>
+                  }}
+                />
+              </Box>
+            )}
 
-            <Divider />
+            {!hasVideo && <Divider />}
 
             {/* Image Generation Section */}
-            <Box>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Tạo sinh hình ảnh tự động
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Tạo sinh hình ảnh ngay dựa trên bài viết đã thực hiện. Bạn có
-                thể điều chỉnh prompt ở trên để AI tạo sinh hình ảnh theo mong
-                muốn chính xác nhất.
-              </Typography>
+            {!hasVideo && (
+              <Box>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  Tạo sinh hình ảnh tự động
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Tạo sinh hình ảnh ngay dựa trên bài viết đã thực hiện. Bạn có
+                  thể điều chỉnh prompt ở trên để AI tạo sinh hình ảnh theo mong
+                  muốn chính xác nhất.
+                </Typography>
 
-              <Button
-                variant="contained"
-                onClick={handleGenerateImage}
-                startIcon={<Iconify icon="solar:gallery-add-bold" />}
-                disabled={isGenerating}
-                sx={{ mb: 3 }}
-              >
-                Tạo sinh hình ảnh
-              </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleGenerateImage}
+                  startIcon={<Iconify icon="solar:gallery-add-bold" />}
+                  disabled={isGenerating}
+                  sx={{ mb: 3 }}
+                >
+                  Tạo sinh hình ảnh
+                </Button>
 
-              {/* Hiển thị ảnh đã generate */}
-              {generatedImages.length > 0 && (
-                <Paper sx={{ p: 2, mt: 2 }}>
-                  <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                    Hình ảnh đã tạo sinh ({generatedImages.length})
-                  </Typography>
-                  <Grid container spacing={2}>
-                    {generatedImages.map((url, index) => (
-                      <Grid item xs={12} sm={6} md={4} key={index}>
-                        <Box sx={{ position: "relative" }}>
-                          <Box
-                            component="img"
-                            src={url}
-                            alt={`Generated ${index + 1}`}
-                            sx={{
-                              width: "100%",
-                              height: 200,
-                              objectFit: "cover",
-                              borderRadius: 1,
-                              border: "1px solid",
-                              borderColor: "divider",
-                            }}
-                          />
-                          <Button
-                            size="small"
-                            color="error"
-                            onClick={() => handleRemoveImage(index)}
-                            sx={{
-                              position: "absolute",
-                              top: 8,
-                              right: 8,
-                              minWidth: "auto",
-                              width: 32,
-                              height: 32,
-                              borderRadius: "50%",
-                              bgcolor: "rgba(255, 255, 255, 0.9)",
-                              "&:hover": {
-                                bgcolor: "rgba(255, 255, 255, 1)",
-                              },
-                            }}
-                          >
-                            <Iconify
-                              icon="solar:trash-bin-minimalistic-bold"
-                              width={16}
+                {/* Hiển thị ảnh đã generate */}
+                {generatedImages.length > 0 && (
+                  <Paper sx={{ p: 2, mt: 2 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                      Hình ảnh đã tạo sinh ({generatedImages.length})
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {generatedImages.map((url, index) => (
+                        <Grid item xs={12} sm={6} md={4} key={index}>
+                          <Box sx={{ position: "relative" }}>
+                            <Box
+                              component="img"
+                              src={url}
+                              alt={`Generated ${index + 1}`}
+                              sx={{
+                                width: "100%",
+                                height: 200,
+                                objectFit: "cover",
+                                borderRadius: 1,
+                                border: "1px solid",
+                                borderColor: "divider",
+                              }}
                             />
-                          </Button>
-                        </Box>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Paper>
-              )}
-            </Box>
+                            <Button
+                              size="small"
+                              color="error"
+                              onClick={() => handleRemoveImage(index)}
+                              sx={{
+                                position: "absolute",
+                                top: 8,
+                                right: 8,
+                                minWidth: "auto",
+                                width: 32,
+                                height: 32,
+                                borderRadius: "50%",
+                                bgcolor: "rgba(255, 255, 255, 0.9)",
+                                "&:hover": {
+                                  bgcolor: "rgba(255, 255, 255, 1)",
+                                },
+                              }}
+                            >
+                              <Iconify
+                                icon="solar:trash-bin-minimalistic-bold"
+                                width={16}
+                              />
+                            </Button>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Paper>
+                )}
+              </Box>
+            )}
 
-            <Divider />
+            {!hasVideo && <Divider />}
 
             {/* File Upload Section */}
-            <Box>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Hình ảnh được đính kèm
-              </Typography>
-              <RHFUpload
-                name="media"
-                multiple
-                accept={{
-                  "image/*": [".jpeg", ".jpg", ".png"],
-                }}
-                helperText="Chọn nhiều hình ảnh để đính kèm"
-                hidePreview={true}
-              />
-              {/* Hiển thị ảnh đã upload */}
-              {Array.isArray(watch("media")) && watch("media").length > 0 && (
-                <Paper sx={{ p: 2, mt: 2 }}>
-                  <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                    Hình ảnh đã tải lên ({watch("media").length})
-                  </Typography>
-                  <Grid container spacing={2}>
-                    {watch("media").map((file: File, index: number) => (
-                      <Grid item xs={12} sm={6} md={4} key={index}>
-                        <Box sx={{ position: "relative" }}>
-                          <Box
-                            component="img"
-                            src={
-                              (file as FileWithPreview).preview ||
-                              URL.createObjectURL(file)
-                            }
-                            alt={`Uploaded ${index + 1}`}
-                            sx={{
-                              width: "100%",
-                              height: 200,
-                              objectFit: "cover",
-                              borderRadius: 1,
-                              border: "1px solid",
-                              borderColor: "divider",
-                            }}
-                          />
-                          <Button
-                            size="small"
-                            color="error"
-                            onClick={() => {
-                              const currentMedia = Array.isArray(watch("media"))
-                                ? watch("media")
-                                : [];
-                              const updatedMedia = currentMedia.filter(
-                                (_: File, i: number) => i !== index
-                              );
-                              setValue("media", updatedMedia);
-                            }}
-                            sx={{
-                              position: "absolute",
-                              top: 8,
-                              right: 8,
-                              minWidth: "auto",
-                              width: 32,
-                              height: 32,
-                              borderRadius: "50%",
-                              bgcolor: "rgba(255, 255, 255, 0.9)",
-                              "&:hover": {
-                                bgcolor: "rgba(255, 255, 255, 1)",
-                              },
-                            }}
-                          >
-                            <Iconify
-                              icon="solar:trash-bin-minimalistic-bold"
-                              width={16}
+            {!hasVideo && (
+              <Box>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  Hình ảnh được đính kèm
+                </Typography>
+                <RHFUpload
+                  name="media"
+                  multiple
+                  accept={{
+                    "image/*": [".jpeg", ".jpg", ".png"],
+                  }}
+                  helperText="Chọn nhiều hình ảnh để đính kèm"
+                  hidePreview={true}
+                />
+                {/* Hiển thị ảnh đã upload */}
+                {Array.isArray(watch("media")) && watch("media").length > 0 && (
+                  <Paper sx={{ p: 2, mt: 2 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                      Hình ảnh đã tải lên ({watch("media").length})
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {watch("media").map((file: File, index: number) => (
+                        <Grid item xs={12} sm={6} md={4} key={index}>
+                          <Box sx={{ position: "relative" }}>
+                            <Box
+                              component="img"
+                              src={
+                                (file as FileWithPreview).preview ||
+                                URL.createObjectURL(file)
+                              }
+                              alt={`Uploaded ${index + 1}`}
+                              sx={{
+                                width: "100%",
+                                height: 200,
+                                objectFit: "cover",
+                                borderRadius: 1,
+                                border: "1px solid",
+                                borderColor: "divider",
+                              }}
                             />
-                          </Button>
-                        </Box>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Paper>
-              )}
-            </Box>
+                            <Button
+                              size="small"
+                              color="error"
+                              onClick={() => {
+                                const currentMedia = Array.isArray(watch("media"))
+                                  ? watch("media")
+                                  : [];
+                                const updatedMedia = currentMedia.filter(
+                                  (_: File, i: number) => i !== index
+                                );
+                                setValue("media", updatedMedia);
+                              }}
+                              sx={{
+                                position: "absolute",
+                                top: 8,
+                                right: 8,
+                                minWidth: "auto",
+                                width: 32,
+                                height: 32,
+                                borderRadius: "50%",
+                                bgcolor: "rgba(255, 255, 255, 0.9)",
+                                "&:hover": {
+                                  bgcolor: "rgba(255, 255, 255, 1)",
+                                },
+                              }}
+                            >
+                              <Iconify
+                                icon="solar:trash-bin-minimalistic-bold"
+                                width={16}
+                              />
+                            </Button>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Paper>
+                )}
+              </Box>
+            )}
 
             <Divider />
 
             {/* Video Upload Section */}
-            <Box>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Video
-              </Typography>
-              <RHFUpload
-                name="video"
-                maxFiles={1}
-                accept={{
-                  "video/*": [".mp4", ".avi", ".mov"],
-                }}
-                helperText="Chỉ được chọn 1 video. Định dạng hỗ trợ: MP4, AVI, MOV"
-                hidePreview
-              />
-
-              {/* Video Preview */}
-              {Array.isArray(watch("video")) && watch("video").length > 0 && (
-                <Paper sx={{ p: 2, mt: 2 }}>
-                  <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                    Video đã chọn
-                  </Typography>
-                  <Box sx={{ position: "relative", display: "inline-block" }}>
-                    <video
-                      src={
-                        typeof watch("video")[0] === "string"
-                          ? `${CONFIG.serverUrl}/assets/${watch("video")[0]}`
-                          : watch("video")[0] instanceof File
-                          ? (watch("video")[0] as FileWithPreview).preview ||
-                            URL.createObjectURL(watch("video")[0])
-                          : ""
-                      }
-                      controls
-                      style={{
-                        width: "100%",
-                        maxWidth: "300px",
-                        height: "auto",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <Button
-                      size="small"
-                      color="error"
-                      onClick={() => setValue("video", [])}
-                      sx={{
-                        position: "absolute",
-                        top: 8,
-                        right: 8,
-                        minWidth: "auto",
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        bgcolor: "rgba(255, 255, 255, 0.9)",
-                        "&:hover": {
-                          bgcolor: "rgba(255, 255, 255, 1)",
-                        },
-                      }}
-                    >
-                      <Iconify icon="mingcute:close-line" width={16} />
-                    </Button>
-                  </Box>
-                </Paper>
-              )}
-            </Box>
           </Stack>
         </Card>
       )}

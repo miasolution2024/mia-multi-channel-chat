@@ -17,7 +17,7 @@ const STEPS = [
   },
   {
     value: POST_STEP.MAKE_OUTLINE,
-    label: "Lên outline bài viết",
+    label: "Outline bài viết",
     stepNumber: 2,
   },
   {

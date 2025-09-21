@@ -7,6 +7,8 @@ import CardHeader from "@mui/material/CardHeader";
 import Divider from "@mui/material/Divider";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
 import { useFormContext } from "react-hook-form";
 
 import {
@@ -14,6 +16,7 @@ import {
   RHFAutocomplete,
   RHFMultiSelect,
   RHFSelect,
+  RHFUpload,
 } from "@/components/hook-form";
 import { Iconify } from "@/components/iconify";
 import { ContentSelectionDialog, SelectedItemsTable } from "../index";
@@ -21,14 +24,23 @@ import { getCustomerGroups } from "@/actions/customer-group";
 import { CustomerGroup } from "@/sections/customer-group/types";
 import { getCustomerJourneys } from "@/actions/customer-journey";
 import { CustomerJourney } from "@/sections/customer-journey/types";
-import { MenuItem } from "@mui/material";
+import { MenuItem, Switch, Tooltip } from "@mui/material";
 import { getOmniChannels, OmniChannel } from "@/actions/omni-channels";
 import { getServices } from "@/actions/services";
-import {  Services } from "@/sections/services/types";
+import { Services } from "@/sections/services/types";
+import { CONFIG } from "@/config-global";
+
+// ----------------------------------------------------------------------
+
+// Extended File interface to include preview property
+interface FileWithPreview extends File {
+  preview?: string;
+}
 
 // ----------------------------------------------------------------------
 
 export function StepResearch() {
+  const [isShowVideo, setIsShowVideo] = useState(false);
   const [contentTonesDialogOpen, setContentTonesDialogOpen] = useState(false);
   const [aiRulesDialogOpen, setAiRulesDialogOpen] = useState(false);
   const [customerGroupsData, setCustomerGroupsData] = useState<CustomerGroup[]>(
@@ -38,11 +50,12 @@ export function StepResearch() {
     CustomerJourney[]
   >([]);
   const [omniChannelsData, setOmniChannelsData] = useState<OmniChannel[]>([]);
-  const [servicesData, setservicesData] = useState<Services[]>([]);
+  const [servicesData, setServicesData] = useState<Services[]>([]);
 
   const { watch, setValue } = useFormContext();
   const contentTones = watch("content_tone") || [];
   const aiRules = watch("ai_rule_based") || [];
+  const videoData = watch("video");
 
   const handleContentTonesConfirm = (selectedIds: string[]) => {
     setValue("content_tone", selectedIds);
@@ -61,6 +74,13 @@ export function StepResearch() {
     const updatedRules = aiRules.filter((ruleId: string) => ruleId !== id);
     setValue("ai_rule_based", updatedRules);
   };
+
+  // Check if video data exists and set isShowVideo accordingly
+  useEffect(() => {
+    if (videoData && ((Array.isArray(videoData) && videoData.length > 0) || (!Array.isArray(videoData) && videoData))) {
+      setIsShowVideo(true);
+    }
+  }, [videoData]);
 
   useEffect(() => {
     const fetchCustomerGroups = async () => {
@@ -93,7 +113,7 @@ export function StepResearch() {
     const fetchServices = async () => {
       try {
         const response = await getServices(1, 100);
-        setservicesData(response.data || []);
+        setServicesData(response.data || []);
       } catch (error) {
         console.error("Error fetching customer services:", error);
       }
@@ -104,6 +124,13 @@ export function StepResearch() {
     fetchOmniChannels();
     fetchServices();
   }, []);
+  const handleChangeShowVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.checked) {
+      setValue("video", undefined);
+    }
+
+    setIsShowVideo(e.target.checked);
+  };
 
   return (
     <Stack spacing={3}>
@@ -207,21 +234,18 @@ export function StepResearch() {
               }))}
             />
 
-           
-
             <RHFSelect
-               name="customer_journey" 
-               label="Hành trình khách hàng" 
-               required 
-               sx={{ width: "100%" }}
-             >
-               {customerJourneysData?.map((item: CustomerJourney) => (
-                 <MenuItem key={item.id} value={item.id}>
-                   {item.name}
-                 </MenuItem>
-               ))}
-             </RHFSelect>
-              
+              name="customer_journey"
+              label="Hành trình khách hàng"
+              required
+              sx={{ width: "100%" }}
+            >
+              {customerJourneysData?.map((item: CustomerJourney) => (
+                <MenuItem key={item.id} value={item.id}>
+                  {item.name}
+                </MenuItem>
+              ))}
+            </RHFSelect>
           </Stack>
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <RHFMultiSelect
@@ -244,7 +268,7 @@ export function StepResearch() {
                 label: item.page_name,
               }))}
             />
-            </Stack>
+          </Stack>
         </Stack>
       </Card>
 
@@ -295,6 +319,102 @@ export function StepResearch() {
           />
         </Box>
       </Card>
+
+      {/* Video Upload Section */}
+      <Stack alignItems={"center"} direction={"row"}>
+        <Switch checked={isShowVideo} onChange={handleChangeShowVideo} />
+        <Typography>Tạo bài viết chuyên sâu</Typography>
+      </Stack>
+      {isShowVideo ? (
+        <Card>
+          <Stack direction="row" alignItems={"center"}>
+            <CardHeader title="Video" sx={{ mb: 3 }} />
+            <Tooltip 
+              title="Bạn có thể tải lên video và bước tiếp theo AI sẽ mô tả phù hợp cho video của bạn"
+              componentsProps={{
+                tooltip: {
+                  sx: {
+                    fontSize: '14px'
+                  }
+                }
+              }}
+            >
+              <Iconify
+                icon="material-symbols:info-outline"
+                width={32}
+                height={32}
+                color="text.secondary"
+                sx={{ marginLeft: "-16px", cursor: "pointer" }}
+              />
+            </Tooltip>
+          </Stack>
+          <Divider />
+          <Stack spacing={3} sx={{ p: 3 }}>
+            <Box>
+              <RHFUpload
+                name="video"
+                maxFiles={1}
+                maxSize={25 * 1024 * 1024} // 25MB in bytes
+                accept={{
+                  "video/*": [".mp4", ".avi", ".mov"],
+                }}
+                helperText="Chỉ được chọn 1 video. Định dạng hỗ trợ: MP4, AVI, MOV. Kích thước tối đa: 25MB"
+                hidePreview
+              />
+
+              {/* Video Preview */}
+              {Array.isArray(watch("video")) && watch("video").length > 0 && (
+                <Paper sx={{ p: 2, mt: 2 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                    Video đã chọn
+                  </Typography>
+                  <Box sx={{ position: "relative", display: "inline-block" }}>
+                    <video
+                      src={
+                        typeof watch("video")[0] === "string"
+                          ? `${CONFIG.serverUrl}/assets/${watch("video")[0]}`
+                          : watch("video")[0] instanceof File
+                          ? (watch("video")[0] as FileWithPreview).preview ||
+                            URL.createObjectURL(watch("video")[0])
+                          : ""
+                      }
+                      controls
+                      style={{
+                        width: "100%",
+                        maxWidth: "300px",
+                        height: "auto",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => setValue("video", [])}
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        minWidth: "auto",
+                        width: 32,
+                        height: 32,
+                        borderRadius: "50%",
+                        bgcolor: "rgba(255, 255, 255, 0.9)",
+                        "&:hover": {
+                          bgcolor: "rgba(255, 255, 255, 1)",
+                        },
+                      }}
+                    >
+                      <Iconify icon="mingcute:close-line" width={16} />
+                    </Button>
+                  </Box>
+                </Paper>
+              )}
+            </Box>
+          </Stack>
+        </Card>
+      ) : (
+        ""
+      )}
 
       {/* Content Tones Selection Dialog */}
       <ContentSelectionDialog

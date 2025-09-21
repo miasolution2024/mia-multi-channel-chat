@@ -187,7 +187,7 @@ export function ContentAssistantMultiStepForm({
           // Update existing content assistant with step-specific data
           let updateData;
           if (currentStep === POST_STEP.RESEARCH_ANALYSIS) {
-            updateData = buildStepResearchData(
+            updateData = await buildStepResearchData(
               data,
               false
             ) as UpdateContentAssistantRequest;
@@ -205,7 +205,7 @@ export function ContentAssistantMultiStepForm({
         } else {
           // Create new content assistant (only for RESEARCH_ANALYSIS step)
           if (currentStep === POST_STEP.RESEARCH_ANALYSIS) {
-            const createData = buildStepResearchData(
+            const createData = await buildStepResearchData(
               data,
               true
             ) as CreateContentAssistantRequest;
@@ -338,7 +338,7 @@ export function ContentAssistantMultiStepForm({
             return;
           }
           
-          const createData = buildStepResearchData(
+          const createData = await buildStepResearchData(
             formData,
             true
           ) as CreateContentAssistantRequest;
@@ -360,7 +360,7 @@ export function ContentAssistantMultiStepForm({
         // Build data based on current step
         switch (stepToSave) {
           case POST_STEP.RESEARCH_ANALYSIS:
-            stepData = buildStepResearchData(
+            stepData = await buildStepResearchData(
               formData,
               false
             ) as UpdateContentAssistantRequest;
@@ -538,8 +538,6 @@ export function ContentAssistantMultiStepForm({
               py: 2,
               mb: 2,
               zIndex: 1000,
-              // borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-              // boxShadow: (theme) => `0 -2px 8px ${alpha(theme.palette.grey[500], 0.08)}`,
             }}
           >
             <Button

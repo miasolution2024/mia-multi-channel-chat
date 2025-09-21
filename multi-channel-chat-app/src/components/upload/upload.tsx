@@ -46,9 +46,13 @@ export function Upload({
     ...other,
   });
 
-  const isArray = Array.isArray(value) && multiple;
+  const isSingleFileMode = other.maxFiles === 1 || multiple === false;
 
-  const hasFile = !isArray && !!value && !Array.isArray(value);
+  const isArray = Array.isArray(value);
+
+  const hasFile = isSingleFileMode
+    ? (isArray && value.length > 0) || (!isArray && !!value)
+    : isArray && !!value.length;
 
   const hasFiles = isArray && !!value.length;
 
@@ -91,49 +95,60 @@ export function Upload({
     </>
   );
 
+
+
   return (
     <Box
       className={uploadClasses.upload.concat(className ? ` ${className}` : "")}
       sx={{ width: 1, position: "relative", ...sx }}
     >
-      <Box
-        {...getRootProps()}
-        sx={{
-          p: 5,
-          outline: "none",
-          borderRadius: 1,
-          cursor: "pointer",
-          overflow: "hidden",
-          position: "relative",
-          bgcolor: (theme: any) =>
-            varAlpha(theme.vars.palette.grey["500Channel"], 0.08),
-          border: (theme: any) =>
-            `1px dashed ${varAlpha(
-              theme.vars.palette.grey["500Channel"],
-              0.2
-            )}`,
-          transition: (theme) =>
-            theme.transitions.create(["opacity", "padding"]),
-          "&:hover": { opacity: 0.72 },
-          ...(isDragActive && { opacity: 0.72 }),
-          ...(disabled && { opacity: 0.48, pointerEvents: "none" }),
-          ...(hasError && {
-            color: "error.main",
-            borderColor: "error.main",
+      {/* Hide upload UI when single file mode and has file */}
+      {!(isSingleFileMode && hasFile) && (
+        <Box
+          {...getRootProps()}
+          sx={{
+            p: 5,
+            outline: "none",
+            borderRadius: 1,
+            cursor: "pointer",
+            overflow: "hidden",
+            position: "relative",
             bgcolor: (theme: any) =>
-              varAlpha(theme.vars.palette.error.mainChannel, 0.08),
-          }),
-          ...(hasFile && { padding: "28% 0" }),
-        }}
-      >
-        <input {...getInputProps()} />
+              varAlpha(theme.vars.palette.grey["500Channel"], 0.08),
+            border: (theme: any) =>
+              `1px dashed ${varAlpha(
+                theme.vars.palette.grey["500Channel"],
+                0.2
+              )}`,
+            transition: (theme) =>
+              theme.transitions.create(["opacity", "padding"]),
+            "&:hover": { opacity: 0.72 },
+            ...(isDragActive && { opacity: 0.72 }),
+            ...(disabled && { opacity: 0.48, pointerEvents: "none" }),
+            ...(hasError && {
+              color: "error.main",
+              borderColor: "error.main",
+              bgcolor: (theme: any) =>
+                varAlpha(theme.vars.palette.error.mainChannel, 0.08),
+            }),
+            ...(hasFile && isSingleFileMode && { padding: "28% 0" }),
+          }}
+        >
+          <input {...getInputProps()} />
 
-        {/* Single file */}
-        {hasFile ? <SingleFilePreview file={value} /> : <UploadPlaceholder />}
-      </Box>
+          {/* Single file */}
+          {hasFile && isSingleFileMode ? (
+            <SingleFilePreview 
+              file={Array.isArray(value) ? value[0] : value} 
+            />
+          ) : (
+            <UploadPlaceholder />
+          )}
+        </Box>
+      )}
 
-      {/* Single file */}
-      {hasFile && <DeleteButton onClick={onDelete} />}
+      {/* Single file delete button */}
+      {hasFile && onDelete && <DeleteButton onClick={onDelete} />}
 
       {helperText && (
         <FormHelperText error={!!error} sx={{ px: 2 }}>

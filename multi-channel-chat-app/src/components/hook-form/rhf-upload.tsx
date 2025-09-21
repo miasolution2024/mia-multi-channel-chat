@@ -60,8 +60,8 @@ export function RHFUploadBox({ name, ...other }: any) {
 }
 // ----------------------------------------------------------------------
 
-export function RHFUpload({ name, multiple, helperText, hidePreview, ...other }: any) {
-  const { control, setValue } = useFormContext();
+export function RHFUpload({ name, multiple, helperText, hidePreview, tooltipContent, maxSize, ...other }: any) {
+  const { control, setValue, setError, clearErrors } = useFormContext();
 
   return (
     <Controller
@@ -76,6 +76,23 @@ export function RHFUpload({ name, multiple, helperText, hidePreview, ...other }:
         };
 
         const onDrop = (acceptedFiles: any) => {
+          // Clear previous errors
+          clearErrors(name);
+          
+          // Check file size if maxSize is provided
+          if (maxSize) {
+            const oversizedFiles = acceptedFiles.filter((file: File) => file.size > maxSize);
+            
+            if (oversizedFiles.length > 0) {
+              const maxSizeMB = Math.round(maxSize / (1024 * 1024));
+              setError(name, {
+                type: 'fileSize',
+                message: `File "${oversizedFiles[0].name}" vượt quá kích thước cho phép ${maxSizeMB}MB. Vui lòng chọn file khác.`
+              });
+              return;
+            }
+          }
+          
           const value = multiple
             ? [...field.value, ...acceptedFiles]
             : acceptedFiles;
@@ -84,11 +101,13 @@ export function RHFUpload({ name, multiple, helperText, hidePreview, ...other }:
         };
 
         return (
+
           <Upload
             {...uploadProps}
             value={field.value}
             onDrop={onDrop}
             hidePreview={hidePreview}
+            tooltipContent={tooltipContent}
             {...other}
           />
         );

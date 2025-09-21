@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import Button from "@mui/material/Button";
@@ -16,6 +16,9 @@ import Popover from "@mui/material/Popover";
 import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
 
 import { useSetState } from "@/hooks/use-set-state";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -31,7 +34,6 @@ import { CustomTable } from "@/components/custom-table";
 import type { TableConfig } from "@/components/custom-table/custom-table";
 import { usePopover } from "@/components/custom-popover";
 import {
-  getContentAssistantList,
   deleteContentAssistant,
   type ContentAssistantApiResponse,
   type MediaGeneratedAiItem,
@@ -46,8 +48,64 @@ import {
 import { getStartStepFromCurrentStep } from "../utils";
 import { Stack } from "@mui/material";
 import { useUpdateContentAssistant } from "../hooks/use-update-content-assistant";
+import { useGetContentAssistantList } from "../hooks/use-get-content-assistant-list";
 
 // Tạo interface riêng cho table config
+interface ItemsPopupProps {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  items: Array<{
+    label: string;
+    color?:
+      | "primary"
+      | "secondary"
+      | "info"
+      | "success"
+      | "warning"
+      | "error"
+      | "default";
+  }>;
+}
+
+function ItemsPopup({ open, onClose, title, items }: ItemsPopupProps) {
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>{title}</DialogTitle>
+      <DialogContent>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1, pb: 2 }}>
+          {items.map((item, index) => (
+            <Chip
+              key={index}
+              label={item.label
+              }
+              size="small"
+              variant="outlined"
+              color={item.color}
+              sx={{
+                width: "100%",
+                "&.MuiChip-root": {
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  overflowY:'auto',
+                  height:'fit-content',
+                  minHeight:'24px'
+                },
+                "& .MuiChip-label": {
+                  // overflow: "hidden",
+                  // textOverflow: "ellipsis",
+                  // whiteSpace: "nowrap",
+                  whiteSpace:'wrap'
+                },
+              }}
+            />
+          ))}
+        </Box>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 interface ContentTableConfig {
   key: string;
   id: keyof Content | string;
@@ -163,181 +221,7 @@ const mappingCurrentStep: Record<string, string> = {
   [POST_STEP.HTML_CODING]: "Tạo định dạng HTML",
   [POST_STEP.PUBLISHED]: "Xuất bản",
 };
-const TABLE_CONFIG: ContentTableConfig[] = [
-  { key: "id", id: "id", label: "ID" },
-  { key: "topic", id: "topic", label: "Chủ đề", align: "left" },
-  {
-    key: "post_type",
-    id: "post_type",
-    label: "Loại bài viết",
-    align: "left",
-    render: (item: Content) => (
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-        {POST_TYPE_OPTIONS.find((option) => option.value === item.post_type)
-          ?.label || "N/A"}
-      </Box>
-    ),
-  },
-  {
-    key: "current_step",
-    id: "current_step",
-    label: "Giai đoạn hiện tại",
-    align: "left",
-    render: (item: Content) => (
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-        {item?.current_step ? mappingCurrentStep[item.current_step] : ""}
-      </Box>
-    ),
-  },
-  {
-    key: "main_seo_keyword",
-    id: "main_seo_keyword",
-    label: "Từ khoá SEO chính",
-    align: "left",
-  },
-  {
-    key: "secondary_seo_keywords",
-    id: "secondary_seo_keywords",
-    label: "Từ khoá SEO phụ",
-    align: "left",
-    render: (item: Content) => (
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-        {(item.secondary_seo_keywords || [])
-          .slice(0, 2)
-          .map((keyword: string, index: number) => (
-            <Chip key={index} label={keyword} size="small" variant="outlined" />
-          ))}
-        {(item.secondary_seo_keywords || []).length > 2 && (
-          <Chip
-            label={`+${(item.secondary_seo_keywords || []).length - 2}`}
-            size="small"
-            variant="outlined"
-          />
-        )}
-      </Box>
-    ),
-  },
-  {
-    key: "customer_group",
-    id: "customer_group",
-    label: "Nhóm khách hàng",
-    align: "left",
-    render: (item: Content) => (
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-        {item.customer_group.map((group, index) => (
-          <Chip
-            key={index}
-            label={group.customer_group_id.name}
-            size="small"
-            variant="outlined"
-          />
-        ))}
-      </Box>
-    ),
-  },
-  {
-    key: "customer_journey",
-    id: "customer_journey",
-    label: "Hành trình khách hàng",
-    align: "left",
-    render: (item: Content) => (
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-        {item.customer_journey.map((journey, index) => (
-          <Chip
-            key={index}
-            label={journey.customer_journey_id.name}
-            size="small"
-            variant="outlined"
-            color="info"
-          />
-        ))}
-      </Box>
-    ),
-  },
-  {
-    key: "content_tone",
-    id: "content_tone",
-    label: "Tông điệu",
-    align: "left",
-    render: (item: Content) => (
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-        {item.content_tone.map((tone, index) => (
-          <Chip
-            key={index}
-            label={tone.content_tone_id.tone_description || "N/A"}
-            size="small"
-            variant="outlined"
-            color="secondary"
-          />
-        ))}
-      </Box>
-    ),
-  },
-  {
-    key: "ai_rule_based",
-    id: "ai_rule_based",
-    label: "Quy tắc AI",
-    align: "left",
-    render: (item: Content) => (
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-        {item.ai_rule_based.slice(0, 1).map((rule, index) => (
-          <Chip
-            key={index}
-            label={
-              rule.ai_rule_based_id.content.length > 20
-                ? `${rule.ai_rule_based_id.content.substring(0, 20)}...`
-                : rule.ai_rule_based_id.content
-            }
-            size="small"
-            variant="outlined"
-            color="primary"
-          />
-        ))}
-        {item.ai_rule_based.length > 1 && (
-          <Chip
-            label={`+${item.ai_rule_based.length - 1}`}
-            size="small"
-            variant="outlined"
-          />
-        )}
-      </Box>
-    ),
-  },
-  {
-    key: "services",
-    id: "services",
-    label: "Dịch vụ",
-    align: "left",
-    render: (item: Content) => (
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-        {item.services.map((group, index) => (
-          <Chip
-            key={index}
-            label={group.services_id.name}
-            size="small"
-            variant="outlined"
-          />
-        ))}
-      </Box>
-    ),
-  },
-  {
-    key: "status",
-    id: "status",
-    label: "Trạng thái",
-    align: "center",
-    render: (item: Content) => (
-      <Chip
-        label={getAIContentStatusLabelAndColor(item.status).label}
-        color={getAIContentStatusLabelAndColor(item.status).color}
-        variant="outlined"
-        size="small"
-      />
-    ),
-    sticky: "right",
-    width: 180,
-  },
-];
+// TABLE_CONFIG will be defined inside the component to access setPopupState
 
 // ----------------------------------------------------------------------
 
@@ -394,7 +278,6 @@ function ContentActionMenu({
               onDelete(content.id);
               popover.onClose();
             }}
-            sx={{ color: "error.main" }}
           >
             <Iconify icon="solar:trash-bin-trash-bold" />
             Xóa
@@ -421,38 +304,305 @@ export function ContentAssistantListView() {
   const [pageSize, setPageSize] = useState(10);
   const [selected, setSelected] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [apiResponse, setApiResponse] = useState<{
-    data: ContentAssistantApiResponse[];
-    total: number;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [popupState, setPopupState] = useState<{
+    open: boolean;
+    title: string;
+    items: Array<{
+      label: string;
+      color?:
+        | "primary"
+        | "secondary"
+        | "info"
+        | "success"
+        | "warning"
+        | "error"
+        | "default";
+    }>;
+  }>({ open: false, title: "", items: [] });
 
   const filters = useSetState({ topic: "", status: [] as string[] });
   const debouncedTopic = useDebounce(filters.state.topic, 500);
 
-  // Fetch data function
-  const fetchData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const data = await getContentAssistantList({
-        topic: debouncedTopic,
-        status: filters.state.status,
-        page: page + 1, // API sử dụng 1-based pagination
-        pageSize,
-      });
-      setApiResponse(data);
-    } catch (error) {
-      console.error("Error fetching content assistant:", error);
-      toast.error("Không thể tải danh sách trợ lý nội dung");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [debouncedTopic, filters.state.status, page, pageSize]);
+  // Use the custom hook for data fetching
+  const { data, total, isLoading, refetch } = useGetContentAssistantList({
+    topic: debouncedTopic,
+    status: filters.state.status,
+    page: page + 1, // API sử dụng 1-based pagination
+    pageSize,
+  });
 
-  // API call với useEffect
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]); // Re-fetch when fetchData changes
+  // Create apiResponse object to maintain compatibility with existing code
+  const apiResponse = { data: data || [], total: total || 0 };
+
+  // Move TABLE_CONFIG inside component to access setPopupState
+  const TABLE_CONFIG: ContentTableConfig[] = [
+    { key: "id", id: "id", label: "ID" },
+    { key: "topic", id: "topic", label: "Chủ đề", align: "left" },
+    {
+      key: "post_type",
+      id: "post_type",
+      label: "Loại bài viết",
+      align: "left",
+      render: (item: Content) => (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+          {POST_TYPE_OPTIONS.find((option) => option.value === item.post_type)
+            ?.label || "N/A"}
+        </Box>
+      ),
+    },
+    {
+      key: "current_step",
+      id: "current_step",
+      label: "Giai đoạn hiện tại",
+      align: "left",
+      render: (item: Content) => (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+          {item?.current_step ? mappingCurrentStep[item.current_step] : ""}
+        </Box>
+      ),
+    },
+    {
+      key: "main_seo_keyword",
+      id: "main_seo_keyword",
+      label: "Từ khoá SEO chính",
+      align: "left",
+    },
+    {
+      key: "secondary_seo_keywords",
+      id: "secondary_seo_keywords",
+      label: "Từ khoá SEO phụ",
+      align: "left",
+      render: (item: Content) => (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+          {(item.secondary_seo_keywords || [])
+            .slice(0, 2)
+            .map((keyword: string, index: number) => (
+              <Chip
+                key={index}
+                label={keyword}
+                size="small"
+                variant="outlined"
+              />
+            ))}
+          {(item.secondary_seo_keywords || []).length > 2 && (
+            <Chip
+              label={`+${(item.secondary_seo_keywords || []).length - 2}`}
+              size="small"
+              variant="outlined"
+            />
+          )}
+        </Box>
+      ),
+    },
+    {
+      key: "customer_group",
+      id: "customer_group",
+      label: "Nhóm khách hàng",
+      align: "left",
+      width: 250,
+      render: (item: Content) => (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+          {item.customer_group.slice(0, 1).map((group, index) => (
+            <Chip
+              key={index}
+              label={group.customer_group_id.name}
+              size="small"
+              variant="outlined"
+            />
+          ))}
+          {item.customer_group.length > 1 && (
+            <Chip
+              label={`+${item.customer_group.length - 1}`}
+              size="small"
+              variant="outlined"
+              onClick={() =>
+                setPopupState({
+                  open: true,
+                  title: "Nhóm khách hàng",
+                  items: item.customer_group.map((group) => ({
+                    label: group.customer_group_id.name,
+                    color: "default" as const,
+                  })),
+                })
+              }
+              sx={{ cursor: "pointer" }}
+            />
+          )}
+        </Box>
+      ),
+    },
+    {
+      key: "customer_journey",
+      id: "customer_journey",
+      label: "Hành trình khách hàng",
+      width: 250,
+      align: "left",
+      render: (item: Content) => (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+          {item.customer_journey.slice(0, 1).map((journey, index) => (
+            <Chip
+              key={index}
+              label={journey.customer_journey_id.name}
+              size="small"
+              variant="outlined"
+              color="info"
+            />
+          ))}
+          {item.customer_journey.length > 1 && (
+            <Chip
+              label={`+${item.customer_journey.length - 1}`}
+              size="small"
+              variant="outlined"
+              onClick={() =>
+                setPopupState({
+                  open: true,
+                  title: "Hành trình khách hàng",
+                  items: item.customer_journey.map((journey) => ({
+                    label: journey.customer_journey_id.name,
+                    color: "info" as const,
+                  })),
+                })
+              }
+              sx={{ cursor: "pointer" }}
+            />
+          )}
+        </Box>
+      ),
+    },
+    {
+      key: "content_tone",
+      id: "content_tone",
+      label: "Tông điệu",
+      width: 250,
+      align: "left",
+      render: (item: Content) => (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+          {item.content_tone.slice(0, 1).map((tone, index) => (
+            <Chip
+              key={index}
+              label={tone.content_tone_id.tone_description || "N/A"}
+              size="small"
+              variant="outlined"
+              color="secondary"
+            />
+          ))}
+          {item.content_tone.length > 1 && (
+            <Chip
+              label={`+${item.content_tone.length - 1}`}
+              size="small"
+              variant="outlined"
+              onClick={() =>
+                setPopupState({
+                  open: true,
+                  title: "Tông điệu",
+                  items: item.content_tone.map((tone) => ({
+                    label: tone.content_tone_id.tone_description || "N/A",
+                    color: "secondary" as const,
+                  })),
+                })
+              }
+              sx={{ cursor: "pointer" }}
+            />
+          )}
+        </Box>
+      ),
+    },
+    {
+      key: "ai_rule_based",
+      id: "ai_rule_based",
+      label: "Quy tắc AI",
+      width: 250,
+      align: "left",
+      render: (item: Content) => (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+          {item.ai_rule_based.slice(0, 1).map((rule, index) => (
+            <Chip
+              key={index}
+              label={
+                rule.ai_rule_based_id.content.length > 20
+                  ? `${rule.ai_rule_based_id.content.substring(0, 20)}...`
+                  : rule.ai_rule_based_id.content
+              }
+              size="small"
+              variant="outlined"
+              color="primary"
+            />
+          ))}
+          {item.ai_rule_based.length > 1 && (
+            <Chip
+              label={`+${item.ai_rule_based.length - 1}`}
+              size="small"
+              variant="outlined"
+              onClick={() =>
+                setPopupState({
+                  open: true,
+                  title: "Quy tắc AI",
+                  items: item.ai_rule_based.map((rule) => ({
+                    label: rule.ai_rule_based_id.content,
+                    color: "primary" as const,
+                  })),
+                })
+              }
+              sx={{ cursor: "pointer" }}
+            />
+          )}
+        </Box>
+      ),
+    },
+    {
+      key: "services",
+      id: "services",
+      label: "Dịch vụ",
+      width: 250,
+      align: "left",
+      render: (item: Content) => (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+          {item.services.slice(0, 1).map((service, index) => (
+            <Chip
+              key={index}
+              label={service.services_id.name}
+              size="small"
+              variant="outlined"
+            />
+          ))}
+          {item.services.length > 1 && (
+            <Chip
+              label={`+${item.services.length - 1}`}
+              size="small"
+              variant="outlined"
+              onClick={() =>
+                setPopupState({
+                  open: true,
+                  title: "Dịch vụ",
+                  items: item.services.map((service) => ({
+                    label: service.services_id.name,
+                    color: "default" as const,
+                  })),
+                })
+              }
+              sx={{ cursor: "pointer" }}
+            />
+          )}
+        </Box>
+      ),
+    },
+    {
+      key: "status",
+      id: "status",
+      label: "Trạng thái",
+      align: "center",
+      render: (item: Content) => (
+        <Chip
+          label={getAIContentStatusLabelAndColor(item.status).label}
+          color={getAIContentStatusLabelAndColor(item.status).color}
+          variant="outlined"
+          size="small"
+        />
+      ),
+      sticky: "right",
+      width: 180,
+    },
+  ];
 
   // Transform API data to match Content interface
   const transformApiData = (
@@ -510,7 +660,7 @@ export function ContentAssistantListView() {
         setIsDeleting(true);
         await deleteContentAssistant(id);
         // Refresh data
-        await fetchData();
+        await refetch();
         toast.success("Xóa thành công!");
       } catch (error) {
         const errorMessage =
@@ -521,7 +671,7 @@ export function ContentAssistantListView() {
         setIsDeleting(false);
       }
     },
-    [fetchData, setIsDeleting]
+    [refetch, setIsDeleting]
   );
 
   const handleEditRow = useCallback(
@@ -537,7 +687,7 @@ export function ContentAssistantListView() {
       // Xử lý xóa nhiều nội dung
       await Promise.all(selected.map((id) => deleteContentAssistant(id)));
       // Refresh data
-      await fetchData();
+      await refetch();
       toast.success(`Đã xóa ${selected.length} mục!`);
       setSelected([]);
     } catch (error) {
@@ -549,7 +699,7 @@ export function ContentAssistantListView() {
       setIsDeleting(false);
     }
     confirm.onFalse();
-  }, [selected, confirm, fetchData, setIsDeleting]);
+  }, [selected, confirm, refetch, setIsDeleting]);
 
   const handleBulkCreatePosts = async () => {
     if (selected.length === 0) return;
@@ -603,7 +753,7 @@ export function ContentAssistantListView() {
       toast.success(
         `Đã bắt đầu tạo ${selected.length} bài viết. Quá trình sẽ hoàn thành trong khoảng 10 phút.`
       );
-      await fetchData();
+      await refetch();
       setPage(0); // Reset to first page after refresh
       handleResetFilters();
 
@@ -650,7 +800,7 @@ export function ContentAssistantListView() {
 
       if (response?.success) {
         toast.success("Đã xuất bản thành công!");
-        fetchData(); // Reload table
+        refetch(); // Reload table
       } else {
         toast.error(response?.message || "Có lỗi xảy ra khi xuất bản");
       }
@@ -872,6 +1022,13 @@ export function ContentAssistantListView() {
         title="Đang xử lý..."
         description="Đang xuất bản nội dung"
         timeDescription="Quá trình này có thể mất tầm 5 phút. Vui lòng không tắt trình duyệt."
+      />
+
+      <ItemsPopup
+        open={popupState.open}
+        title={popupState.title}
+        items={popupState.items}
+        onClose={() => setPopupState({ open: false, title: "", items: [] })}
       />
     </>
   );

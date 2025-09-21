@@ -88,7 +88,6 @@ export default function CustomTable({
     useState<(string | number)[]>(defaultSelected);
   const isNotFound =
     data.length === 0 && !loading && !errorMsg && !firstLoading;
-  const _colSpan = tableConfig.length + (onSelect ? 1 : 0);
 
   // Calculate selectable items
   const selectableItems = data.filter((item) => !canSelectRow || canSelectRow(item));
@@ -161,7 +160,7 @@ export default function CustomTable({
 
   return (
     <>
-      <TableContainer>
+      <TableContainer sx={{ position: "relative" }}>
         <Scrollbar>
           <Table size="small">
             <TableHead>
@@ -225,16 +224,6 @@ export default function CustomTable({
             </TableHead>
 
             <TableBody>
-              {(firstLoading || isNotFound || errorMsg) && (
-                <TableRow>
-                  <TableCell align="center" colSpan={_colSpan}>
-                    {firstLoading && <TableLoader />}
-                    {isNotFound && <RecordNotFound />}
-                    {errorMsg && <FetchFailed errorMsg={errorMsg} />}
-                  </TableCell>
-                </TableRow>
-              )}
-
               {!isNotFound &&
                 data.map((item, index) => {
                   const selectedUser =
@@ -337,6 +326,28 @@ export default function CustomTable({
             </TableBody>
           </Table>
         </Scrollbar>
+        
+        {/* Empty State Overlay */}
+        {(firstLoading || isNotFound || errorMsg) && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "background.paper",
+              zIndex: 2,
+            }}
+          >
+            {firstLoading && <TableLoader />}
+            {isNotFound && <RecordNotFound />}
+            {errorMsg && <FetchFailed errorMsg={errorMsg} />}
+          </Box>
+        )}
       </TableContainer>
       {page !== undefined &&
         count !== undefined &&
@@ -389,7 +400,11 @@ const MoreOptionsEmpty = () => (
 );
 
 const RecordNotFound = () => (
-  <Stack height={200} justifyContent="center">
+  <Stack 
+    height={200} 
+    justifyContent="center" 
+    alignItems="center"
+  >
     <Typography color="text.secondary" fontWeight={700} variant="body1">
       Không có dữ liệu
     </Typography>
@@ -397,7 +412,11 @@ const RecordNotFound = () => (
 );
 
 const FetchFailed = ({ errorMsg }: { errorMsg?: string }) => (
-  <Stack height={200} justifyContent="center">
+  <Stack 
+    height={200} 
+    justifyContent="center" 
+    alignItems="center"
+  >
     <Typography color="error.light" fontWeight={700} variant="body2">
       Something went wrong
     </Typography>

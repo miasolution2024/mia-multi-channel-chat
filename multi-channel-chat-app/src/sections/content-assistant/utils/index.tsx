@@ -75,6 +75,7 @@ export const getFieldsForStep = (step: string): (keyof FormData)[] => {
         "services",
         "customer_journey",
         "omni_channels",
+        "video",
       ];
     case POST_STEP.MAKE_OUTLINE:
       return [
@@ -84,7 +85,7 @@ export const getFieldsForStep = (step: string): (keyof FormData)[] => {
         "ai_notes_write_article",
       ];
     case POST_STEP.WRITE_ARTICLE:
-      return ["post_content", "ai_notes_create_image", "media", "video"];
+      return ["post_content", "ai_notes_create_image", "media"];
     default:
       return [];
   }
@@ -255,6 +256,7 @@ export const getStep1FormData = (formData: FormData) => {
     ai_rule_based: formData.ai_rule_based,
     ai_notes_make_outline: formData.ai_notes_make_outline,
     omni_channels: formData.omni_channels,
+    video: formData.video,
   };
 };
 
@@ -480,7 +482,7 @@ export const getNewMediaFiles = (
       return originalFile.path === file.name;
     });
   });
-};
+}
 
 // Helper function to process media data for API update
 export const processMediaDataForUpdate = async (
@@ -490,10 +492,11 @@ export const processMediaDataForUpdate = async (
     media_generated_ai?: MediaGeneratedAiItem[];
   }
 ) => {
-  const currentMedia =
-    (formData.media as (File | FileWithApiProperties)[]) || [];
-  const newMediaFiles = getNewMediaFiles(currentMedia, editData?.media || []);
-
+  const currentMedia = (formData.media as (File | FileWithApiProperties)[]) || [];
+  const newMediaFiles = getNewMediaFiles(
+    currentMedia,
+    editData?.media || []
+  );
   const deletedMediaIds = getDeletedMediaFiles(
     currentMedia,
     editData?.media || []
@@ -515,11 +518,14 @@ export const processMediaDataForUpdate = async (
     }
   }
 
-  // Handle video upload separately
+  // Handle video upload separately - simple logic like original
   let videoId: string | null = null;
   if (Array.isArray(formData.video) && formData.video.length > 0) {
-    const videoUploadResult = await uploadFile(formData.video[0]);
-    videoId = videoUploadResult.data.id;
+    const videoFile = formData.video[0];
+    if (videoFile instanceof File) {
+      const videoUploadResult = await uploadFile(videoFile);
+      videoId = videoUploadResult.data.id;
+    }
   }
 
   return {
@@ -572,6 +578,7 @@ export const hasFormDataChanged = (
       "content_tone",
       "ai_notes_make_outline",
       "omni_channels",
+      "video",
     ];
   }
 
@@ -588,7 +595,19 @@ export const hasFormDataChanged = (
   });
 };
 
-export const buildStepResearchData = (formData: FormData, isCreate = false) => {
+export const buildStepResearchData = async (formData: FormData, isCreate = false) => {
+  // Handle video upload if present
+  let videoId = null;
+  if (Array.isArray(formData.video) && formData.video.length > 0) {
+    const videoFile = formData.video[0];
+    if (videoFile instanceof File) {
+      const videoUploadResult = await uploadFile(videoFile);
+      videoId = videoUploadResult.data.id;
+    } else if (typeof videoFile === 'string') {
+      videoId = videoFile;
+    }
+  }
+
   if (isCreate) {
     // Format for create API
     return {
@@ -599,6 +618,7 @@ export const buildStepResearchData = (formData: FormData, isCreate = false) => {
       secondary_seo_keywords: formData.secondary_seo_keywords || [],
       is_generated_by_AI: false,
       ai_notes_make_outline: formData.ai_notes_make_outline || "",
+      video: videoId,
       ai_rule_based: {
         create: (formData.ai_rule_based || []).map((id) => ({
           ai_content_suggestions_id: "+",
@@ -657,6 +677,7 @@ export const buildStepResearchData = (formData: FormData, isCreate = false) => {
     post_type: formData.post_type,
     main_seo_keyword: formData.main_seo_keyword,
     secondary_seo_keywords: formData.secondary_seo_keywords || [],
+    video: videoId,
     customer_group:
       formData.customer_group?.map((item) => ({
         customer_group_id: item,
