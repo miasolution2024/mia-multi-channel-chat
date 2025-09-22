@@ -39,7 +39,7 @@ export function ChartLegends({
   return (
     <Box gap={2} display="flex" flexWrap="wrap" {...other}>
       {labels?.map((series: any, index: number) => (
-        <Stack key={series} spacing={1}>
+        <Stack key={index} spacing={1}>
           <StyledLegend>
             {icons?.length ? (
               <Box
