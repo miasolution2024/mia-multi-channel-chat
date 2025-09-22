@@ -183,8 +183,7 @@ export function AppointmentByTimeChart({
         type="area"
         series={chartData?.data}
         options={chartOptions}
-        loading={appointmentsCountLoading}
-        slotProps={{ loading: { p: 2.5 } }}
+        slotprops={{ loading: { p: 2.5 } }}
         sx={{
           pl: 1,
           py: 2.5,

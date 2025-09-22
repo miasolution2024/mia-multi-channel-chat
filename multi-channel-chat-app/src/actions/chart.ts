@@ -67,10 +67,10 @@ export type AppointmentCount = {
   count: string;
 };
 
-export function useGetAppointmentsCount(month: number) {
+export function useGetAppointmentsCount() {
   try {
     const { data, isLoading, error, isValidating } = useSWR(
-      `${endpoints.appointments.list}?aggregate[count]=*&groupBy[]=status&filter[month(created_at)][_eq]=${month}`,
+      `${endpoints.appointments.list}?aggregate[count]=*&groupBy[]=status`,
       fetcher,
       swrConfig
     );

@@ -1,14 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
-import { useTheme } from "@mui/material/styles";
 
 import { DashboardContent } from "@/layouts/dashboard";
 
 import { EcommerceBestSalesman } from "../ecommerce-best-salesman";
-// import { EcommerceSaleByGender } from "../ecommerce-sale-by-gender";
 import { EcommerceSalesOverview } from "../ecommerce-sales-overview";
-import { EcommerceWidgetSummary } from "../ecommerce-widget-summary";
 import { EcommerceLatestProducts } from "../ecommerce-latest-products";
 import { EcommerceCurrentBalance } from "../ecommerce-current-balance";
 import { AppointmentByTimeChart } from "../appointment-time-chart";
@@ -109,13 +104,10 @@ export const monthsTxt = [
 // ----------------------------------------------------------------------
 
 export function OverviewEcommerceView() {
-  const theme = useTheme() as any;
   const { customersCount } = useGetCustomersCount(new Date().getFullYear());
   const { fbCommentsCount } = useGetFBCommentsCount(new Date().getFullYear());
   const { messagesCount } = useGetMessagesCount(new Date().getMonth() + 1);
-  const { appointmentsCount } = useGetAppointmentsCount(
-    new Date().getMonth() + 1
-  );
+  const { appointmentsCount } = useGetAppointmentsCount();
 
   //customer
   const totalCustomers = customersCount?.reduce(
@@ -302,77 +294,6 @@ export function OverviewEcommerceView() {
             />
           </Grid>
         )}
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <EcommerceWidgetSummary
-            title="Product sold"
-            percent={2.6}
-            total={765}
-            chart={{
-              categories: [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-              ],
-              series: [22, 8, 35, 50, 82, 84, 77, 12],
-            }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <EcommerceWidgetSummary
-            title="Total balance"
-            percent={-0.1}
-            total={18765}
-            chart={{
-              colors: [
-                theme.vars.palette.warning.light,
-                theme.vars.palette.warning.main,
-              ],
-              categories: [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-              ],
-              series: [56, 47, 40, 62, 73, 30, 23, 54],
-            }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <EcommerceWidgetSummary
-            title="Sales profit"
-            percent={0.6}
-            total={4876}
-            chart={{
-              colors: [
-                theme.vars.palette.error.light,
-                theme.vars.palette.error.main,
-              ],
-              categories: [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-              ],
-              series: [40, 70, 75, 70, 50, 28, 7, 64],
-            }}
-          />
-        </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AppointmentByChannelChart title="Appointments by channel" />
