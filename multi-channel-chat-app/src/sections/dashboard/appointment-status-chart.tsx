@@ -14,10 +14,9 @@ import {
   SxProps,
   Theme,
 } from "@mui/material/styles";
-import { m } from "framer-motion";
 import { useMemo } from "react";
 
-interface EcommerceStatusSalesProps {
+interface AppointmentByStatusChartProps {
   title?: string;
   subheader?: string;
   colors?: string[];
@@ -25,13 +24,13 @@ interface EcommerceStatusSalesProps {
   [key: string]: any;
 }
 
-export function EcommerceStatusSales({
+export function AppointmentByStatusChart({
   title,
   subheader,
   colors,
   sx,
   ...other
-}: EcommerceStatusSalesProps) {
+}: AppointmentByStatusChartProps) {
   const theme = useTheme();
 
   const { statusCount, statusCountLoading, statusCountError } =
@@ -56,12 +55,14 @@ export function EcommerceStatusSales({
   const chartColors = useMemo(() => {
     if (colors) return colors;
 
-    const statusColorMap = new Map([
-      ["Pending", theme.palette.warning.main],
-      ["Visited", theme.palette.info.main],
-      ["Completed", theme.palette.success.main],
-      ["Canceled", theme.palette.error.main],
-      ["Confirmed", theme.palette.secondary.main],
+    // Use fixed, distinct colors to prevent any overlap between statuses
+    const statusColorMap = new Map<string, string>([
+      ["Pending", "#ff9800"], // Amber
+      ["Visited", "#03a9f4"], // Cyan
+      ["Completed", "#4caf50"], // Green
+      ["Canceled", "#ef5350"], // Red
+      ["Confirmed", "#bfff00"], // Deep purple
+      ["Deposited", "#ba68c8"], // Purple
     ]);
 
     const baseColors = [
@@ -75,6 +76,7 @@ export function EcommerceStatusSales({
 
     const colorList: string[] = []; //setup the color, if the status name appear as above, get the color according to the status, if not then increase the opacity of the color for that status
     chartData.series.forEach((status, index) => {
+      // const statusKey  = status.originalStatus || status.label.toLowerCase()
       const statusColor = statusColorMap.get(status.label);
       if (statusColor) colorList.push(statusColor);
       else if (index < baseColors.length) colorList.push(baseColors[index]);
@@ -130,14 +132,14 @@ export function EcommerceStatusSales({
         <CardHeader title={title} subheader={subheader} />
 
         <Chart
-          type='donut'
+          type="donut"
           series={chartSeries}
           options={chartOptions}
           sx={{
-            my: 4,
+            my: 2,
             mx: "auto",
-            width: { xs: 240, xl: 260 },
-            height: { xs: 240, xl: 260 },
+            width: { xs: 235, xl: 255 },
+            height: { xs: 235, xl: 255 },
           }}
         />
 
@@ -147,7 +149,7 @@ export function EcommerceStatusSales({
           labels={chartOptions?.labels}
           colors={chartOptions?.colors}
           values={chartSeries.map((value) => fNumber(value))}
-          sx={{ p: 2, justifyContent: "center" }}
+          sx={{ px: 3, pt: 1, pb: 2, justifyContent: "center" }}
         />
       </Card>
     </>

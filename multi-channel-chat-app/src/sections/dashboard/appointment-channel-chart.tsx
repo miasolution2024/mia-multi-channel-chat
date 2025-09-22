@@ -17,19 +17,19 @@ import { Chart, ChartLegends, useChart } from "@/components/chart";
 import { fNumber } from "@/utils/format-number";
 import { varAlpha } from "@/theme/styles";
 
-interface EcommerceChannelSalesProps {
+interface AppointmentByChannelChartProps {
   title?: string;
   subheader?: string;
   colors?: string[];
   [key: string]: any;
 }
 
-export function EcommerceChannelSales({
+export function AppointmentByChannelChart({
   title,
   subheader,
   colors,
   ...other
-}: EcommerceChannelSalesProps) {
+}: AppointmentByChannelChartProps) {
   const theme = useTheme() as any;
 
   const { channelsCount, channelsCountLoading, channelsCountError } =
@@ -75,32 +75,18 @@ export function EcommerceChannelSales({
   const chartColors = useMemo(() => {
     if (colors) return colors;
 
-    const baseColors = [
-      theme.palette.primary.main,
-      theme.palette.secondary.main,
-      theme.palette.error.main,
-      theme.palette.warning.main,
-      theme.palette.info.main,
-      theme.palette.success.main,
-    ];
+    const count = Math.max(1, chartData.series.length);
+    const saturation = 70; // percent
+    const lightness = theme.palette.mode === "dark" ? 55 : 50; // percent
+    const hueOffset = 12; // degrees, to avoid starting at pure red
 
-    const colorList: string[] = [];
-    for (let i = 0; i < chartData.series.length; i++) {
-      if (i < baseColors.length) {
-        colorList.push(baseColors[i]);
-      } else {
-        // Generate additional colors with alpha variations
-        const baseIndex = i % baseColors.length;
-        const alpha =
-          0.3 +
-          0.7 *
-            ((i - baseColors.length) /
-              Math.max(1, chartData.series.length - baseColors.length));
-        colorList.push(hexAlpha(baseColors[baseIndex], alpha));
-      }
-    }
-    return colorList;
-  }, [theme, chartData.series.length, colors]);
+    const generated = Array.from({ length: count }, (_, index) => {
+      const hue = Math.round(((360 / count) * index + hueOffset) % 360);
+      return `hsl(${hue} ${saturation}% ${lightness}%)`;
+    });
+
+    return generated;
+  }, [theme.palette.mode, chartData.series.length, colors]);
 
   const truncatedLabel = useMemo(() => {
     return chartData.series.map((item) =>
@@ -158,11 +144,11 @@ export function EcommerceChannelSales({
         <CardHeader title={title} subheader={subheader} />
 
         <Chart
-          type='radialBar'
+          type="radialBar"
           series={chartSeries}
           options={chartOptions}
-          width={{ xs: 300, xl: 320 }}
-          height={{ xs: 280, xl: 300 }}
+          width={{ xs: 305, xl: 325 }}
+          height={{ xs: 305, xl: 325 }}
           sx={{ my: 1.5, mx: "auto" }}
           loadingProps={{ sx: { p: 4 } }}
         />

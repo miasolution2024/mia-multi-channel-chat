@@ -19,7 +19,7 @@ import {
   useGetAppointmentsCount,
   transformAppointmentData,
   TimePeriod,
-} from "@/actions/statistic-chart";
+} from "@/actions/statistic-customer-chart";
 
 // ----------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ interface ChartConfig {
   options?: any;
 }
 
-interface EcommerceYearlySalesProps {
+interface AppointmentByTimeChartProps {
   title: string;
   subheader?: string;
   chart: ChartConfig;
@@ -47,13 +47,13 @@ interface EcommerceYearlySalesProps {
   [key: string]: any; // for ...other props
 }
 
-export function EcommerceCustomerSales({
+export function AppointmentByTimeChart({
   title,
   subheader,
   chart,
   sx,
   ...other
-}: EcommerceYearlySalesProps) {
+}: AppointmentByTimeChartProps) {
   const theme = useTheme();
 
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("month");
@@ -174,13 +174,13 @@ export function EcommerceCustomerSales({
       <ChartLegends
         colors={chartOptions?.colors}
         // labels={chart.series[0].data.map((item) => item.name)}
-        labels={["New Customers"]}
+        labels={["Total Appointments"]}
         values={[fShortenNumber(totalCount)]}
         sx={{ px: 3, gap: 3 }}
       />
 
       <Chart
-        type='area'
+        type="area"
         series={chartData?.data}
         options={chartOptions}
         loading={appointmentsCountLoading}

@@ -7,7 +7,8 @@ export type AppointmentStatus =
   | "visited"
   | "completed"
   | "canceled"
-  | "confirmed";
+  | "confirmed"
+  | "deposited";
 
 export type StatusCount = {
   status: AppointmentStatus;
@@ -34,6 +35,7 @@ export function useGetStatusCount() {
           ["completed", "Completed"],
           ["canceled", "Canceled"],
           ["confirmed", "Confirmed"],
+          ["deposited", "Deposited"],
         ]);
 
         type StatusCountWithStringStatus = Omit<StatusCount, "status"> & {
@@ -76,7 +78,10 @@ export function useGetStatusCount() {
 
 export function transformStatusData(
   data: (StatusCount & { status_name?: string })[] | undefined
-): { total: number; series: { label: string; data: number }[] } {
+): {
+  total: number;
+  series: { label: string; data: number }[];
+} {
   if (!data || !Array.isArray(data)) return { total: 0, series: [] };
 
   const sanitized = data.filter((item) => {
@@ -100,15 +105,26 @@ export function transformStatusData(
     "completed",
     "canceled",
     "confirmed",
+    "deposited",
   ];
+
+  const statusMapping = new Map<AppointmentStatus, string>([
+    ["pending", "Pending"],
+    ["visited", "Visited"],
+    ["completed", "Completed"],
+    ["canceled", "Canceled"],
+    ["confirmed", "Confirmed"],
+    ["deposited", "Deposited"],
+  ]);
 
   const series = statusOrder.map((statusValue) => {
     const item = sortedData.find((d) => d.status === statusValue);
     return {
       label:
-        item?.status_name ||
+        statusMapping.get(statusValue) ||
         statusValue.charAt(0).toUpperCase() + statusValue.slice(1),
       data: item ? parseInt(item.count, 10) || 0 : 0,
+      // originalStatus: statusValue,
     };
   });
 
