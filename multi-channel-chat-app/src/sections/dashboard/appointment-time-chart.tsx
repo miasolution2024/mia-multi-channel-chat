@@ -125,7 +125,7 @@ export function AppointmentByTimeChart({
     },
     tooltip: {
       y: { formatter: (value: number) => `Total: ${value}` },
-      theme: "dark",
+      // theme: "dark",
     },
     dataLabels: {
       enabled: false,
