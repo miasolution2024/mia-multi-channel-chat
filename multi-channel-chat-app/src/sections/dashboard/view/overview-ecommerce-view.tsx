@@ -19,6 +19,7 @@ import {
   useGetFBCommentsCount,
   useGetMessagesCount,
 } from "@/actions/chart";
+import { CustomerByChannelChart } from "../customer-channel-chart";
 
 // ECOMMERCE
 // ----------------------------------------------------------------------
@@ -314,17 +315,7 @@ export function OverviewEcommerceView() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 8 }}>
-          {/*number of customer */}
-          <AppointmentByTimeChart
-            title="Appointments by Time"
-            chart={{
-              series: [
-                { name: "Daily", categories: [], data: [] },
-                { name: "Weekly", categories: [], data: [] },
-                { name: "Monthly", categories: [], data: [] },
-              ],
-            }}
-          />
+          <CustomerByChannelChart title="Customer by Channel" />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
