@@ -117,20 +117,21 @@ export function OverviewEcommerceView() {
   );
 
   const customerChartData = {
-    categories: customersCount?.map((m) => monthsTxt[m.created_at_month - 1]),
+    categories: customersCount?.map((m) => monthsTxt[parseInt(m.created_at_month) - 1]),
     series: customersCount?.map((m) => m.count),
   };
 
   const currentMonthData = customersCount?.find(
-    (m) => m.created_at_month === new Date().getMonth() + 1
+    (m) => parseInt(m.created_at_month) === new Date().getMonth() + 1
   );
   const prevMonthData = customersCount?.find(
-    (m) => m.created_at_month === new Date().getMonth()
+    (m) => parseInt(m.created_at_month) === new Date().getMonth()
   );
 
   const currentMonthCount = currentMonthData
     ? parseInt(currentMonthData.count || "0")
     : 0;
+
   const prevMonthCount = prevMonthData
     ? parseInt(prevMonthData.count || "0")
     : 0;
@@ -152,10 +153,10 @@ export function OverviewEcommerceView() {
   };
 
   const todayData = messagesCount?.find(
-    (m) => m.date_created_day === new Date().getDate()
+    (m) => parseInt(m.date_created_day) === new Date().getDate()
   );
   const yesterdayData = messagesCount?.find(
-    (m) => m.date_created_day === new Date().getDate() - 1
+    (m) => parseInt(m.date_created_day) === new Date().getDate() - 1
   );
 
   const todayCount = todayData ? parseInt(todayData.count || "0") : 0;
@@ -187,16 +188,16 @@ export function OverviewEcommerceView() {
 
   const commentsChartData = {
     categories: fbCommentsCount?.map(
-      (m) => monthsTxt[m.date_created_month - 1]
+      (m) => monthsTxt[parseInt(m.date_created_month) - 1]
     ),
     series: fbCommentsCount?.map((m) => m.count),
   };
 
   const currentCommentsMonthData = fbCommentsCount?.find(
-    (m) => m.date_created_month === new Date().getMonth() + 1
+    (m) => parseInt(m.date_created_month) === new Date().getMonth() + 1
   );
   const prevCommentsMonthData = fbCommentsCount?.find(
-    (m) => m.date_created_month === new Date().getMonth()
+    (m) => parseInt(m.date_created_month) === new Date().getMonth()
   );
 
   const currentCommentsMonthCount = currentCommentsMonthData
@@ -210,8 +211,8 @@ export function OverviewEcommerceView() {
     prevCommentsMonthCount === 0
       ? 0
       : ((currentCommentsMonthCount - prevCommentsMonthCount) /
-          prevCommentsMonthCount) *
-        100;
+        prevCommentsMonthCount) *
+      100;
 
   return (
     <DashboardContent maxWidth="xl">
@@ -276,7 +277,7 @@ export function OverviewEcommerceView() {
             />
           </Grid>
         )}
-        {fbCommentsCount && (
+        {fbCommentsCount ? (
           <Grid size={{ xs: 12, md: 3, sm: 6 }}>
             <AnalyticsWidgetSummary
               title="Monthly Comments"
@@ -294,7 +295,7 @@ export function OverviewEcommerceView() {
               chart={commentsChartData}
             />
           </Grid>
-        )}
+        ) : <></>}
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AppointmentByChannelChart title="Appointments by channel" />
@@ -315,7 +316,7 @@ export function OverviewEcommerceView() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 8 }}>
-          <CustomerByChannelChart title="Customer by Channel" />
+          <CustomerByChannelChart title="Conversations by channel" />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>

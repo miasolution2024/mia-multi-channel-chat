@@ -46,7 +46,7 @@ export function AnalyticsWidgetSummary({
     ...chart.options,
   });
 
-  if(!chartColors) return;
+  if (!chartColors) return;
 
   const renderTrending = (
     <Box
@@ -84,8 +84,8 @@ export function AnalyticsWidgetSummary({
     >
       <Box sx={{ width: 48, height: 48, mb: 3 }}>{icon}</Box>
 
-      {percent && renderTrending}
-
+      {!!percent && renderTrending }
+      
       <Box
         sx={{
           display: 'flex',

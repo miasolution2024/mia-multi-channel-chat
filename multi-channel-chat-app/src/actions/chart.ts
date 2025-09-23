@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import useSWR from "swr";
 
 export type CustomerCount = {
-  created_at_month: number;
+  created_at_month: string;
   count: string;
 };
 
@@ -33,7 +33,7 @@ export function useGetCustomersCount(year: number) {
 }
 
 export type MessageCount = {
-  date_created_day: number;
+  date_created_day: string;
   count: string;
 };
 
@@ -93,7 +93,7 @@ export function useGetAppointmentsCount() {
 }
 
 export type FBCommentCount = {
-  date_created_month: number;
+  date_created_month: string;
   count: string;
 };
 
