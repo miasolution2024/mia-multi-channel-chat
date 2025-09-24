@@ -56,8 +56,10 @@ export function ContentAssistantMultiStepForm({
   editData,
 }: ContentAssistantMultiStepFormProps) {
 
+  const [aiImagesToCheckDelete, setAiImagesToCheckDelete] = useState<MediaGeneratedAiItem[]>([]);
+
   const router = useRouter();
-  
+
   const getInitStep = (initStep: string | undefined) => {
     if (!initStep) return POST_STEP.RESEARCH_ANALYSIS;
     if ([POST_STEP.GENERATE_IMAGE, POST_STEP.WRITE_ARTICLE].includes(initStep))
@@ -374,12 +376,12 @@ export function ContentAssistantMultiStepForm({
             const dataMediaEdit = {
               media: (editData?.media as FileWithApiProperties[]) || [],
               media_generated_ai:
-                (editData?.media_generated_ai as MediaGeneratedAiItem[]) || [],
+                (editData?.media_generated_ai as MediaGeneratedAiItem[]) || aiImagesToCheckDelete,
               id: editData?.id?.toString(),
             };
             stepData = (await buildStepWriteArticleData(
               formData,
-              dataMediaEdit
+              dataMediaEdit,
             )) as UpdateContentAssistantRequest;
             break;
           default:
@@ -422,7 +424,7 @@ export function ContentAssistantMultiStepForm({
         setIsNextLoading(false);
       }
     },
-    [methods, editData, updateContentAssistant, activeStep, createContentAssistant]
+    [methods, editData, updateContentAssistant, activeStep, createContentAssistant, aiImagesToCheckDelete]
   );
 
   const handlePublish = async () => {
@@ -485,7 +487,7 @@ export function ContentAssistantMultiStepForm({
       case POST_STEP.MAKE_OUTLINE:
         return <StepOutline />;
       case POST_STEP.WRITE_ARTICLE:
-        return <StepContent contentAssistantId={contentAssistantId} hasDataChanged={hasDataChanged} />;
+        return <StepContent setAiImagesToCheckDelete={setAiImagesToCheckDelete} contentAssistantId={contentAssistantId} hasDataChanged={hasDataChanged} />;
       default:
         return null;
     }

@@ -37,11 +37,13 @@ interface FileWithPreview extends File {
 interface StepContentProps {
   contentAssistantId?: string;
   hasDataChanged?: boolean;
+  setAiImagesToCheckDelete?: (value: MediaGeneratedAiItem[]) => void;
 }
 
 export function StepContent({
   contentAssistantId,
   hasDataChanged,
+  setAiImagesToCheckDelete,
 }: StepContentProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -135,6 +137,11 @@ export function StepContent({
           setValue("media_generated_ai", imageIds, {
             shouldDirty: true,
           });
+
+          const imageIdsToCheckDelete = updatedDataResponse.data[0].media_generated_ai;
+          if (imageIdsToCheckDelete?.length) {
+            setAiImagesToCheckDelete?.(imageIdsToCheckDelete);
+          }
         }
         toast.success("Images generated successfully!");
       } else {

@@ -11,7 +11,6 @@ export interface MediaGeneratedAiItem {
   id?: number;
   ai_content_suggestions_id?: number;
   directus_files_id?: string;
-  [key: string]: unknown;
 }
 
 export interface FileWithApiProperties {
@@ -278,7 +277,7 @@ export const buildStepWriteArticleData = async (
     media_generated_ai?: MediaGeneratedAiItem[];
     id?: string;
   },
-  excludeMedia = false
+  excludeMedia = false,
 ) => {
   // Process media data for upload and deletion only if not excluding media
   let mediaArray: Array<{ id: string }> = [];
