@@ -160,7 +160,10 @@ export default function CustomTable({
 
   return (
     <>
-      <TableContainer sx={{ position: "relative" }}>
+      <TableContainer sx={{ 
+        position: "relative",
+        minHeight: (firstLoading || loading) && data.length === 0 ? 300 : 'auto'
+      }}>
         <Scrollbar>
           <Table size="small">
             <TableHead>
@@ -224,7 +227,57 @@ export default function CustomTable({
             </TableHead>
 
             <TableBody>
-              {!isNotFound &&
+              {/* Show skeleton rows when loading and no data */}
+              {(firstLoading || (loading && data.length === 0)) && 
+                Array.from({ length: pageSize || 10 }).map((_, index) => (
+                  <TableRow key={`skeleton-${index}`} hover>
+                    {Boolean(onSelect) && (
+                      <TableCell padding="checkbox" align="left">
+                        <CheckboxEmpty />
+                      </TableCell>
+                    )}
+                    {tableConfig.map((x, i) => (
+                      <TableCell
+                        key={i}
+                        align={x.align}
+                        sx={{ 
+                          whiteSpace: "nowrap",
+                          ...(x.width && {
+                            width: x.width,
+                            minWidth: x.width,
+                            maxWidth: x.width,
+                          }),
+                          ...(x.sticky && {
+                            position: "sticky",
+                            [x.sticky]: x.sticky === "right" ? stickyRightPositions[i] : 0,
+                            backgroundColor: "background.paper",
+                            zIndex: 1,
+                          })
+                        }}
+                      >
+                        <Skeleton width="80%" />
+                      </TableCell>
+                    ))}
+                    {moreOptions && (
+                      <TableCell 
+                        align="right" 
+                        sx={{ 
+                          whiteSpace: "nowrap",
+                          position: "sticky",
+                          right: 0,
+                          backgroundColor: "background.paper",
+                          zIndex: 1,
+                        }}
+                      >
+                        <MoreOptionsEmpty />
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              }
+              
+              {/* Show actual data when not in initial loading state */}
+              {!firstLoading && !(loading && data.length === 0) && !isNotFound &&
                 data.map((item, index) => {
                   const selectedUser =
                     selected.indexOf(

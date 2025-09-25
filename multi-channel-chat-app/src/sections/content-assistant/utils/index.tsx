@@ -33,7 +33,7 @@ const ContentSchema = zod.object({
     .min(1, { message: "Từ khoá SEO chính là bắt buộc!" }),
   secondary_seo_keywords: zod.string().array().default([]),
   customer_group: zod.number().array().min(1, "Nhóm khách hàng là bắt buộc"),
-  services: zod.number().array().default([]),
+  services: zod.number().array().min(1, "Dịch vụ là bắt buộc"),
   customer_journey: zod.number({
     required_error: "Hành trình khách hàng là bắt buộc",
   }),

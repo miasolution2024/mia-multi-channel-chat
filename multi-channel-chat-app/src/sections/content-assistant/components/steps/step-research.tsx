@@ -14,7 +14,6 @@ import { useFormContext } from "react-hook-form";
 import {
   RHFTextField,
   RHFAutocomplete,
-  RHFMultiSelect,
   RHFSelect,
   RHFUpload,
 } from "@/components/hook-form";
@@ -223,15 +222,26 @@ export function StepResearch() {
         <Divider />
         <Stack spacing={3} sx={{ p: 3 }}>
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-            <RHFMultiSelect
+            <RHFAutocomplete
               name="customer_group"
-              label="Nhóm khách hàng"
+              label="Nhóm khách hàng *"
               required
               sx={{ width: "100%" }}
-              options={customerGroupsData?.map((item: CustomerGroup) => ({
-                value: item.id,
-                label: item.name,
-              }))}
+              multiple
+              disableCloseOnSelect
+              options={customerGroupsData || []}
+              getOptionLabel={(option: CustomerGroup) => option.name}
+              getOptionValue={(option: CustomerGroup) => option.id}
+              useValueAsId={true}
+              isOptionEqualToValue={(option: CustomerGroup, value: CustomerGroup) => option.id === value.id}
+              renderOption={(
+                props: React.HTMLAttributes<HTMLLIElement>,
+                option: CustomerGroup
+              ) => (
+                <li {...props} key={option.id}>
+                  {option.name}
+                </li>
+              )}
             />
 
             <RHFSelect
@@ -248,25 +258,47 @@ export function StepResearch() {
             </RHFSelect>
           </Stack>
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-            <RHFMultiSelect
+            <RHFAutocomplete
               name="services"
-              label="Dịch vụ"
+              label="Dịch vụ *"
               required
               sx={{ width: "100%" }}
-              options={servicesData?.map((item: Services) => ({
-                value: item.id,
-                label: item.name,
-              }))}
+              multiple
+              disableCloseOnSelect
+              options={servicesData || []}
+              getOptionLabel={(option: Services) => option.name}
+              getOptionValue={(option: Services) => option.id}
+              useValueAsId={true}
+              isOptionEqualToValue={(option: Services, value: Services) => option.id === value.id}
+              renderOption={(
+                props: React.HTMLAttributes<HTMLLIElement>,
+                option: Services
+              ) => (
+                <li {...props} key={option.id}>
+                  {option.name}
+                </li>
+              )}
             />
-            <RHFMultiSelect
-              required
+            <RHFAutocomplete
               name="omni_channels"
-              label="Omni channel"
+              label="Kênh Omni *"
+              required
               sx={{ width: "100%" }}
-              options={omniChannelsData?.map((item: OmniChannel) => ({
-                value: item.id,
-                label: item.page_name,
-              }))}
+              multiple
+              disableCloseOnSelect
+              options={omniChannelsData || []}
+              getOptionLabel={(option: OmniChannel) => option.page_name}
+              getOptionValue={(option: OmniChannel) => option.id}
+              useValueAsId={true}
+              isOptionEqualToValue={(option: OmniChannel, value: OmniChannel) => option.id === value.id}
+              renderOption={(
+                props: React.HTMLAttributes<HTMLLIElement>,
+                option: OmniChannel
+              ) => (
+                <li {...props} key={option.id}>
+                  {option.page_name}
+                </li>
+              )}
             />
           </Stack>
         </Stack>

@@ -138,6 +138,8 @@ export function ContentAssistantMultiStepForm({
 
   const onSubmit = handleSubmit(handleSubmitPost);
 
+  console.log(methods.formState.errors)
+
   const getLoadingMessage = () => {
     const isUpdate = !!methods.getValues().id;
 
