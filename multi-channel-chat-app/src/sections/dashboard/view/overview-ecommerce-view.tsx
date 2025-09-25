@@ -5,7 +5,7 @@ import { DashboardContent } from "@/layouts/dashboard";
 import { EcommerceBestSalesman } from "../ecommerce-best-salesman";
 import { EcommerceSalesOverview } from "../ecommerce-sales-overview";
 import { EcommerceLatestProducts } from "../ecommerce-latest-products";
-import { EcommerceCurrentBalance } from "../ecommerce-current-balance";
+// import { EcommerceCurrentBalance } from "../ecommerce-current-balance";
 import { AppointmentByTimeChart } from "../appointment-time-chart";
 import { AppointmentByChannelChart } from "../appointment-channel-chart";
 import { AppointmentByStatusChart } from "../appointment-status-chart";
@@ -20,6 +20,7 @@ import {
   useGetMessagesCount,
 } from "@/actions/chart";
 import { CustomerByChannelChart } from "../customer-channel-chart";
+import { ConversionRateChart } from "../conversion-rate-chart";
 
 // ECOMMERCE
 // ----------------------------------------------------------------------
@@ -117,7 +118,9 @@ export function OverviewEcommerceView() {
   );
 
   const customerChartData = {
-    categories: customersCount?.map((m) => monthsTxt[parseInt(m.created_at_month) - 1]),
+    categories: customersCount?.map(
+      (m) => monthsTxt[parseInt(m.created_at_month) - 1]
+    ),
     series: customersCount?.map((m) => m.count),
   };
 
@@ -211,8 +214,8 @@ export function OverviewEcommerceView() {
     prevCommentsMonthCount === 0
       ? 0
       : ((currentCommentsMonthCount - prevCommentsMonthCount) /
-        prevCommentsMonthCount) *
-      100;
+          prevCommentsMonthCount) *
+        100;
 
   return (
     <DashboardContent maxWidth="xl">
@@ -295,7 +298,9 @@ export function OverviewEcommerceView() {
               chart={commentsChartData}
             />
           </Grid>
-        ) : <></>}
+        ) : (
+          <></>
+        )}
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AppointmentByChannelChart title="Appointments by channel" />
@@ -331,13 +336,7 @@ export function OverviewEcommerceView() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <EcommerceCurrentBalance
-            title="Current balance"
-            earning={25500}
-            refunded={1600}
-            orderTotal={287650}
-            currentBalance={187650}
-          />
+          <ConversionRateChart title="Conversion Rate" />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 8 }}>
