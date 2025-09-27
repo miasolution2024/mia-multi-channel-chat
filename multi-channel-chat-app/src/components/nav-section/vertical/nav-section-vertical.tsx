@@ -64,6 +64,7 @@ function Group({
     setOpen((prev) => !prev);
   }, []);
 
+
   const renderContent = (
     <NavUl sx={{ gap: "var(--nav-item-gap)" }}>
       {items.map((list: any) => (

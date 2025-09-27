@@ -18,7 +18,6 @@ export function NavList({
   enabledRootRedirect,
 }: any) {
   const pathname = usePathname();
-
   const active = useActiveLink(data.path, !!data.children);
 
   const [openMenu, setOpenMenu] = useState(active);

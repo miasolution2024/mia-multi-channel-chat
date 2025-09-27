@@ -20,7 +20,7 @@ export const defaultSettings: DefaultSettingsProps = {
   direction: "ltr",
   contrast: "default",
   navLayout: "mini",
-  primaryColor: "orange",
+  primaryColor: "cyan",
   navColor: "integrate",
   compactLayout: true,
   fontFamily: defaultFont,

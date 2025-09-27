@@ -517,7 +517,7 @@ export function ContentAssistantMultiStepForm({
         description={getLoadingMessage()}
       />
       <Form methods={methods} onSubmit={onSubmit}>
-        <Stack spacing={4}>
+        <Stack>
           <ContentStepper currentStep={activeStep} />
 
           <Box

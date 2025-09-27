@@ -40,6 +40,7 @@ export function StepOutline() {
           sx={{
             "& .MuiOutlinedInput-root": {
               transition: "all 0.3s ease",
+              backgroundColor: "background.paper",
               "&:hover": {
                 boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
               },

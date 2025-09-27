@@ -137,7 +137,7 @@ export function StepResearch() {
       <Box sx={{ mb: 3 }}>
         <RHFTextField
           name="ai_notes_make_outline"
-          placeholder="💬 Viết thêm mô tả chi tiết và lưu ý bài viết..."
+          placeholder="Viết thêm mô tả chi tiết và lưu ý bài viết..."
           multiline
           minRows={1}
           maxRows={4}
@@ -159,6 +159,7 @@ export function StepResearch() {
           sx={{
             "& .MuiOutlinedInput-root": {
               transition: "all 0.3s ease",
+              backgroundColor: "background.paper",
               "&:hover": {
                 boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
               },
@@ -354,8 +355,8 @@ export function StepResearch() {
 
       {/* Video Upload Section */}
       <Stack alignItems={"center"} direction={"row"}>
+        <Typography sx={{fontWeight: 600}}>Tạo bài viết chuyên sâu</Typography>
         <Switch checked={isShowVideo} onChange={handleChangeShowVideo} />
-        <Typography>Tạo bài viết chuyên sâu</Typography>
       </Stack>
       {isShowVideo ? (
         <Card>

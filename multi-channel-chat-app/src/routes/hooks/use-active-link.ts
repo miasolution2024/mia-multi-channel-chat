@@ -62,5 +62,5 @@ export function useActiveLink(itemPath: string | Record<string, unknown> | ((...
    * @itemPath 			 = '/dashboard/calendar'
    * @match pathname = '/dashboard/calendar'
    */
-  return pathname === itemPath;
+  return pathname === itemPath ||  pathname.includes(itemPath);
 }

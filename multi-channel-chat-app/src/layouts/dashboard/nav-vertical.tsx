@@ -20,6 +20,7 @@ export function NavVertical({
 }: any) {
   const theme = useTheme() as any;
 
+
   const renderNavVertical = (
     <>
       {/* {slots?.topArea ?? (

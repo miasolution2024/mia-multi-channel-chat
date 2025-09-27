@@ -51,7 +51,7 @@ export function ContentStepper({ currentStep }: Props) {
     <Box sx={{ width: "100%", mb: 4 }}>
       <Stepper activeStep={activeStep - 1} alternativeLabel>
         {STEPS.map((step) => (
-          <Step key={step.value}>
+          <Step key={step.value} >
             <StepLabel
               sx={{
                 cursor: "default",
