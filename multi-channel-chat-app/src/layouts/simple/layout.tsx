@@ -8,7 +8,6 @@ import Alert from "@mui/material/Alert";
 import { Main, CompactContent } from "./main";
 import { LayoutSection } from "../core/layout-section";
 import { HeaderSection } from "../core/header-section";
-import { SettingsButton } from "../components/settings-button";
 import { Logo } from "@/components/logo";
 import { paths } from "@/routes/path";
 import { RouterLink } from "@/routes/components";
@@ -47,7 +46,7 @@ export function SimpleLayout({ sx, children, header, content }: any) {
                   Need help?
                 </Link>
                 {/* -- Settings button -- */}
-                <SettingsButton />
+                {/* <SettingsButton /> */}
               </Box>
             ),
           }}

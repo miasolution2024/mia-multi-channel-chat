@@ -138,8 +138,6 @@ export function ContentAssistantMultiStepForm({
 
   const onSubmit = handleSubmit(handleSubmitPost);
 
-  console.log(methods.formState.errors)
-
   const getLoadingMessage = () => {
     const isUpdate = !!methods.getValues().id;
 
@@ -295,7 +293,7 @@ export function ContentAssistantMultiStepForm({
   );
 
   const handleNext = useCallback(async () => {
-    if (!activeStep) return;
+    if (!activeStep) return;  
     const fieldsToValidate = getFieldsForStep(activeStep);
     const isStepValid = await methods.trigger(fieldsToValidate);
     if (!isStepValid) {

@@ -24,10 +24,11 @@ import { CustomerGroup } from "@/sections/customer-group/types";
 import { getCustomerJourneys } from "@/actions/customer-journey";
 import { CustomerJourney } from "@/sections/customer-journey/types";
 import { MenuItem, Switch, Tooltip } from "@mui/material";
-import { getOmniChannels, OmniChannel } from "@/actions/omni-channels";
+import { getOmniChannels } from "@/actions/omni-channels";
 import { getServices } from "@/actions/services";
 import { Services } from "@/sections/services/types";
 import { CONFIG } from "@/config-global";
+import { OmniChannel } from "@/sections/omni-channel/types";
 
 // ----------------------------------------------------------------------
 
@@ -374,8 +375,8 @@ export function StepResearch() {
             >
               <Iconify
                 icon="material-symbols:info-outline"
-                width={32}
-                height={32}
+                width={24}
+                height={24}
                 color="text.secondary"
                 sx={{ marginLeft: "-16px", cursor: "pointer" }}
               />

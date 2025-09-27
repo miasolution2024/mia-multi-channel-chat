@@ -1,36 +1,15 @@
+import { OmniChannelsResponse } from '@/sections/omni-channel/types';
 import axiosInstance, { endpoints } from '@/utils/axios';
 
 /**
  * Interface for omni channel data
  */
-export interface OmniChannel {
-  is_enabled: boolean;
-  is_enabled_reply_comment: boolean;
-  demo_account: string | null;
-  id: number;
-  sub_domain_id: number;
-  note: string | null;
-  page_id: string;
-  page_name: string;
-  source: string;
-  date_created: string;
-  date_updated: string;
-  token: string | null;
-  domain_directus: {
-    public_directus_url: string;
-    id: number;
-    version_release: {
-      version_number: number;
-    };
-  };
-}
+
 
 /**
  * Interface for omni channels API response
  */
-export interface OmniChannelsResponse {
-  data: OmniChannel[];
-}
+
 
 /**
  * Get all omni channels with pagination and filtering

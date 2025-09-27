@@ -31,11 +31,11 @@ export const paths = {
     new: `${ROOTS.DASHBOARD}/content-tone/new`,
     edit: (id: string) => `${ROOTS.DASHBOARD}/content-tone/${id}/edit`,
   },
-  aiRules: {
+    aiRules: {
     root: `${ROOTS.DASHBOARD}/ai-rules`,
     new: `${ROOTS.DASHBOARD}/ai-rules/new`,
     edit: (id: string) => `${ROOTS.DASHBOARD}/ai-rules/${id}/edit`,
-  },
+    },
     marketingCampaign: {
       root: `${ROOTS.DASHBOARD}/marketing-campaign`,
       new: `${ROOTS.DASHBOARD}/marketing-campaign/new`,

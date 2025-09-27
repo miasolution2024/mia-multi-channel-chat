@@ -85,12 +85,9 @@ export function RHFAutocomplete({
                   size="small"
                   variant="outlined"
                   sx={{
-                    backgroundColor: 'grey.100',
-                    borderColor: 'grey.300',
-                    color: 'grey.700',
-                    '&:hover': {
-                      backgroundColor: 'grey.200',
-                    },
+                    backgroundColor: 'primary.lighter',
+                    border: 'none',
+                    color: 'primary.main',
                   }}
                 />
               ))

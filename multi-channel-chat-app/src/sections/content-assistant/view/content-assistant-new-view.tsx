@@ -31,19 +31,6 @@ export function ContentAssistantNewView() {
         sx={{
           mb: { xs: 3, md: 5 },
         }}
-        // action={
-        //   isShowDraftButton && (
-        //     <Button
-        //       variant="outlined"
-        //       onClick={handleSaveDraft}
-        //       loading={isSavingDraft}
-        //       disabled={isSavingDraft}
-        //       sx={{ borderRadius: 2 }}
-        //     >
-        //       {isSavingDraft ? "Đang lưu..." : "Lưu nháp"}
-        //     </Button>
-        //   )
-        // }
       />
 
       <Box
