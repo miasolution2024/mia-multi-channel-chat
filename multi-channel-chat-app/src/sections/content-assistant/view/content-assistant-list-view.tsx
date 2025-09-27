@@ -47,8 +47,8 @@ import {
 } from "@/constants/auto-post";
 import { getStartStepFromCurrentStep } from "../utils";
 import { Stack } from "@mui/material";
-import { useUpdateContentAssistant } from "../hooks/use-update-content-assistant";
-import { useGetContentAssistantList } from "../hooks/use-get-content-assistant-list";
+import { useUpdateContentAssistant } from "@/hooks/apis/use-update-content-assistant";
+import { useGetContentAssistantList } from "@/hooks/apis/use-get-content-assistant-list";
 
 // Tạo interface riêng cho table config
 interface ItemsPopupProps {

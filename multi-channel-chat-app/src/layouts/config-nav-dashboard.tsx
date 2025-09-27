@@ -112,7 +112,7 @@ export const navData = [
       {
         title: "Chiến dịch Marketing",
         path: paths.dashboard.marketingCampaign.root,
-        icon: ICONS.menuItem,
+        icon: ICONS.inventory,
       },
     ],
   },
