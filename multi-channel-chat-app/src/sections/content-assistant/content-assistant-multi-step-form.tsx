@@ -35,15 +35,15 @@ import {
   MediaGeneratedAiItem,
   transformMediaItems,
 } from "./utils";
-import { useCreateContentAssistant } from "./hooks/use-create-content-assistant";
-import { useUpdateContentAssistant } from "./hooks/use-update-content-assistant";
-import { useGetContentAssistantById } from "./hooks/use-get-content-assistant-by-id";
 import { CreateContentAssistantRequest } from "./types/content-assistant-create";
 import { UpdateContentAssistantRequest } from "./types/content-assistant-update";
 import { createPost, PostRequest } from "@/actions/auto-mia";
 import { ContentAssistantApiResponse, getContentAssistantList } from "@/actions/content-assistant";
   import { useRouter } from "next/navigation";
 import { Content } from "./view/content-assistant-list-view";
+import { useCreateContentAssistant } from "@/hooks/apis/use-create-content-assistant";
+import { useUpdateContentAssistant } from "@/hooks/apis/use-update-content-assistant";
+import { useGetContentAssistantById } from "@/hooks/apis/use-get-content-assistant-by-id";
 
 
 // ----------------------------------------------------------------------

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from '@/components/snackbar';
 import { createNewContentAssistant } from '@/actions/content-assistant';
-import { CreateContentAssistantRequest, CreateContentAssistantResponse } from '../types/content-assistant-create';
+import { CreateContentAssistantRequest, CreateContentAssistantResponse } from '@/sections/content-assistant/types/content-assistant-create';
 
 export interface UseCreateContentAssistantReturn {
   createContentAssistant: (data: CreateContentAssistantRequest) => Promise<CreateContentAssistantResponse | null>;

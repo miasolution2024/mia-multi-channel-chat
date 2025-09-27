@@ -36,32 +36,10 @@ export const paths = {
     new: `${ROOTS.DASHBOARD}/ai-rules/new`,
     edit: (id: string) => `${ROOTS.DASHBOARD}/ai-rules/${id}/edit`,
   },
-    customer: {
-      root: `${ROOTS.DASHBOARD}/customer`,
-    },
-    supplier: {
-      root: `${ROOTS.DASHBOARD}/supplier`,
-    },
-    category: {
-      root: `${ROOTS.DASHBOARD}/category`,
-    },
-    purchaseOrder: {
-      root: `${ROOTS.DASHBOARD}/purchase-order`,
-      new: `${ROOTS.DASHBOARD}/purchase-order/new`,
-      edit: (id: string) => `${ROOTS.DASHBOARD}/purchase-order/${id}/edit`,
-      details: (id: string) => `${ROOTS.DASHBOARD}/purchase-order/${id}`,
-    },
-    salesOrder: {
-      root: `${ROOTS.DASHBOARD}/sales-order`,
-      details: (id: string) => `${ROOTS.DASHBOARD}/sales-order/${id}`,
-    },
-    product: {
-      root: `${ROOTS.DASHBOARD}/product`,
-      new: `${ROOTS.DASHBOARD}/product/new`,
-      edit: (id: string) => `${ROOTS.DASHBOARD}/product/${id}/edit`,
-    },
-    inventoryTransaction: {
-      root: `${ROOTS.DASHBOARD}/inventory-transaction`,
+    marketingCampaign: {
+      root: `${ROOTS.DASHBOARD}/marketing-campaign`,
+      new: `${ROOTS.DASHBOARD}/marketing-campaign/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/marketing-campaign/${id}/edit`,
     },
   },
 };

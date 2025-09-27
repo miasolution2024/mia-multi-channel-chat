@@ -109,6 +109,11 @@ export const navData = [
         path: paths.dashboard.aiRules.root,
         icon: ICONS.menuItem,
       },
+      {
+        title: "Chiến dịch Marketing",
+        path: paths.dashboard.marketingCampaign.root,
+        icon: ICONS.menuItem,
+      },
     ],
   },
 ];

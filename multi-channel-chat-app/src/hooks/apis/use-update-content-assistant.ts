@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from '@/components/snackbar';
 import { updateNewContentAssistant } from '@/actions/content-assistant';
-import { UpdateContentAssistantRequest, UpdateContentAssistantResponse } from '../types/content-assistant-update';
+import { UpdateContentAssistantRequest, UpdateContentAssistantResponse } from '@/sections/content-assistant/types/content-assistant-update';
 
 export interface UseUpdateContentAssistantReturn {
   updateContentAssistant: (id: string | number, data: UpdateContentAssistantRequest) => Promise<UpdateContentAssistantResponse | null>;
