@@ -32,7 +32,7 @@ import { useCreateCampaign } from "@/hooks/apis/use-create-campaign";
 import { useUpdateCampaign } from "@/hooks/apis/use-update-campaign";
 
 export function CampaignMultiStepForm({ editData }: { editData?: null }) {
-  const [activeStep, setActiveStep] = useState(CAMPAIGN_STEP_KEY.CAMPAIGN_INFO);
+  const [activeStep, setActiveStep] = useState(CAMPAIGN_STEP_KEY.CREATE_POST_LIST);
   const { createCampaignHandler, isLoading: isCreatingCampaign } = useCreateCampaign();
   const { updateCampaign: updateCampaignHandler, isLoading: isUpdatingCampaign } = useUpdateCampaign();
 
