@@ -23,12 +23,18 @@ import {
   CampaignSchema,
   getDefaultValues,
   getFieldsForStep,
+  buildCampaignDataStep1,
+  buildCampaignDataStep2
 } from "./utils";
 import { PostContentInfoStep } from "./components/steps/post-content-info-step";
+import { CreatePostListStep } from "./components/steps/create-post-list-step";
+import { useCreateCampaign } from "@/hooks/apis/use-create-campaign";
+import { useUpdateCampaign } from "@/hooks/apis/use-update-campaign";
 
 export function CampaignMultiStepForm({ editData }: { editData?: null }) {
   const [activeStep, setActiveStep] = useState(CAMPAIGN_STEP_KEY.CAMPAIGN_INFO);
-  const isProcessing = false;
+  const { createCampaignHandler, isLoading: isCreatingCampaign } = useCreateCampaign();
+  const { updateCampaign: updateCampaignHandler, isLoading: isUpdatingCampaign } = useUpdateCampaign();
 
   const defaultValues = getDefaultValues(editData);
 
@@ -62,17 +68,48 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
 
   const handleStepProcess = useCallback(
     async (data: CampaignFormData, currentStep: string) => {
-      let nextStep: string;
       if (currentStep === CAMPAIGN_STEP_KEY.CAMPAIGN_INFO) {
-        nextStep = CAMPAIGN_STEP_KEY.POST_CONTENT_INFO;
+        try {
+          // Transform form data using utility function
+          const apiData = buildCampaignDataStep1(data);
+          
+          // Call create campaign API
+          const response = await createCampaignHandler(apiData);
+          
+          if (response?.data?.id) {
+            // Set the ID in the form data
+            methods.setValue("id", response.data.id);
+            
+            setActiveStep(CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
+          }
+        } catch (error) {
+          console.error("Error creating campaign:", error);
+          toast.error("Có lỗi xảy ra khi tạo chiến dịch");
+          return;
+        }
       } else if (currentStep === CAMPAIGN_STEP_KEY.POST_CONTENT_INFO) {
-        nextStep = CAMPAIGN_STEP_KEY.CREATE_POST_LIST;
-      } else {
-        return;
+        try {
+          const campaignId = methods.getValues("id");
+          if (!campaignId) {
+            toast.error("Không tìm thấy ID chiến dịch");
+            return;
+          }
+          
+          // Transform form data for Step 2 update
+          const apiData = buildCampaignDataStep2(data, campaignId.toString());
+          
+          // Call update campaign API
+          await updateCampaignHandler(campaignId, apiData);
+          
+          setActiveStep(CAMPAIGN_STEP_KEY.CREATE_POST_LIST);
+        } catch (error) {
+          console.error("Error updating campaign:", error);
+          toast.error("Có lỗi xảy ra khi cập nhật chiến dịch");
+          return;
+        }
       }
-      setActiveStep(nextStep);
     },
-    []
+    [createCampaignHandler, methods, updateCampaignHandler]
   );
 
   const handleNext = useCallback(async () => {
@@ -87,10 +124,10 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     switch (activeStep) {
       case CAMPAIGN_STEP_KEY.CAMPAIGN_INFO:
         await handleStepProcess(formData, CAMPAIGN_STEP_KEY.CAMPAIGN_INFO);
-        return;
+        break;
       case CAMPAIGN_STEP_KEY.POST_CONTENT_INFO:
         await handleStepProcess(formData, CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
-        return;
+        break;
       case CAMPAIGN_STEP_KEY.CREATE_POST_LIST:
         break;
       default:
@@ -107,11 +144,11 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
   const renderStepContent = {
     [CAMPAIGN_STEP_KEY.CAMPAIGN_INFO]: <CampaignInfoStep />,
     [CAMPAIGN_STEP_KEY.POST_CONTENT_INFO]: <PostContentInfoStep />,
-    [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: <></>,
+    [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: <CreatePostListStep />,
   };
 
   const renderLabelNextStep = {
-      [CAMPAIGN_STEP_KEY.CAMPAIGN_INFO]: "Lên thông tin bài viết",
+    [CAMPAIGN_STEP_KEY.CAMPAIGN_INFO]: "Lên thông tin bài viết",
     [CAMPAIGN_STEP_KEY.POST_CONTENT_INFO]: "Tạo bài viết",
     [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: "Tạo bài viết (2)",
   }
@@ -185,7 +222,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
             size="large"
             variant="contained"
             onClick={handleNext}
-            disabled={isProcessing}
+            disabled={isCreatingCampaign || isUpdatingCampaign}
             sx={{ minWidth: 150, borderRadius: 2 }}
           >
             {renderLabelNextStep[activeStep]}

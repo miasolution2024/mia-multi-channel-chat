@@ -43,6 +43,7 @@ export function JwtSignInView() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const password = useBoolean();
+  const loading = useBoolean();
 
   const defaultValues = {
     email: '',
@@ -61,6 +62,7 @@ export function JwtSignInView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
+      loading.onTrue();
       await signInAsync({ email: data.email, password: data.password });
       await checkUserSession?.();
 
@@ -68,6 +70,8 @@ export function JwtSignInView() {
     } catch (error: any) {
       console.error(error);
       setErrorMsg(typeof error === 'string' ? error : error.message);
+    } finally {
+      loading.onFalse();
     }
   });
 
@@ -106,11 +110,11 @@ export function JwtSignInView() {
 
       <LoadingButton
         fullWidth
-        color="inherit"
+        color="primary"
         size="large"
         type="submit"
         variant="contained"
-        loading={isSubmitting}
+        loading={isSubmitting || loading.value}
         loadingIndicator="Sign in..."
       >
         Sign in

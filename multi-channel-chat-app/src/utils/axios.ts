@@ -199,4 +199,10 @@ export const endpoints = {
     update: "/items/services",
     delete: "/items/services",
   },
+  campaign: {
+    list: "/items/campaign",
+    create: "/items/campaign",
+    update: "/items/campaign",
+    delete: "/items/campaign",
+  },
 };
