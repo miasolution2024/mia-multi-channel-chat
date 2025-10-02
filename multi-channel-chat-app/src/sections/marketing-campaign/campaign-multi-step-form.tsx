@@ -17,24 +17,34 @@ import {
   CAMPAIGN_STEP_KEY,
   CAMPAIGN_STEPS,
 } from "@/constants/marketing-compaign";
-import { CampaignInfoStep,  } from "./components/steps/campaign-info-step";
+import { CampaignInfoStep } from "./components/steps/campaign-info-step";
 import {
   CampaignFormData,
   CampaignSchema,
   getDefaultValues,
   getFieldsForStep,
   buildCampaignDataStep1,
-  buildCampaignDataStep2
+  buildCampaignDataStep2,
 } from "./utils";
 import { PostContentInfoStep } from "./components/steps/post-content-info-step";
 import { CreatePostListStep } from "./components/steps/create-post-list-step";
 import { useCreateCampaign } from "@/hooks/apis/use-create-campaign";
 import { useUpdateCampaign } from "@/hooks/apis/use-update-campaign";
+import { CampaignRequest, createCampaignN8N } from "@/actions/auto-mia";
+import { useGetCampaignById } from "@/hooks/apis/use-get-campaign-by-id";
 
 export function CampaignMultiStepForm({ editData }: { editData?: null }) {
-  const [activeStep, setActiveStep] = useState(CAMPAIGN_STEP_KEY.CREATE_POST_LIST);
-  const { createCampaignHandler, isLoading: isCreatingCampaign } = useCreateCampaign();
-  const { updateCampaign: updateCampaignHandler, isLoading: isUpdatingCampaign } = useUpdateCampaign();
+  const [activeStep, setActiveStep] = useState(
+    CAMPAIGN_STEP_KEY.CAMPAIGN_INFO
+  );
+  const { createCampaignHandler, isLoading: isCreatingCampaign } =
+    useCreateCampaign();
+  const {
+    updateCampaign: updateCampaignHandler,
+    isLoading: isUpdatingCampaign,
+  } = useUpdateCampaign();
+
+  const { fetchData: getCampaignById, data: campaignData } = useGetCampaignById();
 
   const defaultValues = getDefaultValues(editData);
 
@@ -59,8 +69,10 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
 
   const onSubmit = handleSubmit(handleSubmitPost);
   const handleBack = () => {
-     if (!activeStep) return;
-    const currentIndex = CAMPAIGN_STEPS.findIndex(step => step.value === activeStep);
+    if (!activeStep) return;
+    const currentIndex = CAMPAIGN_STEPS.findIndex(
+      (step) => step.value === activeStep
+    );
     if (currentIndex > 0) {
       setActiveStep(CAMPAIGN_STEPS[currentIndex - 1].value);
     }
@@ -72,14 +84,31 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
         try {
           // Transform form data using utility function
           const apiData = buildCampaignDataStep1(data);
-          
+
           // Call create campaign API
           const response = await createCampaignHandler(apiData);
-          
+
           if (response?.data?.id) {
             // Set the ID in the form data
             methods.setValue("id", response.data.id);
-            
+            const inputN8NData: CampaignRequest = [
+              {
+                id: response.data.id,
+                startStep: 1,
+                endStep: 2,
+              },
+            ];
+            const n8nResponse = await createCampaignN8N(inputN8NData);
+            if (!n8nResponse?.success) {
+              toast.error(n8nResponse?.message || "Đã có lỗi xảy ra");
+              return;
+            }
+            // Get latest data after N8N processing
+            await getCampaignById(response.data.id.toString());
+
+            if (campaignData) {
+              console.log("detailResponse", campaignData);
+            }
             setActiveStep(CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
           }
         } catch (error) {
@@ -94,13 +123,13 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
             toast.error("Không tìm thấy ID chiến dịch");
             return;
           }
-          
+
           // Transform form data for Step 2 update
           const apiData = buildCampaignDataStep2(data, campaignId.toString());
-          
+
           // Call update campaign API
           await updateCampaignHandler(campaignId, apiData);
-          
+
           setActiveStep(CAMPAIGN_STEP_KEY.CREATE_POST_LIST);
         } catch (error) {
           console.error("Error updating campaign:", error);
@@ -109,7 +138,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
         }
       }
     },
-    [createCampaignHandler, methods, updateCampaignHandler]
+    [campaignData, createCampaignHandler, getCampaignById, methods, updateCampaignHandler]
   );
 
   const handleNext = useCallback(async () => {
@@ -151,7 +180,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     [CAMPAIGN_STEP_KEY.CAMPAIGN_INFO]: "Lên thông tin bài viết",
     [CAMPAIGN_STEP_KEY.POST_CONTENT_INFO]: "Tạo bài viết",
     [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: "Tạo bài viết (2)",
-  }
+  };
 
   if (!activeStep) return null;
 
