@@ -7,8 +7,8 @@ export interface UseGetCampaignByIdReturn {
   data: Campaign | null;
   isLoading: boolean;
   error: string | null;
-  fetchData: (id: string) => Promise<void>;
-  refetch: (id: string) => Promise<void>;
+  fetchData: (id: string) => Promise<Campaign | null>;
+  refetch: (id: string) => Promise<Campaign | null>;
 }
 
 export function useGetCampaignById(): UseGetCampaignByIdReturn {
@@ -16,11 +16,11 @@ export function useGetCampaignById(): UseGetCampaignByIdReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async (id: string) => {
+  const fetchData = useCallback(async (id: string): Promise<Campaign | null> => {
     if (!id) {
       setError('ID chiến dịch không hợp lệ');
       setIsLoading(false);
-      return;
+      return null;
     }
 
     try {
@@ -28,20 +28,23 @@ export function useGetCampaignById(): UseGetCampaignByIdReturn {
       setError(null);
       
       const response = await getCampaign(id);
-      setData(response.data || null);
+      const campaignData = response.data || null;
+      setData(campaignData);
+      return campaignData;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Không thể tải thông tin chiến dịch';
       setError(errorMessage);
       toast.error(errorMessage);
       console.error('Error fetching campaign by id:', err);
       setData(null);
+      return null;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const refetch = useCallback(async (id: string) => {
-    await fetchData(id);
+  const refetch = useCallback(async (id: string): Promise<Campaign | null> => {
+    return await fetchData(id);
   }, [fetchData]);
 
   return {

@@ -25,18 +25,26 @@ import {
   getFieldsForStep,
   buildCampaignDataStep1,
   buildCampaignDataStep2,
+  hasStepDataChanged,
+  extractStepData,
 } from "./utils";
 import { PostContentInfoStep } from "./components/steps/post-content-info-step";
 import { CreatePostListStep } from "./components/steps/create-post-list-step";
 import { useCreateCampaign } from "@/hooks/apis/use-create-campaign";
 import { useUpdateCampaign } from "@/hooks/apis/use-update-campaign";
-// import { CampaignRequest, createCampaignN8N } from "@/actions/auto-mia";
+import { CampaignRequest, createCampaignN8N } from "@/actions/auto-mia";
 import { useGetCampaignById } from "@/hooks/apis/use-get-campaign-by-id";
+import { LoadingOverlay } from "@/components/loading-overlay";
 
 export function CampaignMultiStepForm({ editData }: { editData?: null }) {
   const [activeStep, setActiveStep] = useState(
     CAMPAIGN_STEP_KEY.CAMPAIGN_INFO
   );
+  const [isNextLoading, setIsNextLoading] = useState(false);
+  
+  // Cache for storing step data after successful API calls
+  const [cachedStepData, setCachedStepData] = useState<Record<string, Partial<CampaignFormData> | null>>({});
+
   const { createCampaignHandler, isLoading: isCreatingCampaign } =
     useCreateCampaign();
   const {
@@ -44,7 +52,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     isLoading: isUpdatingCampaign,
   } = useUpdateCampaign();
 
-  const { fetchData: getCampaignById, data: campaignData } = useGetCampaignById();
+  const { fetchData: getCampaignById } = useGetCampaignById();
 
   const defaultValues = getDefaultValues(editData);
 
@@ -78,67 +86,117 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     }
   };
 
+  // Helper function for N8N processing - không cần useCallback vì không được truyền như prop
+  const processN8NStep = async (campaignId: number, step: number) => {
+    const inputN8NData: CampaignRequest[] = [
+      {
+        campaignId,
+        step,
+      },
+    ];
+    const n8nResponse = await createCampaignN8N(inputN8NData);
+    if (!n8nResponse?.success) {
+      toast.error(n8nResponse?.message || "Đã có lỗi xảy ra");
+      return false;
+    }
+    return true;
+  };
+
+  // Step 1 handler - không cần useCallback vì chỉ được gọi trong handleStepProcess
+  const handleCampaignInfoStep = async (data: CampaignFormData) => {
+    // Check if data has changed compared to cached data
+    if (!hasStepDataChanged(data, cachedStepData[CAMPAIGN_STEP_KEY.CAMPAIGN_INFO] || null, CAMPAIGN_STEP_KEY.CAMPAIGN_INFO)) {
+      // Data hasn't changed, just move to next step
+      setActiveStep(CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
+      return;
+    }
+
+    const apiData = buildCampaignDataStep1(data);
+    const response = await createCampaignHandler(apiData);
+
+    if (response?.data?.id) {
+      methods.setValue("id", response.data.id);
+      
+      const n8nSuccess = await processN8NStep(response.data.id, 1);
+      if (!n8nSuccess) {
+        return;
+      }
+      
+      const newCampaignDetail = await getCampaignById(response.data.id.toString());
+      if(newCampaignDetail) {
+        methods.setValue("main_seo_keyword", newCampaignDetail.main_seo_keyword || "");
+        methods.setValue("secondary_seo_keywords", newCampaignDetail.secondary_seo_keywords || []);
+      }
+      
+      // Cache the step data after successful API call
+      setCachedStepData(prev => ({
+        ...prev,
+        [CAMPAIGN_STEP_KEY.CAMPAIGN_INFO]: extractStepData(data, CAMPAIGN_STEP_KEY.CAMPAIGN_INFO)
+      }));
+      
+      setActiveStep(CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
+      return;
+    }
+  };
+
+  // Step 2 handler - không cần useCallback vì chỉ được gọi trong handleStepProcess
+  const handlePostContentInfoStep = async (data: CampaignFormData) => {
+    const campaignId = methods.getValues("id");
+    if (!campaignId) {
+      toast.error("Không tìm thấy ID chiến dịch");
+      return;
+    }
+
+    // Check if data has changed compared to cached data
+    if (!hasStepDataChanged(data, cachedStepData[CAMPAIGN_STEP_KEY.POST_CONTENT_INFO] || null, CAMPAIGN_STEP_KEY.POST_CONTENT_INFO)) {
+      // Data hasn't changed, just move to next step
+      setActiveStep(CAMPAIGN_STEP_KEY.CREATE_POST_LIST);
+      return;
+    }
+
+    const apiData = buildCampaignDataStep2(data, campaignId.toString());
+    await updateCampaignHandler(campaignId, apiData);
+
+    const n8nSuccess = await processN8NStep(campaignId, 2);
+    if (!n8nSuccess) {
+      return;
+    }
+    
+    const newCampaignDetail = await getCampaignById(campaignId.toString());
+    if(newCampaignDetail) {
+      methods.setValue("description", newCampaignDetail.description || "");
+    }
+    
+    // Cache the step data after successful API call
+    setCachedStepData(prev => ({
+      ...prev,
+      [CAMPAIGN_STEP_KEY.POST_CONTENT_INFO]: extractStepData(data, CAMPAIGN_STEP_KEY.POST_CONTENT_INFO)
+    }));
+    
+    setActiveStep(CAMPAIGN_STEP_KEY.CREATE_POST_LIST);
+    return;
+  };
+
+  // Cần useCallback vì được gọi trong handleNext và có dependencies
   const handleStepProcess = useCallback(
     async (data: CampaignFormData, currentStep: string) => {
-      if (currentStep === CAMPAIGN_STEP_KEY.CAMPAIGN_INFO) {
-        try {
-          // Transform form data using utility function
-          const apiData = buildCampaignDataStep1(data);
-
-          // Call create campaign API
-          const response = await createCampaignHandler(apiData);
-
-          if (response?.data?.id) {
-            // Set the ID in the form data
-            methods.setValue("id", response.data.id);
-            // const inputN8NData: CampaignRequest[] = [
-            //   {
-            //     campaignId: response.data.id,
-            //     startStep: 1,
-            //     endStep: 2,
-            //   },
-            // ];
-            // const n8nResponse = await createCampaignN8N(inputN8NData);
-            // if (!n8nResponse?.success) {
-            //   toast.error(n8nResponse?.message || "Đã có lỗi xảy ra");
-            //   return;
-            // }
-            // // Get latest data after N8N processing
-            // await getCampaignById(response.data.id.toString());
-
-            // if (campaignData) {
-            //   console.log("detailResponse", campaignData);
-            // }
-            setActiveStep(CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
-          }
-        } catch (error) {
-          console.error("Error creating campaign:", error);
-          toast.error("Có lỗi xảy ra khi tạo chiến dịch");
-          return;
+      setIsNextLoading(true);
+      try {
+        if (currentStep === CAMPAIGN_STEP_KEY.CAMPAIGN_INFO) {
+          await handleCampaignInfoStep(data);
+        } else if (currentStep === CAMPAIGN_STEP_KEY.POST_CONTENT_INFO) {
+          await handlePostContentInfoStep(data);
         }
-      } else if (currentStep === CAMPAIGN_STEP_KEY.POST_CONTENT_INFO) {
-        try {
-          const campaignId = methods.getValues("id");
-          if (!campaignId) {
-            toast.error("Không tìm thấy ID chiến dịch");
-            return;
-          }
-
-          // Transform form data for Step 2 update
-          const apiData = buildCampaignDataStep2(data, campaignId.toString());
-
-          // Call update campaign API
-          await updateCampaignHandler(campaignId, apiData);
-
-          setActiveStep(CAMPAIGN_STEP_KEY.CREATE_POST_LIST);
-        } catch (error) {
-          console.error("Error updating campaign:", error);
-          toast.error("Có lỗi xảy ra khi cập nhật chiến dịch");
-          return;
-        }
+      } catch (error) {
+        console.error("Error updating campaign:", error);
+        toast.error("Có lỗi xảy ra khi cập nhật chiến dịch");
+        return;
+      } finally {
+        setIsNextLoading(false);
       }
     },
-    [campaignData, createCampaignHandler, getCampaignById, methods, updateCampaignHandler]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [createCampaignHandler, getCampaignById, methods, updateCampaignHandler]
   );
 
   const handleNext = useCallback(async () => {
@@ -166,6 +224,16 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
 
   const isFirstStep = activeStep === CAMPAIGN_STEP_KEY.CAMPAIGN_INFO;
 
+  const getLoadingMessage = () => {
+    if (activeStep === CAMPAIGN_STEP_KEY.CAMPAIGN_INFO) {
+      return "Đang khởi tạo thông tin chiến dịch...";
+    } else if (activeStep === CAMPAIGN_STEP_KEY.POST_CONTENT_INFO) {
+      return "Đang tạo nội dung bài viết";
+    }
+
+    return "Đang xử lý...";
+  };
+
   const getActiveStep = () => {
     return CAMPAIGN_STEPS.findIndex((step) => step.value === activeStep);
   };
@@ -185,6 +253,12 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
   if (!activeStep) return null;
 
   return (
+    <>
+    <LoadingOverlay
+        open={isNextLoading}
+        title="Đang xử lý..."
+        description={getLoadingMessage()}
+      />
     <Form methods={methods} onSubmit={onSubmit}>
       <Stack>
         <Box sx={{ width: "100%", mb: 4 }}>
@@ -259,5 +333,6 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
         </Stack>
       </Stack>
     </Form>
+    </>
   );
 }

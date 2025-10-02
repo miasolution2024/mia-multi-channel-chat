@@ -8,8 +8,7 @@ export type PostRequest = {
 
 export type CampaignRequest = {
   campaignId: number;
-  startStep: number;
-  endStep: number;
+  step: number;
 }
 
 interface PostResponse {

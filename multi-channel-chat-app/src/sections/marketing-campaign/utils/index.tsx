@@ -174,7 +174,7 @@ export const getDefaultValues = (
   console.log('editData',editData)
   return {
     id: null,
-    name: "Chiến dịch Bắc phạt",
+    name: "Chiến dịch làm mát da",
     status: CAMPAIGN_STATUS.TODO,
     target_post_count: 5,
     start_date: new Date(),
@@ -183,18 +183,18 @@ export const getDefaultValues = (
     customer_group: [3],
     services: [2, 3],
     omni_channels: 269,
-    post_topic: "Tấn công Hán Trung",
-    objectives: "Diệt Nguỵ phục Hán",
+    post_topic: "Làm mát da",
+    objectives: "Tăng tương tác",
     description: "",
     ai_create_post_info_notes: "",
 
-    main_seo_keyword: "Tấn công",
+    main_seo_keyword: "",
     secondary_seo_keywords: [],
-    customer_journey: 2,
-    content_tone: [1,2],
-    ai_rule_based: [227, 228],
+    customer_journey: undefined,
+    content_tone: [],
+    ai_rule_based: [],
     ai_create_post_list_notes: "",
-    need_create_post_amount: 2,
+    need_create_post_amount: undefined,
     post_notes: "",
 
     ai_content_suggestion: [],
@@ -287,4 +287,60 @@ export const buildCampaignData = (formData: CampaignFormData): CampaignApiData =
       delete: [],
     },
   };
+};
+
+// Utility functions for data comparison and caching
+export const compareArrays = (arr1: unknown[], arr2: unknown[]): boolean => {
+  if (arr1.length !== arr2.length) return false;
+  return arr1.every((item, index) => item === arr2[index]);
+};
+
+export const compareDates = (date1: Date | null, date2: Date | null): boolean => {
+  if (date1 === null && date2 === null) return true;
+  if (date1 === null || date2 === null) return false;
+  return date1.getTime() === date2.getTime();
+};
+
+// Compare form data for specific step to detect changes
+export const hasStepDataChanged = (
+  currentData: CampaignFormData,
+  cachedData: Partial<CampaignFormData> | null,
+  step: string
+): boolean => {
+  if (!cachedData) return true;
+
+  const fieldsToCompare = getFieldsForStep(step);
+  
+  return fieldsToCompare.some((field) => {
+    const currentValue = currentData[field];
+    const cachedValue = cachedData[field];
+
+    // Handle array comparison
+    if (Array.isArray(currentValue) && Array.isArray(cachedValue)) {
+      return !compareArrays(currentValue, cachedValue);
+    }
+
+    // Handle date comparison
+    if (currentValue instanceof Date || cachedValue instanceof Date) {
+      return !compareDates(currentValue as Date | null, cachedValue as Date | null);
+    }
+
+    // Handle primitive values
+    return currentValue !== cachedValue;
+  });
+};
+
+// Extract data for specific step
+export const extractStepData = (
+  formData: CampaignFormData,
+  step: string
+): Partial<CampaignFormData> => {
+  const fieldsForStep = getFieldsForStep(step);
+  const stepData: Partial<CampaignFormData> = {};
+
+  fieldsForStep.forEach((field) => {
+    (stepData as Record<string, unknown>)[field] = formData[field];
+  });
+
+  return stepData;
 };
