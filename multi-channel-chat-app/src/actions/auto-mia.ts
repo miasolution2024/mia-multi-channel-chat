@@ -6,7 +6,11 @@ export type PostRequest = {
   endStep: number;
 }[]
 
-export type CampaignRequest = PostRequest
+export type CampaignRequest = {
+  campaignId: number;
+  startStep: number;
+  endStep: number;
+}
 
 interface PostResponse {
   success: boolean;
@@ -43,7 +47,7 @@ export const createPost = async (
 };
 
 export const createCampaignN8N = async (
-  data: CampaignRequest
+  data: CampaignRequest[]
 ): Promise<CampaignResponse> => {
   try {
     const response = await autoMiaAxiosInstance.post("/webhook/campaign", 

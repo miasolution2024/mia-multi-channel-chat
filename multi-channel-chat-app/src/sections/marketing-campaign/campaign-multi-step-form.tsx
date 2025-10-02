@@ -30,7 +30,7 @@ import { PostContentInfoStep } from "./components/steps/post-content-info-step";
 import { CreatePostListStep } from "./components/steps/create-post-list-step";
 import { useCreateCampaign } from "@/hooks/apis/use-create-campaign";
 import { useUpdateCampaign } from "@/hooks/apis/use-update-campaign";
-import { CampaignRequest, createCampaignN8N } from "@/actions/auto-mia";
+// import { CampaignRequest, createCampaignN8N } from "@/actions/auto-mia";
 import { useGetCampaignById } from "@/hooks/apis/use-get-campaign-by-id";
 
 export function CampaignMultiStepForm({ editData }: { editData?: null }) {
@@ -91,24 +91,24 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
           if (response?.data?.id) {
             // Set the ID in the form data
             methods.setValue("id", response.data.id);
-            const inputN8NData: CampaignRequest = [
-              {
-                id: response.data.id,
-                startStep: 1,
-                endStep: 2,
-              },
-            ];
-            const n8nResponse = await createCampaignN8N(inputN8NData);
-            if (!n8nResponse?.success) {
-              toast.error(n8nResponse?.message || "Đã có lỗi xảy ra");
-              return;
-            }
-            // Get latest data after N8N processing
-            await getCampaignById(response.data.id.toString());
+            // const inputN8NData: CampaignRequest[] = [
+            //   {
+            //     campaignId: response.data.id,
+            //     startStep: 1,
+            //     endStep: 2,
+            //   },
+            // ];
+            // const n8nResponse = await createCampaignN8N(inputN8NData);
+            // if (!n8nResponse?.success) {
+            //   toast.error(n8nResponse?.message || "Đã có lỗi xảy ra");
+            //   return;
+            // }
+            // // Get latest data after N8N processing
+            // await getCampaignById(response.data.id.toString());
 
-            if (campaignData) {
-              console.log("detailResponse", campaignData);
-            }
+            // if (campaignData) {
+            //   console.log("detailResponse", campaignData);
+            // }
             setActiveStep(CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
           }
         } catch (error) {
