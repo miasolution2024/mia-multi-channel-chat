@@ -114,7 +114,6 @@ const CustomCalendar = () => {
   const [inputData, setInputData] = useState("");
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-
   // const [searchData, setSearchData] = useState("");
 
   const toggleDrawer = (isOpened: boolean) => {

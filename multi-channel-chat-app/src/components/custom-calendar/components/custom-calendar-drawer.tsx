@@ -92,8 +92,6 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
       "12",
     ];
     const month = monthNames[date.getMonth()];
-
-    console.log(month);
     const year = date.getFullYear();
     return `Tháng ${month}, ${year}`;
   };
