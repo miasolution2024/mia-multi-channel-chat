@@ -6,7 +6,7 @@ export const CONFIG = {
   isStaticExport: JSON.parse(`${process.env.BUILD_STATIC_EXPORT}`),
   STORAGE_KEY: "jwt_access_token",
   auth: {
-    skip: false,
+    skip: true,
     redirectPath: "/dashboard/content-assistant",
   },
 };

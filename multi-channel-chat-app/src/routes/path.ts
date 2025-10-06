@@ -27,19 +27,24 @@ export const paths = {
       edit: (id: string) => `${ROOTS.DASHBOARD}/content-assistant/${id}/edit`,
     },
     contentTone: {
-    root: `${ROOTS.DASHBOARD}/content-tone`,
-    new: `${ROOTS.DASHBOARD}/content-tone/new`,
-    edit: (id: string) => `${ROOTS.DASHBOARD}/content-tone/${id}/edit`,
-  },
+      root: `${ROOTS.DASHBOARD}/content-tone`,
+      new: `${ROOTS.DASHBOARD}/content-tone/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/content-tone/${id}/edit`,
+    },
     aiRules: {
-    root: `${ROOTS.DASHBOARD}/ai-rules`,
-    new: `${ROOTS.DASHBOARD}/ai-rules/new`,
-    edit: (id: string) => `${ROOTS.DASHBOARD}/ai-rules/${id}/edit`,
+      root: `${ROOTS.DASHBOARD}/ai-rules`,
+      new: `${ROOTS.DASHBOARD}/ai-rules/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/ai-rules/${id}/edit`,
     },
     marketingCampaign: {
       root: `${ROOTS.DASHBOARD}/marketing-campaign`,
       new: `${ROOTS.DASHBOARD}/marketing-campaign/new`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/marketing-campaign/${id}/edit`,
+    },
+    postCalendar: {
+      root: `${ROOTS.DASHBOARD}/post-calendar`,
+      new: `${ROOTS.DASHBOARD}/post-calendar/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/post-calendar/${id}/edit`,
     },
   },
 };
