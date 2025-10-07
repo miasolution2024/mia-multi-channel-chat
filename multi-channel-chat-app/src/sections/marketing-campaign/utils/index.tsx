@@ -4,7 +4,7 @@ import {
     CAMPAIGN_STEP_KEY,
   } from "@/constants/marketing-compaign";
 import * as zod from "zod";
-import { CampaignApiData, CampaignStep1Data, CampaignStep2Data } from "../types";
+import { CampaignApiData, CampaignStep1Data, CampaignStep2Data, CampaignStep3Data } from "../types";
 
 // Schema definition
 const CampaignSchema = zod.object({
@@ -13,7 +13,7 @@ const CampaignSchema = zod.object({
 
   // Step 1: Campaign Info
   name: zod.string().min(1, "Tên chiến dịch là bắt buộc"),
-  status: zod.string().default(CAMPAIGN_STATUS.TODO),
+  status: zod.string().default(CAMPAIGN_STATUS.DRAFT),
   target_post_count: zod.number({
     required_error:"Số lượng mục tiêu bài viết là bắc buộc"
   }),
@@ -45,7 +45,6 @@ const CampaignSchema = zod.object({
   post_notes: zod.string().default(""),
 
   // Step 3: Create Post List
-  ai_content_suggestion: zod.string().array().default([]),
   ai_create_post_detail_notes: zod.string(),
   ai_content_suggestions: zod.string().array().default([]),
 });
@@ -82,7 +81,7 @@ export const getFieldsForStep = (step: string): (keyof CampaignFormData)[] => {
         "ai_create_post_list_notes",
       ];
     case CAMPAIGN_STEP_KEY.CREATE_POST_LIST:
-      return ["ai_create_post_detail_notes"];
+      return ["ai_create_post_detail_notes", "ai_content_suggestions"];
     default:
       return [];
   }
@@ -168,6 +167,24 @@ export const buildCampaignDataStep2 = (formData: CampaignFormData, campaignId: s
   };
 };
 
+export const buildCampaignDataStep3 = (
+  formData: CampaignFormData, 
+  campaignId: string, 
+  selectedContentSuggestions: (string | number)[]
+): CampaignStep3Data => {
+  return {
+    status: 'in_progress' as const,
+    ai_content_suggestions: {
+      create: [],
+      update: selectedContentSuggestions.map((id) => ({
+        campaign: campaignId,
+        id: typeof id === 'string' ? parseInt(id, 10) : id,
+      })),
+      delete: [],
+    },
+  };
+};
+
 export const getDefaultValues = (
   editData?: null
 ): Partial<CampaignFormData> => {
@@ -175,7 +192,7 @@ export const getDefaultValues = (
   return {
     id: null,
     name: "Chiến dịch làm mát da",
-    status: CAMPAIGN_STATUS.TODO,
+    status: CAMPAIGN_STATUS.DRAFT,
     target_post_count: 5,
     start_date: new Date(),
     end_date: new Date(),
@@ -197,7 +214,6 @@ export const getDefaultValues = (
     need_create_post_amount: undefined,
     post_notes: "",
 
-    ai_content_suggestion: [],
     ai_create_post_detail_notes: "",
     ai_content_suggestions: [],
   };
@@ -278,7 +294,7 @@ export const buildCampaignData = (formData: CampaignFormData): CampaignApiData =
       delete: [],
     },
     ai_content_suggestions: {
-      create: (formData.ai_content_suggestion || []).map((suggestion: string) => ({
+      create: (formData.ai_content_suggestions || []).map((suggestion: string) => ({
         campaign_id: "+",
         ai_content_suggestion: suggestion,
         ai_create_post_detail_notes: formData.ai_create_post_detail_notes || "",

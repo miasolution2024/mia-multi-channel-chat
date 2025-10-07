@@ -23,7 +23,7 @@ export const CAMPAIGN_STEPS = [
 ];
 
 export const CAMPAIGN_STATUS = {
-  TODO: "todo",
+  DRAFT: "draft",
   IN_PROGRESS: "in_progress",
   COMPLETED: "completed",
 }

@@ -123,6 +123,7 @@ const getCampaignStatusLabelAndColor = (
     | "error"
     | "info";
 } => {
+  console.log(status);
   switch (status) {
     case "completed":
       return { label: "Hoàn thành", color: "success" };
@@ -468,7 +469,7 @@ export function CampaignListView() {
         />
       ),
       sticky: "right",
-      width: 120,
+      width: 150,
     },
     {
       key: "actions",

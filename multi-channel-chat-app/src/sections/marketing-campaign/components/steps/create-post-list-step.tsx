@@ -1,133 +1,267 @@
-import {
-  RHFTextField,
-} from "@/components/hook-form";
+import { useEffect, useState } from "react";
+import { useFormContext, useForm, FormProvider } from "react-hook-form";
+import { getContentAssistantList } from "@/actions/content-assistant";
+import { useGetContentTones } from "@/hooks/apis/use-get-content-tones";
+import { CustomTable } from "@/components/custom-table";
 import { Iconify } from "@/components/iconify";
-import CustomTable from "@/components/custom-table/custom-table";
-import type { TableConfig } from "@/components/custom-table/custom-table";
-
-import {
-  Stack,
-  IconButton,
-  Typography,
-  Box,
-  Chip,
-  TextField,
-  ClickAwayListener,
+import { toast } from "@/components/snackbar";
+import { RHFTextField, RHFMultiSelect, RHFAutocomplete } from "@/components/hook-form";
+import PostSelectionDialog from "@/sections/content-assistant/components/post-selection-dialog";
+import { Content } from "@/sections/content-assistant/view/content-assistant-list-view";
+import { 
+  ContentSuggestionItem
+} from "@/sections/marketing-campaign/types/create-post-list-step";
+import { 
+  Box, 
+  Button,
+  Chip, 
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Drawer,
+  IconButton, 
+  Stack, 
+  Typography
 } from "@mui/material";
-import { useState } from "react";
+import type { TableConfig } from "@/components/custom-table/custom-table";
+import { POST_TYPE_OPTIONS } from "@/constants/auto-post";
 
-// Define the data structure for ai_content_suggestions
-interface ContentSuggestionItem {
-  id: string;
-  topic: string;
-  main_seo_keyword: string;
-  secondary_seo_keywords: string[];
-  customer_journey: number;
-  post_type: string;
-  content_tone: number[];
-  ai_notes_write_article: string;
-  [key: string]: unknown; // Add index signature to match DataItem interface
-}
+export function CreatePostListStep({
+  selectedContentSuggestions,
+  setSelectedContentSuggestions,
+}: {
+  selectedContentSuggestions: (string | number)[];
+  setSelectedContentSuggestions: (selected: (string | number)[]) => void;
+}) {
+  const { watch } = useFormContext();
+  const [contentSuggestions, setContentSuggestions] = useState<ContentSuggestionItem[]>([]);
+  const [isLoadingContentAssistant, setIsLoadingContentAssistant] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState<ContentSuggestionItem | null>(null);
+  const [createPostListDialogOpen, setCreatePostListDialogOpen] = useState(false);
 
-// Fake data for ai_content_suggestions
-const FAKE_CONTENT_SUGGESTIONS: ContentSuggestionItem[] = [
-  {
-    id: "1",
-    topic: "Xu hướng marketing số 2024",
-    main_seo_keyword: "marketing số",
-    secondary_seo_keywords: ["digital marketing", "xu hướng 2024", "chiến lược marketing"],
-    customer_journey: 1,
-    post_type: "blog",
-    content_tone: [1, 2],
-    ai_notes_write_article: "Tập trung vào các xu hướng mới nhất trong marketing số, bao gồm AI và automation"
-  },
-  {
-    id: "2", 
-    topic: "Cách tối ưu SEO cho website",
-    main_seo_keyword: "tối ưu SEO",
-    secondary_seo_keywords: ["SEO website", "tối ưu hóa", "thứ hạng Google"],
-    customer_journey: 2,
-    post_type: "tutorial",
-    content_tone: [1, 3],
-    ai_notes_write_article: "Hướng dẫn chi tiết các bước tối ưu SEO cơ bản và nâng cao"
-  },
-  {
-    id: "3",
-    topic: "Social Media Marketing hiệu quả",
-    main_seo_keyword: "social media marketing",
-    secondary_seo_keywords: ["mạng xã hội", "marketing Facebook", "Instagram marketing"],
-    customer_journey: 1,
-    post_type: "guide",
-    content_tone: [2, 4],
-    ai_notes_write_article: "Chia sẻ kinh nghiệm và chiến lược marketing trên các nền tảng mạng xã hội"
-  }
-];
+  // Watch form values for filtering
+  const postType = watch("post_type");
+  const omniChannels = watch("omni_channels");
 
-export function CreatePostListStep() {
-  const [contentSuggestions, setContentSuggestions] = useState<ContentSuggestionItem[]>(FAKE_CONTENT_SUGGESTIONS);
-  const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
-  const [editValue, setEditValue] = useState<string>("");
+  
+  // Use the new hook for content tones
+  const { data: contentToneOptions } = useGetContentTones({
+    page: 1,
+    limit: 100,
+  });
+
+  const editForm = useForm<{
+    topic: string;
+    main_seo_keyword: string;
+    secondary_seo_keywords: string[];
+    content_tone: string[];
+    ai_notes_write_article: string;
+  }>({
+    defaultValues: {
+      topic: "",
+      main_seo_keyword: "",
+      secondary_seo_keywords: [],
+      ai_notes_write_article: "",
+    },
+  });
+
+  const aiContentSuggestions = watch("ai_content_suggestions");
+
+  // Load content assistants when ai_content_suggestions changes
+  useEffect(() => {
+    const loadContentAssistants = async () => {
+      if (!aiContentSuggestions || !Array.isArray(aiContentSuggestions) || aiContentSuggestions.length === 0) {
+        setContentSuggestions([]);
+        return;
+      }
+
+      try {
+        setIsLoadingContentAssistant(true);
+        
+        // Gọi API getContentAssistantList với từng ID
+        const promises = aiContentSuggestions.map(async (contentId: string) => {
+          const response = await getContentAssistantList({
+            id: Number(contentId),
+          });
+          
+          if (response.data && response.data.length > 0) {
+            const item = response.data[0]; // Lấy item đầu tiên vì filter theo ID
+            return {
+              id: item.id.toString(),
+              topic: item.topic,
+              main_seo_keyword: item.main_seo_keyword,
+              secondary_seo_keywords: item.secondary_seo_keywords || [],
+              customer_journey: item.customer_journey || [],
+              post_type: item.post_type,
+              content_tone: item.content_tone || [],
+              ai_notes_write_article: item.ai_notes_write_article,
+            } as unknown as ContentSuggestionItem;
+          }
+          return null;
+        });
+        const results = await Promise.all(promises);
+        const filteredResults = results.filter(item => item !== null) as ContentSuggestionItem[];
+        setContentSuggestions(filteredResults);
+        // Mặc định tick hết tất cả items
+        setSelectedContentSuggestions(filteredResults.map(item => item.id));
+      } catch {
+        toast.error("Không thể tải danh sách content assistants");
+        setContentSuggestions([]);
+        setSelectedContentSuggestions([]);
+      } finally {
+        setIsLoadingContentAssistant(false);
+      }
+    };
+
+    loadContentAssistants();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(aiContentSuggestions)]);
+
+  // Xử lý khi user select/deselect items
+  const handleSelectChange = (selected: (string | number)[]) => {
+    setSelectedContentSuggestions(selected);
+  };
 
   // Handle delete item from list
   const handleDeleteItem = (id: string) => {
-    setContentSuggestions(prev => prev.filter(item => item.id !== id));
+    setItemToDelete(id);
+    setDeleteConfirmOpen(true);
   };
 
-  // Handle start editing
-  const handleStartEdit = (id: string, field: string, currentValue: string | string[] | number[]) => {
-    let valueToEdit = '';
-    if (Array.isArray(currentValue)) {
-      valueToEdit = currentValue.join(', ');
-    } else {
-      valueToEdit = String(currentValue);
+  // Handle confirm delete
+  const handleConfirmDelete = () => {
+    if (itemToDelete) {
+      
+      setContentSuggestions(prev => prev.filter(item => item.id !== itemToDelete));
+      const newSelected = selectedContentSuggestions.filter(id => id !== itemToDelete);
+      setSelectedContentSuggestions(newSelected);
+      toast.success("Đã xóa bài viết thành công");
     }
-    
-    setEditingCell({ id, field });
-    setEditValue(valueToEdit);
+    setDeleteConfirmOpen(false);
+    setItemToDelete(null);
   };
 
-  // Handle save edit
+  // Handle cancel delete
+  const handleCancelDelete = () => {
+    setDeleteConfirmOpen(false);
+    setItemToDelete(null);
+  };
+
+  const handleEditItem = (item: ContentSuggestionItem) => {
+    setItemToEdit(item);
+    editForm.reset({
+      topic: item.topic,
+      main_seo_keyword: item.main_seo_keyword,
+      secondary_seo_keywords: item.secondary_seo_keywords,
+      content_tone: item.content_tone.map(ct => {
+        // Find the corresponding tone option by description to get the ID
+        const toneOption = contentToneOptions.find(option => 
+          option.tone_description === ct.content_tone_id.tone_description
+        );
+        return toneOption?.id || '';
+      }).filter(id => id !== ''), // Remove empty IDs
+      ai_notes_write_article: item.ai_notes_write_article || "",
+    });
+    setEditDrawerOpen(true);
+  };
+
+  const handleCloseEditDrawer = () => {
+    setEditDrawerOpen(false);
+    setItemToEdit(null);
+    editForm.reset();
+  };
+
   const handleSaveEdit = () => {
-    if (editingCell) {
-      const { id, field } = editingCell;
-      setContentSuggestions(prev => 
-        prev.map(item => {
-          if (item.id === id) {
-            if (field === 'secondary_seo_keywords') {
-              return { 
-                ...item, 
-                [field]: editValue.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0)
-              };
-            } else if (field === 'content_tone') {
-              return { 
-                ...item, 
-                [field]: editValue.split(',').map(num => parseInt(num.trim())).filter(num => !isNaN(num))
-              };
-            } else {
-              return { ...item, [field]: editValue };
-            }
-          }
-          return item;
-        })
-      );
-      setEditingCell(null);
-      setEditValue('');
-    }
+    if (!itemToEdit) return;
+    
+    const formData = editForm.getValues();
+    
+    // Update the item in contentSuggestions state
+    const updatedSuggestions = contentSuggestions.map(suggestion => {
+      if (suggestion.id === itemToEdit.id) {
+        return {
+          ...suggestion,
+          topic: formData.topic,
+          main_seo_keyword: formData.main_seo_keyword,
+          secondary_seo_keywords: Array.isArray(formData.secondary_seo_keywords) 
+            ? formData.secondary_seo_keywords
+            : (formData.secondary_seo_keywords as string).split(',').map((k: string) => k.trim()),
+          content_tone: formData.content_tone.map(toneId => {
+            const tone = contentToneOptions.find(t => t.id === toneId);
+            return {
+              content_tone_id: {
+                id: toneId,
+                tone_description: tone?.tone_description || ''
+              }
+            };
+          }),
+          ai_notes_write_article: formData.ai_notes_write_article,
+        };
+      }
+      return suggestion;
+    });
+    
+    setContentSuggestions(updatedSuggestions);
+    handleCloseEditDrawer();
+    toast.success('Cập nhật bài viết thành công!');
   };
 
-  // Handle cancel edit
-  const handleCancelEdit = () => {
-    setEditingCell(null);
-    setEditValue("");
-  };
+  const handlePostsConfirm = (selectedItems: Content[]) => {
+    const selectedIds = selectedItems.map(item => item.id.toString());
+    const existingIds = contentSuggestions.map(item => item.id);
+    
+    // Find items to add (selected but not in existing)
+    const itemsToAdd = selectedItems.filter(item => !existingIds.includes(item.id.toString()));
+    
+    // Find items to remove (existing but not selected)
+    const idsToRemove = existingIds.filter(id => !selectedIds.includes(id));
+    
+    // Convert new Content items to ContentSuggestionItem format
+    const newContentSuggestions: ContentSuggestionItem[] = itemsToAdd.map(item => ({
+      id: item.id.toString(),
+      topic: item.topic,
+      main_seo_keyword: item.main_seo_keyword,
+      secondary_seo_keywords: item.secondary_seo_keywords || [],
+      customer_journey: item.customer_journey.map(cj => ({
+        customer_journey_id: {
+          name: cj.customer_journey_id.name
+        }
+      })),
+      post_type: item.post_type,
+      content_tone: item.content_tone.map(ct => ({
+        content_tone_id: {
+          id: ct.content_tone_id.id?.toString(),
+          tone_description: ct.content_tone_id.tone_description
+        }
+      })),
+      ai_notes_write_article: item.additional_notes || null,
+    }));
 
-  // Check if cell is being edited
-  const isCellEditing = (id: string, field: string) => {
-    return editingCell?.id === id && editingCell?.field === field;
+    // Update contentSuggestions: remove unchecked items and add new items
+    const filteredExistingSuggestions = contentSuggestions.filter(item => !idsToRemove.includes(item.id));
+    const updatedContentSuggestions = [...filteredExistingSuggestions, ...newContentSuggestions];
+    setContentSuggestions(updatedContentSuggestions);
+
+    // Update selectedContentSuggestions to match the selected items
+    setSelectedContentSuggestions(selectedIds);
+
+    // Close the dialog
+    setCreatePostListDialogOpen(false);
   };
 
   // Table configuration
   const TABLE_CONFIG: TableConfig[] = [
+    {
+      key:'id',
+      label:'ID',
+      align:'left',
+      width:100,
+    },
     { 
       key: "topic", 
       label: "Chủ đề", 
@@ -135,27 +269,6 @@ export function CreatePostListStep() {
       width: 180,
       render: (item) => {
         const suggestion = item as ContentSuggestionItem;
-        const isEditing = isCellEditing(suggestion.id, 'topic');
-        
-        if (isEditing) {
-          return (
-            <ClickAwayListener onClickAway={handleSaveEdit}>
-              <TextField
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveEdit();
-                  if (e.key === 'Escape') handleCancelEdit();
-                }}
-                size="small"
-                fullWidth
-                autoFocus
-                sx={{ maxWidth: 170 }}
-              />
-            </ClickAwayListener>
-          );
-        }
-        
         return (
           <Typography 
             variant="body2" 
@@ -164,16 +277,8 @@ export function CreatePostListStep() {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              maxWidth: 180,
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor: 'action.hover',
-                borderRadius: 1,
-                padding: '2px 4px',
-                margin: '-2px -4px'
-              }
+              maxWidth: 180
             }}
-            onClick={() => handleStartEdit(suggestion.id, 'topic', suggestion.topic)}
           >
             {suggestion.topic}
           </Typography>
@@ -187,40 +292,14 @@ export function CreatePostListStep() {
       width: 140,
       render: (item) => {
         const suggestion = item as ContentSuggestionItem;
-        const isEditing = isCellEditing(suggestion.id, 'main_seo_keyword');
-        
-        if (isEditing) {
-          return (
-            <ClickAwayListener onClickAway={handleSaveEdit}>
-              <TextField
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveEdit();
-                  if (e.key === 'Escape') handleCancelEdit();
-                }}
-                size="small"
-                fullWidth
-                autoFocus
-                sx={{ maxWidth: 130 }}
-              />
-            </ClickAwayListener>
-          );
-        }
-        
         return (
           <Chip
             label={suggestion.main_seo_keyword}
             size="small"
             variant="outlined"
             color="primary"
-            onClick={() => handleStartEdit(suggestion.id, 'main_seo_keyword', suggestion.main_seo_keyword)}
             sx={{ 
               maxWidth: 130,
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor: 'primary.lighter'
-              },
               '& .MuiChip-label': {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -236,47 +315,17 @@ export function CreatePostListStep() {
       key: "secondary_seo_keywords", 
       label: "Từ khóa phụ", 
       align: "left", 
-      width: 200,
+      width: 400,
       render: (item) => {
         const suggestion = item as ContentSuggestionItem;
-        const isEditing = isCellEditing(suggestion.id, 'secondary_seo_keywords');
-        
-        if (isEditing) {
-          return (
-            <ClickAwayListener onClickAway={handleSaveEdit}>
-              <TextField
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveEdit();
-                  if (e.key === 'Escape') handleCancelEdit();
-                }}
-                size="small"
-                fullWidth
-                autoFocus
-                placeholder="Nhập từ khóa, cách nhau bằng dấu phẩy"
-                sx={{ maxWidth: 190 }}
-              />
-            </ClickAwayListener>
-          );
-        }
-        
         return (
           <Stack 
             direction="row" 
             spacing={0.5} 
             sx={{ 
               flexWrap: 'wrap', 
-              gap: 0.5,
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor: 'action.hover',
-                borderRadius: 1,
-                padding: '2px 4px',
-                margin: '-2px -4px'
-              }
+              gap: 0.5
             }}
-            onClick={() => handleStartEdit(suggestion.id, 'secondary_seo_keywords', suggestion.secondary_seo_keywords)}
           >
             {suggestion.secondary_seo_keywords.map((keyword, index) => (
               <Chip
@@ -302,15 +351,9 @@ export function CreatePostListStep() {
     },
     { 
       key: "customer_journey", 
-      label: "Customer Journey", 
+      label: "Hành trình khách hàng", 
       align: "center", 
-      width: 100
-    },
-    { 
-      key: "post_type", 
-      label: "Loại bài viết", 
-      align: "center", 
-      width: 100,
+      width: 200,
       render: (item) => {
         const suggestion = item as ContentSuggestionItem;
         return (
@@ -320,10 +363,32 @@ export function CreatePostListStep() {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              maxWidth: 100
+              maxWidth: 180
             }}
           >
-            {suggestion.post_type}
+            {suggestion.customer_journey.map(cj => cj.customer_journey_id.name).join(', ')}
+          </Typography>
+        );
+      }
+    },
+    { 
+      key: "post_type", 
+      label: "Loại bài viết", 
+      align: "center", 
+      width: 150,
+      render: (item) => {
+        const suggestion = item as ContentSuggestionItem;
+        return (
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              maxWidth: 140
+            }}
+          >
+            {POST_TYPE_OPTIONS.find(option => option.value === suggestion.post_type)?.label || suggestion.post_type}
           </Typography>
         );
       }
@@ -331,105 +396,46 @@ export function CreatePostListStep() {
     { 
       key: "content_tone", 
       label: "Văn phong AI", 
-      align: "center", 
-      width: 100,
+      align: "left", 
+      width: 200,
       render: (item) => {
         const suggestion = item as ContentSuggestionItem;
-        const isEditing = isCellEditing(suggestion.id, 'content_tone');
-        
-        if (isEditing) {
-          return (
-            <ClickAwayListener onClickAway={handleSaveEdit}>
-              <TextField
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveEdit();
-                  if (e.key === 'Escape') handleCancelEdit();
-                }}
-                size="small"
-                fullWidth
-                autoFocus
-                placeholder="Nhập số, cách nhau bằng dấu phẩy"
-                sx={{ maxWidth: 90 }}
-              />
-            </ClickAwayListener>
-          );
-        }
-        
         return (
           <Typography 
             variant="body2"
-            onClick={() => handleStartEdit(suggestion.id, 'content_tone', suggestion.content_tone)}
             sx={{ 
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              maxWidth: 100,
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor: 'action.hover',
-                borderRadius: 1,
-                padding: '2px 4px',
-                margin: '-2px -4px'
-              }
+              overflow: 'auto',
+              maxWidth: 180
             }}
           >
-            {suggestion.content_tone.join(", ")}
+            {suggestion.content_tone.map(ct => ct.content_tone_id.tone_description).map(item => (
+              <Typography variant="body2" key={item}>
+                {item}
+              </Typography>
+            ))}
           </Typography>
         );
       }
     },
     { 
       key: "ai_notes_write_article", 
-      label: "Ghi chú AI", 
+      label: "Lưu ý bài viết", 
       align: "left", 
       width: 200,
       render: (item) => {
         const suggestion = item as ContentSuggestionItem;
-        const isEditing = isCellEditing(suggestion.id, 'ai_notes_write_article');
-        
-        if (isEditing) {
-          return (
-            <ClickAwayListener onClickAway={handleSaveEdit}>
-              <TextField
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveEdit();
-                  if (e.key === 'Escape') handleCancelEdit();
-                }}
-                size="small"
-                fullWidth
-                multiline
-                rows={2}
-                autoFocus
-                sx={{ maxWidth: 190 }}
-              />
-            </ClickAwayListener>
-          );
-        }
-        
         return (
           <Typography 
             variant="body2" 
-            onClick={() => handleStartEdit(suggestion.id, 'ai_notes_write_article', suggestion.ai_notes_write_article)}
             sx={{ 
               fontSize: '0.875rem',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              maxWidth: 200,
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor: 'action.hover',
-                borderRadius: 1,
-                padding: '2px 4px',
-                margin: '-2px -4px'
-              }
+              maxWidth: 180
             }}
           >
-            {suggestion.ai_notes_write_article}
+            {suggestion.ai_notes_write_article || ""}
           </Typography>
         );
       }
@@ -443,18 +449,32 @@ export function CreatePostListStep() {
       render: (item) => {
         const suggestion = item as ContentSuggestionItem;
         return (
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => handleDeleteItem(suggestion.id)}
-            sx={{ 
-              '&:hover': { 
-                backgroundColor: 'error.lighter' 
-              } 
-            }}
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" width={18} />
-          </IconButton>
+          <Stack direction="row" spacing={1}>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => handleEditItem(suggestion)}
+              sx={{ 
+                '&:hover': { 
+                  backgroundColor: 'primary.lighter' 
+                } 
+              }}
+            >
+              <Iconify icon="solar:pen-bold" width={18} />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleDeleteItem(suggestion.id)}
+              sx={{ 
+                '&:hover': { 
+                  backgroundColor: 'error.lighter' 
+                } 
+              }}
+            >
+              <Iconify icon="solar:trash-bin-trash-bold" width={18} />
+            </IconButton>
+          </Stack>
         );
       }
     }
@@ -501,16 +521,195 @@ export function CreatePostListStep() {
 
       {/* Content Suggestions Table */}
       <Box>
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-          Danh sách gợi ý nội dung
-        </Typography>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            Danh sách bài viết
+          </Typography>
+          <Stack>
+            <Button
+              variant="outlined"
+              sx={{paddingInline: 0, minWidth: 32}}
+              onClick={() => setCreatePostListDialogOpen(true)}
+            >
+              <Iconify icon="mingcute:add-line" />
+            </Button>
+          </Stack>
+        </Stack>
         <CustomTable
           data={contentSuggestions}
           tableConfig={TABLE_CONFIG}
-          firstLoading={false}
-          loading={false}
+          loading={isLoadingContentAssistant}
+          onSelect={handleSelectChange}
+          defaultSelected={selectedContentSuggestions}
+          checkKey="id"
+          canSelectRow={() => true}
         />
       </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Xác nhận xóa</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không
+            thể hoàn tác.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} color="inherit">
+            Hủy
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Drawer */}
+      <Drawer
+        anchor="right"
+        open={editDrawerOpen}
+        onClose={handleCloseEditDrawer}
+        PaperProps={{
+          sx: { width: 500 },
+        }}
+      >
+        <FormProvider {...editForm}>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" sx={{ mb: 3 }}>
+              Chỉnh sửa bài viết
+            </Typography>
+
+            <Stack spacing={3}>
+              <RHFTextField
+                name="topic"
+                label="Chủ đề"
+                placeholder="Nhập chủ đề bài viết"
+              />
+
+              <RHFTextField
+                name="main_seo_keyword"
+                label="Từ khóa chính"
+                placeholder="Nhập từ khóa chính"
+              />
+
+              <RHFAutocomplete
+                name="secondary_seo_keywords"
+                label="Từ khóa phụ"
+                placeholder="+ Thêm từ khóa"
+                multiple
+                freeSolo
+                disableCloseOnSelect
+                options={[]}
+                getOptionLabel={(option: string) => option}
+                renderOption={(
+                  props: React.HTMLAttributes<HTMLLIElement>,
+                  option: string
+                ) => (
+                  <li {...props} key={option}>
+                    {option}
+                  </li>
+                )}
+              />
+
+              <RHFMultiSelect
+                name="content_tone"
+                label="Văn phong AI"
+                options={
+                  contentToneOptions?.map((tone) => ({
+                    value: tone.id,
+                    label: tone.tone_description,
+                  })) || []
+                }
+                placeholder="Chọn văn phong AI"
+                chip
+                slotProps={{
+                  chip: {
+                    sx: {
+                      maxWidth: 500,
+                      "& .MuiChip-label": {
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      },
+                    },
+                  },
+                  select: {
+                    MenuProps: {
+                      PaperProps: {
+                        sx: {
+                          "& .MuiMenuItem-root": {
+                            maxWidth: 500,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          },
+                        },
+                      },
+                    },
+                  },
+                }}
+              />
+
+              <RHFTextField
+                name="ai_notes_write_article"
+                label="Lưu ý bài viết"
+                placeholder="Nhập lưu ý cho bài viết"
+                multiline
+                minRows={3}
+                maxRows={6}
+              />
+            </Stack>
+
+            <Stack
+              direction="row"
+              spacing={2}
+              sx={{
+                mt: 4,
+                pt: 2,
+                borderTop: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Button variant="contained" onClick={handleSaveEdit} fullWidth>
+                Lưu thay đổi
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleCloseEditDrawer}
+                fullWidth
+              >
+                Hủy
+              </Button>
+            </Stack>
+          </Box>
+        </FormProvider>
+      </Drawer>
+
+      {/* Content Posts Selection Dialog */}
+      <PostSelectionDialog
+          open={createPostListDialogOpen}
+          onClose={() => setCreatePostListDialogOpen(false)}
+          onConfirm={handlePostsConfirm}
+          defaultSelected={contentSuggestions.map(item => item.id)}
+          postFilters={{
+            post_type: postType,
+            omni_channels: omniChannels
+          }}
+        />
     </Stack>
   );
 }
