@@ -12,7 +12,7 @@ import {
   Stepper,
   Typography,
 } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, memo, useMemo } from "react";
 import {
   CAMPAIGN_STEP_KEY,
   CAMPAIGN_STEPS,
@@ -28,6 +28,9 @@ import {
   buildCampaignDataStep3,
   hasStepDataChanged,
   extractStepData,
+  transformCampaignToContentAssistant,
+  createDebouncedDateValidation,
+  isDateRangeValid,
 } from "./utils";
 import { PostContentInfoStep } from "./components/steps/post-content-info-step";
 import { CreatePostListStep } from "./components/steps/create-post-list-step";
@@ -38,12 +41,11 @@ import { useGetCampaignById } from "@/hooks/apis/use-get-campaign-by-id";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { useCreateContentAssistant } from "@/hooks/apis/use-create-content-assistant";
 import { buildStepResearchData } from "@/sections/content-assistant/utils";
-import { POST_TYPE } from "@/constants/auto-post";
 import { CreateContentAssistantResponse, CreateContentAssistantRequest } from "@/sections/content-assistant/types/content-assistant-create";
 import { useRouter } from "next/navigation";
 import { paths } from "@/routes/path";
 
-export function CampaignMultiStepForm({ editData }: { editData?: null }) {
+function CampaignMultiStepFormComponent({ editData }: { editData?: null }) {
   const [activeStep, setActiveStep] = useState(
     CAMPAIGN_STEP_KEY.CAMPAIGN_INFO
   );
@@ -66,7 +68,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
   const { fetchData: getCampaignById } = useGetCampaignById();
   const { createContentAssistant, isLoading: isCreatingContentAssistant } = useCreateContentAssistant();
 
-  const defaultValues = getDefaultValues(editData);
+  const defaultValues = useMemo(() => getDefaultValues(editData), [editData]);
 
   const methods = useForm<CampaignFormData>({
     resolver: zodResolver(CampaignSchema),
@@ -75,13 +77,27 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     shouldFocusError: true,
   });
 
-  const { handleSubmit } = methods;
+  const { handleSubmit, watch, setError, clearErrors, formState } = methods;
+  const startDate = watch("start_date");
+  const endDate = watch("end_date");
+
+  useEffect(() => {
+    // Sử dụng utility function từ utils
+    const cleanup = createDebouncedDateValidation(
+      startDate, 
+      endDate, 
+      setError, 
+      clearErrors, 
+      formState
+    );
+
+    return cleanup;
+  }, [startDate, endDate, setError, clearErrors, formState]);
 
   const handleSubmitPost = async () => {
     try {
       // Handle final form submission
     } catch (error) {
-      console.error(error);
       toast.error("Có lỗi xảy ra!");
       throw error;
     }
@@ -169,32 +185,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     if (needCreatePostAmount && needCreatePostAmount > 0) {
       try {
         // Transform campaign data to content assistant FormData format
-        const contentAssistantFormData = {
-          post_type: data.post_type || POST_TYPE.FACEBOOK_POST,
-          topic: data.post_topic,
-          main_seo_keyword: data.main_seo_keyword,
-          secondary_seo_keywords: data.secondary_seo_keywords || [],
-          customer_group: data.customer_group || [],
-          services: data.services || [],
-          customer_journey: data.customer_journey,
-          content_tone: data.content_tone || [],
-          ai_rule_based: data.ai_rule_based || [],
-          ai_notes_make_outline: data.ai_create_post_list_notes || "",
-          omni_channels: [data.omni_channels],
-          video: [],
-          // Required fields for FormData type
-          id: null,
-          status: "draft",
-          outline_post: "",
-          post_goal: "",
-          post_notes: "",
-          ai_notes_write_article: "",
-          post_content: "",
-          ai_notes_create_image: "",
-          media: [],
-          media_generated_ai: [],
-          is_generated_by_AI: false,
-        };
+        const contentAssistantFormData = transformCampaignToContentAssistant(data);
 
         // Build the research data for content assistant creation
         const researchData = await buildStepResearchData(contentAssistantFormData, true);
@@ -213,8 +204,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
 
         // Set the created IDs to ai_content_suggestions
         methods.setValue('ai_content_suggestions', createdIds);
-      } catch (error) {
-        console.error("Error creating content assistants:", error);
+      } catch {
         toast.error("Có lỗi xảy ra khi tạo nội dung trợ lý");
       }
     }
@@ -269,7 +259,6 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
   )
   
 
-  console.log('selectedContentSuggestions', selectedContentSuggestions);
   const handleStepProcess = useCallback(
     async (data: CampaignFormData, currentStep: string) => {
       setIsNextLoading(true);
@@ -279,8 +268,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
         } else if (currentStep === CAMPAIGN_STEP_KEY.POST_CONTENT_INFO) {
           await handlePostContentInfoStep(data);
         }
-      } catch (error) {
-        console.error("Error updating campaign:", error);
+      } catch {
         toast.error("Có lỗi xảy ra khi cập nhật chiến dịch");
         return;
       } finally {
@@ -293,8 +281,48 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
 
   const handleNext = useCallback(async () => {
     if (!activeStep) return;
+    
+    // Check date validation first for CAMPAIGN_INFO step
+    if (activeStep === CAMPAIGN_STEP_KEY.CAMPAIGN_INFO) {
+      const formData = methods.getValues();
+      const { start_date, end_date } = formData;
+      
+      if (!isDateRangeValid(start_date, end_date)) {
+        // Set the error manually to ensure it shows in the UI
+        if (start_date && end_date && start_date > end_date) {
+          methods.setError('end_date', {
+            type: 'manual',
+            message: 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu'
+          });
+        }
+        
+        toast.error('Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc');
+        return;
+      }
+    }
+
     const fieldsToValidate = getFieldsForStep(activeStep);
     const isStepValid = await methods.trigger(fieldsToValidate);
+    
+    // Re-check date validation after trigger to ensure errors are still visible
+    if (activeStep === CAMPAIGN_STEP_KEY.CAMPAIGN_INFO) {
+      const formData = methods.getValues();
+      const { start_date, end_date } = formData;
+      
+      if (!isDateRangeValid(start_date, end_date)) {
+        
+        // Re-set the error after trigger
+        if (start_date && end_date && start_date > end_date) {
+          methods.setError('end_date', {
+            type: 'manual',
+            message: 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu'
+          });
+        }
+        
+        return;
+      }
+    }
+    
     if (!isStepValid) {
       return;
     }
@@ -432,3 +460,5 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     </>
   );
 }
+
+export const CampaignMultiStepForm = memo(CampaignMultiStepFormComponent);

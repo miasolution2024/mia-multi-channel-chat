@@ -71,14 +71,7 @@ export interface CampaignStep1Data {
     update: never[];
     delete: never[];
   };
-  omni_channels: {
-    create: Array<{
-      campaign_id: string;
-      omni_channels_id: { id: number };
-    }>;
-    update: never[];
-    delete: never[];
-  };
+  omni_channels: number | undefined;
 }
 
 // Type for API data structure
