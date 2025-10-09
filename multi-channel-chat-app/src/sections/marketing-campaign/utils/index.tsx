@@ -65,7 +65,7 @@ export const validateDateRange = (
     if (startDate > endDate) {
       setError("end_date", {
         type: "manual",
-        message: "Ngày kết thúc phải lớn hơn ngày bắt đầu",
+        message: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu",
       });
       // Clear error on start_date if any
       clearErrors("start_date");
@@ -261,8 +261,8 @@ export const getDefaultValues = (
       start_date: editData.start_date ? new Date(editData.start_date) : new Date(),
       end_date: editData.end_date ? new Date(editData.end_date) : new Date(),
       post_type: editData.post_type || POST_TYPE.FACEBOOK_POST,
-      customer_group: editData.customer_group?.map(cg => cg.customer_group_id.id) || [],
-      services: editData.services?.map(s => s.services_id.id) || [],
+      customer_group: editData.customer_group?.map(cg => cg.customer_group_id?.id).filter(id => id !== undefined) || [],
+      services: editData.services?.map(s => s.services_id?.id).filter(id => id !== undefined) || [],
       omni_channels: editData['38a0c536']?.id || editData['704a9f83'] ? 1 : 1,
       post_topic: editData.post_topic || "",
       objectives: editData.objectives || "",
@@ -272,14 +272,14 @@ export const getDefaultValues = (
       main_seo_keyword: editData.main_seo_keyword || "",
       secondary_seo_keywords: editData.secondary_seo_keywords || [],
       customer_journey: editData.customer_journey?.[0]?.customer_journey_id?.id,
-      content_tone: editData.content_tone?.map(ct => ct.content_tone_id.id) || [],
-      ai_rule_based: editData.ai_rule_based?.map(ar => ar.ai_rule_based_id.id) || [],
+      content_tone: editData.content_tone?.map(ct => ct.content_tone_id?.id).filter(id => id !== undefined) || [],
+      ai_rule_based: editData.ai_rule_based?.map(ar => ar.ai_rule_based_id?.id).filter(id => id !== undefined) || [],
       ai_create_post_list_notes: "",
       need_create_post_amount: editData.need_create_post_amount ? Number(editData.need_create_post_amount) : undefined,
       post_notes: "",
       
       ai_create_post_detail_notes: "",
-      ai_content_suggestions: editData.ai_content_suggestions?.map(acs => acs.id.toString()) || [],
+      ai_content_suggestions: editData.ai_content_suggestions?.map(acs => acs.id?.toString()).filter(id => id !== undefined) || [],
     };
   }
   

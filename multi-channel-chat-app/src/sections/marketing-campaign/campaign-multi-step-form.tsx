@@ -44,8 +44,9 @@ import { buildStepResearchData } from "@/sections/content-assistant/utils";
 import { CreateContentAssistantResponse, CreateContentAssistantRequest } from "@/sections/content-assistant/types/content-assistant-create";
 import { useRouter } from "next/navigation";
 import { paths } from "@/routes/path";
+import { Campaign } from "@/types/campaign";
 
-function CampaignMultiStepFormComponent({ editData }: { editData?: null }) {
+function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | null }) {
   const [activeStep, setActiveStep] = useState(
     CAMPAIGN_STEP_KEY.CAMPAIGN_INFO
   );
@@ -77,9 +78,17 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: null }) {
     shouldFocusError: true,
   });
 
-  const { handleSubmit, watch, setError, clearErrors, formState } = methods;
+  const { handleSubmit, watch, setError, clearErrors, formState, reset } = methods;
   const startDate = watch("start_date");
   const endDate = watch("end_date");
+
+  // Reset form when editData changes
+  useEffect(() => {
+    if (editData) {
+      const newDefaultValues = getDefaultValues(editData);
+      reset(newDefaultValues);
+    }
+  }, [editData, reset]);
 
   useEffect(() => {
     // Sử dụng utility function từ utils
@@ -252,9 +261,10 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: null }) {
     toast.success(
         `Đã bắt đầu tạo ${n8nPostInput.length} bài viết. Quá trình sẽ hoàn thành trong khoảng 10 phút.`
       );
-    router.push(paths.dashboard.marketingCampaign.root)
-    
-  },
+      setTimeout(() => {
+        router.push(paths.dashboard.marketingCampaign.root)
+      }, 1000);
+    },
     [methods, router, selectedContentSuggestions, updateCampaignHandler],
   )
   
@@ -303,25 +313,6 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: null }) {
 
     const fieldsToValidate = getFieldsForStep(activeStep);
     const isStepValid = await methods.trigger(fieldsToValidate);
-    
-    // Re-check date validation after trigger to ensure errors are still visible
-    if (activeStep === CAMPAIGN_STEP_KEY.CAMPAIGN_INFO) {
-      const formData = methods.getValues();
-      const { start_date, end_date } = formData;
-      
-      if (!isDateRangeValid(start_date, end_date)) {
-        
-        // Re-set the error after trigger
-        if (start_date && end_date && start_date > end_date) {
-          methods.setError('end_date', {
-            type: 'manual',
-            message: 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu'
-          });
-        }
-        
-        return;
-      }
-    }
     
     if (!isStepValid) {
       return;

@@ -123,7 +123,6 @@ const getCampaignStatusLabelAndColor = (
     | "error"
     | "info";
 } => {
-  console.log(status);
   switch (status) {
     case "completed":
       return { label: "Hoàn thành", color: "success" };

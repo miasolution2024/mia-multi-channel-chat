@@ -81,7 +81,7 @@ export function CampaignInfoStep() {
               name="target_post_count"
               label="Số bài viết mục tiêu"
             />
-            <RHFSelect required name="status" label="Loại bài viết">
+            <RHFSelect required name="status" label="Trạng thái">
               {[
                 { value: CAMPAIGN_STATUS.DRAFT, label: "Khởi tạo" },
                 { value: CAMPAIGN_STATUS.IN_PROGRESS, label: "Đang chạy" },
