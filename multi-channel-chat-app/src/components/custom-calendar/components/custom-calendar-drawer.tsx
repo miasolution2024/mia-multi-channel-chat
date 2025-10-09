@@ -9,6 +9,8 @@ import "../styles/custom-drawer.css";
 import { Iconify } from "@/components/iconify";
 import DrawerSidebar from "./drawer-sidebar";
 import { useCalendarPositions } from "../hooks/use-calendar-navigations";
+import { OmniChoices } from "../type";
+import { useGetWorkingScheduleOmniChannels } from "@/actions/post-calendar";
 
 interface CustomCalendarDrawerProps {
   isOpened: boolean;
@@ -18,31 +20,40 @@ interface CustomCalendarDrawerProps {
   onPeopleChange?: (choices: number[]) => void;
 }
 
-const Channels = [
-  { id: 0, title: "Tất cả" },
-  { id: 1, title: "Warmmate Thẩm Mỹ Viện" },
-  { id: 2, title: "Warmmate" },
-];
-
-const People = [
-  { id: 0, title: "Tất cả" },
-  { id: 1, title: "Nguyễn Văn A" },
-  { id: 2, title: "Vũ Quốc B" },
-  { id: 3, title: "Trần Minh C" },
-];
-
 const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
   isOpened,
   handleCloseDrawer,
   onSelectedDateChange,
   onChannelsChange,
-  onPeopleChange,
+  // onPeopleChange,
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [channelsChoices, setChannelsChoices] = useState<number[]>([0]);
-  const [peopleChoices, setPeopleChoices] = useState<number[]>([0]);
+  // const [peopleChoices, setPeopleChoices] = useState<number[]>([0]);
+  const [omniChannels, setOmniChannels] = useState<OmniChoices[]>([
+    { id: 0, page_name: "Tất cả" },
+  ]);
+  const { omniChannelsData } = useGetWorkingScheduleOmniChannels();
+  const omniChannelsLength = Array.isArray(omniChannelsData)
+    ? omniChannelsData.length
+    : 0;
+
+  useEffect(() => {
+    if (omniChannelsData) {
+      const apiOmni: OmniChoices[] = omniChannelsData.map((item) => ({
+        id: item.id,
+        page_name: item.page_name,
+      }));
+
+      const allOmniChannels: OmniChoices[] = [
+        { id: 0, page_name: "Tất cả" },
+        ...apiOmni,
+      ];
+      setOmniChannels(allOmniChannels);
+    }
+  }, [omniChannelsLength]);
 
   const createToggleHandler = (
     setChoices: React.Dispatch<React.SetStateAction<number[]>>
@@ -69,7 +80,7 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
   };
 
   const handleChannelToggle = createToggleHandler(setChannelsChoices);
-  const handlePeopleToggle = createToggleHandler(setPeopleChoices);
+  // const handlePeopleToggle = createToggleHandler(setPeopleChoices);
 
   const { handlePrevious, handleNext } = useCalendarPositions(
     calendarRef,
@@ -140,8 +151,8 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
   useEffect(() => {
     if (onSelectedDateChange) onSelectedDateChange(selectedDate);
     if (onChannelsChange) onChannelsChange(channelsChoices);
-    if (onPeopleChange) onPeopleChange(peopleChoices);
-  }, [selectedDate, channelsChoices, peopleChoices]);
+    // if (onPeopleChange) onPeopleChange(peopleChoices);
+  }, [selectedDate, channelsChoices]);
 
   useEffect(() => {
     if (isOpened && calendarRef.current) {
@@ -151,7 +162,6 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
         calendarApi.gotoDate(selectedDate);
         setCurrentDate(selectedDate);
       } else {
-        // Otherwise, go to current month
         const today = new Date();
         calendarApi.gotoDate(today);
         setCurrentDate(today);
@@ -280,19 +290,19 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
             <DrawerSidebar
               title="Trang đặt lịch hẹn"
               handleDataToggle={handleChannelToggle}
-              data={Channels}
+              data={omniChannels}
               dataChoices={channelsChoices}
             />
           </Box>
 
-          <Box>
+          {/* <Box>
             <DrawerSidebar
               title="Người thực hiện"
               handleDataToggle={handlePeopleToggle}
               data={People}
               dataChoices={peopleChoices}
             />
-          </Box>
+          </Box> */}
         </Box>
       </Drawer>
     </>

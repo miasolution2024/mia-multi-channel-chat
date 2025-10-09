@@ -48,9 +48,9 @@ const CustomCalendarTooltip: React.FC<CustomCalendarTooltipProps> = ({
 
         <Box
           sx={{
-            backgroundColor: "#4a4a4a",
+            backgroundColor: "#4a4a4ae8",
             color: "white",
-            padding: "8px 12px",
+            padding: "8px",
             borderRadius: "6px",
             fontSize: "14px",
             fontWeight: 500,

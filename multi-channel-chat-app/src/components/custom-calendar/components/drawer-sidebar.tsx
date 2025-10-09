@@ -9,11 +9,12 @@ import {
   Button,
 } from "@mui/material";
 import React, { useState } from "react";
+import { OmniChoices } from "../type";
 
 interface DrawerSidebarProps {
   title: string;
   handleDataToggle: (id: number) => void;
-  data: { id: number; title: string }[];
+  data: OmniChoices[];
   dataChoices: number[];
 }
 
@@ -42,6 +43,7 @@ const DrawerSidebar: React.FC<DrawerSidebarProps> = ({
       >
         <Box
           sx={{
+            height: "auto",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -94,15 +96,15 @@ const DrawerSidebar: React.FC<DrawerSidebarProps> = ({
 
         <Box
           sx={{
-            maxHeight: openSidebar ? "238px" : "0px",
+            maxHeight: openSidebar ? "1000px" : "0px",
             overflow: "hidden",
-            transition: "all 0.3s ease-in-out",
+            transition: "all 0.35s ease-in-out",
           }}
         >
           <List sx={{ p: 0 }}>
-            {data.map((channel) => (
+            {data.map((data) => (
               <ListItem
-                key={channel.id}
+                key={data.id}
                 sx={{
                   cursor: "pointer",
                 }}
@@ -112,8 +114,8 @@ const DrawerSidebar: React.FC<DrawerSidebarProps> = ({
                     edge="start"
                     tabIndex={-1}
                     disableRipple
-                    onClick={() => handleDataToggle(channel.id)}
-                    checked={dataChoices.includes(channel.id)}
+                    onClick={() => handleDataToggle(data.id)}
+                    checked={dataChoices.includes(data.id)}
                     sx={{
                       "& .MuiSvgIcon-root": {
                         borderRadius: "10px",
@@ -122,8 +124,8 @@ const DrawerSidebar: React.FC<DrawerSidebarProps> = ({
                   />
                 </Box>
                 <ListItemText
-                  id={channel.id.toString()}
-                  primary={channel.title}
+                  id={data.id.toString()}
+                  primary={data.page_name}
                 />
               </ListItem>
             ))}

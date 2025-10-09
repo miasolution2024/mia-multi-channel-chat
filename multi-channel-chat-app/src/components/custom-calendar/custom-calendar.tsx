@@ -14,107 +14,47 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { Iconify } from "../iconify";
 import "./styles/custom-calendar.css";
 import CustomCalendarTimeChoice from "./components/custom-calendar-timechoices";
-import CustomCalendarStatusChoices from "./components/custome-calendar-statuschoices";
+import CustomCalendarStatusChoices from "./components/custom-calendar-statuschoices";
 import CustomCalendarDrawer from "./components/custom-calendar-drawer";
 import CustomCalendarEvent from "./components/custom-calendar-event";
-// import { paths } from "@/routes/path";
-// import router from "next/router";
 import { useCalendarPositions } from "./hooks/use-calendar-navigations";
 import CustomCalendarTooltip from "./components/custom-calendar-tooltip";
-
-const Events = [
-  {
-    id: 1,
-    title: "Cấy meso",
-    time: "08:00 AM",
-    date: "23/09/2025",
-    channelId: 1,
-    channel: "Warmmate Thẩm Mỹ Viện",
-    peopleId: 1,
-    people: "Nguyễn Văn A",
-    note: "MKT Tháng 10",
-    status: "Đã lên lịch",
-  },
-  {
-    id: 2,
-    title: "Chăm da trẻ hoá",
-    time: "04:00 AM",
-    date: "23/09/2025",
-    channelId: 1,
-    channel: "Warmmate Thẩm Mỹ Viện",
-    peopleId: 1,
-    people: "Nguyễn Văn A",
-    note: "MKT Tháng 10",
-    status: "Đã lên lịch",
-  },
-  {
-    id: 3,
-    title: "Cấy meso",
-    time: "15:00 PM",
-    date: "26/09/2025",
-    channelId: 1,
-    channel: "Warmmate Thẩm Mỹ Viện",
-    peopleId: 2,
-    people: "Vũ Quốc B",
-    note: "MKT Tháng 10",
-    status: "Đã đăng",
-  },
-  {
-    id: 4,
-    title: "Cấy meso",
-    time: "16:00 PM",
-    date: "27/09/2025",
-    channelId: 1,
-    channel: "Warmmate Thẩm Mỹ Viện",
-    peopleId: 3,
-    people: "Trần Minh C",
-    note: "MKT Tháng 10",
-    status: "Đã đăng",
-  },
-  {
-    id: 5,
-    title: "Cấy meso",
-    time: "14:00 PM",
-    date: "27/09/2025",
-    channelId: 2,
-    channel: "Warmmate",
-    peopleId: 2,
-    people: "Vũ Quốc B",
-    note: "MKT Tháng 10",
-    status: "Đã lên lịch",
-  },
-  {
-    id: 6,
-    title: "Cấy meso",
-    time: "14:00 PM",
-    date: "02/10/2025",
-    channelId: 2,
-    channel: "Warmmate",
-    peopleId: 2,
-    people: "Vũ Quốc B",
-    note: "MKT Tháng 10",
-    status: "Đã lên lịch",
-  },
-];
+import { WorkingSchedule } from "./type";
+import { useGetWorkingSchedule } from "@/actions/post-calendar";
+import {
+  formatScheduledTimeToDate,
+  formatScheduledTimeToTime,
+} from "./hooks/use-format-date-time";
 
 const CustomCalendar = () => {
   const theme = useTheme();
   const calendarRef = useRef<FullCalendar>(null);
   const [timeChoice, setTimeChoice] = useState("Tuần");
-  const [statusChoice, setStatusChoice] = useState("Tất cả");
+  const [statusChoice, setStatusChoice] = useState("all");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [openDrawer, setOpenDrawer] = useState(false);
   const [drawerSelectedDate, setDrawerSelectedDate] = useState<Date | null>(
     null
   );
-  const [drawerChannels, setDrawerChannels] = useState<number[]>([1]);
-  const [drawerPeople, setDrawerPeople] = useState<number[]>([1]);
+  const [schedules, setSchedules] = useState<WorkingSchedule[]>([]);
+  const [drawerChannels, setDrawerChannels] = useState<number[]>([0]);
+  // const [drawerPeople, setDrawerPeople] = useState<number[]>([1]);
   const [, setSelectedDate] = useState<Date | null>(null);
   const [searchData, setSearchData] = useState("");
   const [inputData, setInputData] = useState("");
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  // const [searchData, setSearchData] = useState("");
+  const { workingSchedules } = useGetWorkingSchedule(
+    searchData,
+    statusChoice,
+    drawerChannels
+  );
+
+  useEffect(() => {
+    if (workingSchedules) {
+      setSchedules(workingSchedules);
+    }
+  }, [workingSchedules]);
 
   const toggleDrawer = (isOpened: boolean) => {
     setOpenDrawer(isOpened);
@@ -128,7 +68,6 @@ const CustomCalendar = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Calculate the same date next month, then subtract one day
     const sameDateNextMonth = new Date(
       today.getFullYear(),
       today.getMonth() + 1,
@@ -158,7 +97,7 @@ const CustomCalendar = () => {
       const rect = info.dayEl.getBoundingClientRect();
       setTooltipPosition({
         x: rect.left + rect.width / 2,
-        y: rect.bottom + 10,
+        y: rect.top + 10,
       });
     } else {
       setShowTooltip(false);
@@ -308,74 +247,38 @@ const CustomCalendar = () => {
         }
       : {};
 
-  const toIsoDate = (dateString: string) => {
-    const [day, month, year] = dateString.split("/").map(Number);
-    const mm = String(month).padStart(2, "0");
-    const dd = String(day).padStart(2, "0");
-    return `${year}-${mm}-${dd}`;
-  };
+  const calendarEvents = useMemo(() => {
+    const sortedSchedules = [...schedules].sort((a, b) => {
+      const aTime = a.scheduled_post_time || a.date_created;
+      const bTime = b.scheduled_post_time || b.date_created;
+      const dateA = new Date(aTime).getTime();
+      const dateB = new Date(bTime).getTime();
+      return dateA - dateB;
+    });
 
-  const filteredEvents = useMemo(() => {
-    const channels = drawerChannels || [];
-    const people = drawerPeople || [];
-
-    if (channels.length === 0 && people.length === 0) return [];
-
-    const channelsAll = channels.includes(0);
-    const peopleAll = people.includes(0);
-    if (channelsAll && peopleAll) return Events;
-
-    const isInChannels = (id: number) => channels.includes(id);
-    const isInPeople = (id: number) => people.includes(id);
-
-    if (
-      !channelsAll &&
-      channels.length > 0 &&
-      (peopleAll || people.length === 0)
-    ) {
-      return Events.filter((e) => isInChannels(e.channelId));
-    }
-
-    if (
-      !peopleAll &&
-      people.length > 0 &&
-      (channelsAll || channels.length === 0)
-    ) {
-      return Events.filter((e) => isInPeople(e.peopleId));
-    }
-
-    if (!channelsAll && !peopleAll) {
-      return Events.filter(
-        (e) => isInChannels(e.channelId) && isInPeople(e.peopleId)
-      );
-    }
-
-    if (channels.length === 0 && people.length > 0 && !peopleAll) {
-      return Events.filter((e) => isInPeople(e.peopleId));
-    }
-
-    if (people.length === 0 && channels.length > 0 && !channelsAll) {
-      return Events.filter((e) => isInChannels(e.channelId));
-    }
-
-    return Events;
-  }, [drawerChannels, drawerPeople]);
-
-  const calendarEvents = filteredEvents.map((e) => ({
-    id: String(e.id),
-    title: e.title,
-    date: toIsoDate(e.date),
-    allDay: true,
-    extendedProps: {
-      channelId: e.channelId,
-      peopleId: e.peopleId,
-      channel: e.channel,
-      people: e.people,
-      note: e.note,
-      status: e.status,
-      time: e.time,
-    },
-  }));
+    return sortedSchedules.map((schedule) => ({
+      id: schedule.id.toString(),
+      title: schedule.topic,
+      date: formatScheduledTimeToDate(
+        schedule.scheduled_post_time || schedule.date_created
+      ),
+      allDay: false,
+      start: schedule.scheduled_post_time || schedule.date_created,
+      display: "list-item",
+      extendedProps: {
+        channelIds: schedule.omni_channels,
+        channelName: schedule.omni_channel_name,
+        userCreated: schedule.user_created,
+        postType: schedule.post_type,
+        // note: schedule.post_notes,
+        campaign: schedule.campaign,
+        status: schedule.status,
+        timeCreated: formatScheduledTimeToTime(
+          schedule.scheduled_post_time || schedule.date_created
+        ),
+      },
+    }));
+  }, [schedules]);
 
   return (
     <>
@@ -662,6 +565,7 @@ const CustomCalendar = () => {
                 weekends={true}
                 fixedWeekCount={false}
                 events={calendarEvents}
+                eventOrder="-1"
                 height="auto"
                 eventDisplay="block"
                 eventBackgroundColor="transparent"
@@ -695,8 +599,8 @@ const CustomCalendar = () => {
                 isOpened={openDrawer}
                 handleCloseDrawer={handleCloseDrawer}
                 onSelectedDateChange={setDrawerSelectedDate}
-                onChannelsChange={setDrawerChannels}
-                onPeopleChange={setDrawerPeople}
+                onChannelsChange={(ids) => setDrawerChannels(ids)}
+                onPeopleChange={() => {}}
               />
             </Box>
           </Paper>
