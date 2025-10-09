@@ -139,7 +139,17 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
   };
 
   const handleCampaignInfoStep = async (data: CampaignFormData) => {
-    if (!hasStepDataChanged(data, cachedStepData[CAMPAIGN_STEP_KEY.CAMPAIGN_INFO] || null, CAMPAIGN_STEP_KEY.CAMPAIGN_INFO)) {
+    // Build previous data for comparison: use cached step data if available; otherwise use current form values (initial defaults from editData)
+    const formValues = methods.getValues();
+    const previousCampaignInfoData: CampaignFormData = cachedStepData[CAMPAIGN_STEP_KEY.CAMPAIGN_INFO]
+      ? { ...formValues, ...cachedStepData[CAMPAIGN_STEP_KEY.CAMPAIGN_INFO] } as CampaignFormData
+      : formValues;
+
+    if (!hasStepDataChanged(
+      data,
+      previousCampaignInfoData,
+      CAMPAIGN_STEP_KEY.CAMPAIGN_INFO
+    )) {
       setActiveStep(CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
       return;
     }
@@ -179,8 +189,18 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
       return;
     }
 
-    // Check if data has changed compared to cached data
-    if (!hasStepDataChanged(data, cachedStepData[CAMPAIGN_STEP_KEY.POST_CONTENT_INFO] || null, CAMPAIGN_STEP_KEY.POST_CONTENT_INFO)) {
+    // Build previous data for comparison: use cached step data if available; otherwise use current form values (initial defaults from editData)
+    const formValues = methods.getValues();
+    const previousPostContentInfoData: CampaignFormData = cachedStepData[CAMPAIGN_STEP_KEY.POST_CONTENT_INFO]
+      ? { ...formValues, ...cachedStepData[CAMPAIGN_STEP_KEY.POST_CONTENT_INFO] } as CampaignFormData
+      : formValues;
+
+    // Check if data has changed compared to cached or initial edit data
+    if (!hasStepDataChanged(
+      data,
+      previousPostContentInfoData,
+      CAMPAIGN_STEP_KEY.POST_CONTENT_INFO
+    )) {
       // Data hasn't changed, just move to next step
       setActiveStep(CAMPAIGN_STEP_KEY.CREATE_POST_LIST);
       return;
