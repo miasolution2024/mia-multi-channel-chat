@@ -3,10 +3,10 @@ import { toast } from '@/components/snackbar';
 import { updateCampaign } from '@/actions/campaign';
 import { Campaign } from '@/types/campaign';
 import { CampaignFormData } from '@/sections/marketing-campaign/utils';
-import { CampaignStep2Data } from '@/sections/marketing-campaign/types';
+import { CampaignStep2Data, CampaignStep3Data } from '@/sections/marketing-campaign/types';
 
 export interface UseUpdateCampaignReturn {
-  updateCampaign: (id: string | number, data: CampaignFormData | CampaignStep2Data) => Promise<Campaign>;
+  updateCampaign: (id: string | number, data: CampaignFormData | CampaignStep2Data | CampaignStep3Data) => Promise<Campaign>;
   isLoading: boolean;
   error: string | null;
 }
@@ -17,7 +17,7 @@ export function useUpdateCampaign(): UseUpdateCampaignReturn {
 
   const updateCampaignHandler = async (
     id: string | number,
-    data: CampaignFormData | CampaignStep2Data,
+    data: CampaignFormData | CampaignStep2Data | CampaignStep3Data,
   ): Promise<Campaign> => {
     setIsLoading(true);
     setError(null);

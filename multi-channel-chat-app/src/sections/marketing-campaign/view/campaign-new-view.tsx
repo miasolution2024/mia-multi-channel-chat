@@ -12,9 +12,6 @@ import { CampaignMultiStepForm } from "../campaign-multi-step-form";
 
 function CampaignNewView() {
   const settings = useSettingsContext();
-
-
- 
   return (
     <DashboardContent>
       <Container maxWidth={settings.themeStretch ? false : "lg"}>

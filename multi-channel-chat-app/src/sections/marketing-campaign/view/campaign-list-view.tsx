@@ -468,7 +468,7 @@ export function CampaignListView() {
         />
       ),
       sticky: "right",
-      width: 120,
+      width: 150,
     },
     {
       key: "actions",

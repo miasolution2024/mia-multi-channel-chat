@@ -158,6 +158,13 @@ export default function CustomTable({
     if (onSelect) onSelect(selected);
   }, [selected]);
 
+  // Update selected when defaultSelected changes
+  useEffect(() => {
+    if(defaultSelected && defaultSelected.length > 0){
+      setSelected(defaultSelected);
+    }
+  }, [defaultSelected]);
+
   return (
     <>
       <TableContainer sx={{ 

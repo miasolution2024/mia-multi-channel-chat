@@ -30,6 +30,19 @@ export interface CampaignStep2Data {
   ai_create_post_list_notes: string;
 }
 
+// Type for Step 3 campaign update
+export interface CampaignStep3Data {
+  status: 'in_progress';
+  ai_content_suggestions: {
+    create: never[];
+    update: Array<{
+      campaign: string;
+      id: number;
+    }>;
+    delete: never[];
+  };
+}
+
 // Type for Step 1 campaign creation
 export interface CampaignStep1Data {
   name: string;
@@ -58,14 +71,7 @@ export interface CampaignStep1Data {
     update: never[];
     delete: never[];
   };
-  omni_channels: {
-    create: Array<{
-      campaign_id: string;
-      omni_channels_id: { id: number };
-    }>;
-    update: never[];
-    delete: never[];
-  };
+  omni_channels: number | undefined;
 }
 
 // Type for API data structure

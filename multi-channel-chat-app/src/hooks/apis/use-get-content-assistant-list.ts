@@ -23,7 +23,7 @@ export interface UseGetContentAssistantListReturn {
 }
 
 export function useGetContentAssistantList(
-  params: UseGetContentAssistantListParams = {}
+  params: UseGetContentAssistantListParams = {},
 ): UseGetContentAssistantListReturn {
   const [data, setData] = useState<ContentAssistantApiResponse[]>([]);
   const [total, setTotal] = useState(0);
@@ -59,7 +59,7 @@ export function useGetContentAssistantList(
 
   // Auto-fetch when parameters change
   useEffect(() => {
-    fetchData();
+      fetchData();
   }, [fetchData]);
 
   const refetch = useCallback(async () => {

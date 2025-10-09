@@ -77,6 +77,7 @@ export async function getContentAssistantList(
     // Set required fields
     const fields = [
       'main_seo_keyword',
+      'secondary_seo_keywords',
       'post_type',
       'status',
       'topic',

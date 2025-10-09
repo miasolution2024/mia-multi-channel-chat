@@ -12,7 +12,7 @@ import {
   Stepper,
   Typography,
 } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, memo, useMemo } from "react";
 import {
   CAMPAIGN_STEP_KEY,
   CAMPAIGN_STEPS,
@@ -25,25 +25,39 @@ import {
   getFieldsForStep,
   buildCampaignDataStep1,
   buildCampaignDataStep2,
+  buildCampaignDataStep3,
   hasStepDataChanged,
   extractStepData,
+  transformCampaignToContentAssistant,
+  createDebouncedDateValidation,
+  isDateRangeValid,
 } from "./utils";
 import { PostContentInfoStep } from "./components/steps/post-content-info-step";
 import { CreatePostListStep } from "./components/steps/create-post-list-step";
 import { useCreateCampaign } from "@/hooks/apis/use-create-campaign";
 import { useUpdateCampaign } from "@/hooks/apis/use-update-campaign";
-import { CampaignRequest, createCampaignN8N } from "@/actions/auto-mia";
+import { CampaignRequest, createCampaignN8N, createPost, PostRequest } from "@/actions/auto-mia";
 import { useGetCampaignById } from "@/hooks/apis/use-get-campaign-by-id";
 import { LoadingOverlay } from "@/components/loading-overlay";
+import { useCreateContentAssistant } from "@/hooks/apis/use-create-content-assistant";
+import { buildStepResearchData } from "@/sections/content-assistant/utils";
+import { CreateContentAssistantResponse, CreateContentAssistantRequest } from "@/sections/content-assistant/types/content-assistant-create";
+import { useRouter } from "next/navigation";
+import { paths } from "@/routes/path";
+import { Campaign } from "@/types/campaign";
 
-export function CampaignMultiStepForm({ editData }: { editData?: null }) {
+function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | null }) {
   const [activeStep, setActiveStep] = useState(
     CAMPAIGN_STEP_KEY.CAMPAIGN_INFO
   );
+    const router = useRouter();
+
   const [isNextLoading, setIsNextLoading] = useState(false);
   
   // Cache for storing step data after successful API calls
   const [cachedStepData, setCachedStepData] = useState<Record<string, Partial<CampaignFormData> | null>>({});
+    const [selectedContentSuggestions, setSelectedContentSuggestions] = useState<(string | number)[]>([]);
+
 
   const { createCampaignHandler, isLoading: isCreatingCampaign } =
     useCreateCampaign();
@@ -53,8 +67,9 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
   } = useUpdateCampaign();
 
   const { fetchData: getCampaignById } = useGetCampaignById();
+  const { createContentAssistant, isLoading: isCreatingContentAssistant } = useCreateContentAssistant();
 
-  const defaultValues = getDefaultValues(editData);
+  const defaultValues = useMemo(() => getDefaultValues(editData), [editData]);
 
   const methods = useForm<CampaignFormData>({
     resolver: zodResolver(CampaignSchema),
@@ -63,13 +78,35 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     shouldFocusError: true,
   });
 
-  const { handleSubmit } = methods;
+  const { handleSubmit, watch, setError, clearErrors, formState, reset } = methods;
+  const startDate = watch("start_date");
+  const endDate = watch("end_date");
+
+  // Reset form when editData changes
+  useEffect(() => {
+    if (editData) {
+      const newDefaultValues = getDefaultValues(editData);
+      reset(newDefaultValues);
+    }
+  }, [editData, reset]);
+
+  useEffect(() => {
+    // Sử dụng utility function từ utils
+    const cleanup = createDebouncedDateValidation(
+      startDate, 
+      endDate, 
+      setError, 
+      clearErrors, 
+      formState
+    );
+
+    return cleanup;
+  }, [startDate, endDate, setError, clearErrors, formState]);
 
   const handleSubmitPost = async () => {
     try {
       // Handle final form submission
     } catch (error) {
-      console.error(error);
       toast.error("Có lỗi xảy ra!");
       throw error;
     }
@@ -86,8 +123,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     }
   };
 
-  // Helper function for N8N processing - không cần useCallback vì không được truyền như prop
-  const processN8NStep = async (campaignId: number, step: number) => {
+  const processN8NCreateCampaignStep = async (campaignId: number, step: number) => {
     const inputN8NData: CampaignRequest[] = [
       {
         campaignId,
@@ -102,11 +138,8 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     return true;
   };
 
-  // Step 1 handler - không cần useCallback vì chỉ được gọi trong handleStepProcess
   const handleCampaignInfoStep = async (data: CampaignFormData) => {
-    // Check if data has changed compared to cached data
     if (!hasStepDataChanged(data, cachedStepData[CAMPAIGN_STEP_KEY.CAMPAIGN_INFO] || null, CAMPAIGN_STEP_KEY.CAMPAIGN_INFO)) {
-      // Data hasn't changed, just move to next step
       setActiveStep(CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
       return;
     }
@@ -117,7 +150,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     if (response?.data?.id) {
       methods.setValue("id", response.data.id);
       
-      const n8nSuccess = await processN8NStep(response.data.id, 1);
+      const n8nSuccess = await processN8NCreateCampaignStep(response.data.id, 1);
       if (!n8nSuccess) {
         return;
       }
@@ -139,7 +172,6 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     }
   };
 
-  // Step 2 handler - không cần useCallback vì chỉ được gọi trong handleStepProcess
   const handlePostContentInfoStep = async (data: CampaignFormData) => {
     const campaignId = methods.getValues("id");
     if (!campaignId) {
@@ -156,8 +188,37 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
 
     const apiData = buildCampaignDataStep2(data, campaignId.toString());
     await updateCampaignHandler(campaignId, apiData);
+    
+    // CREATE MULTIPLE CONTENT ASSITANTS
+    const needCreatePostAmount = data.need_create_post_amount;
+    if (needCreatePostAmount && needCreatePostAmount > 0) {
+      try {
+        // Transform campaign data to content assistant FormData format
+        const contentAssistantFormData = transformCampaignToContentAssistant(data);
 
-    const n8nSuccess = await processN8NStep(campaignId, 2);
+        // Build the research data for content assistant creation
+        const researchData = await buildStepResearchData(contentAssistantFormData, true);
+
+        // Create multiple content assistants using Promise.all
+        const createPromises = Array.from({ length: needCreatePostAmount }, () =>
+          createContentAssistant(researchData as CreateContentAssistantRequest)
+        );
+
+        const results = await Promise.all(createPromises);
+        
+        // Extract IDs from successful creations
+        const createdIds = results
+          .filter((result: CreateContentAssistantResponse | null) => result && result.data && result.data.id)
+          .map((result: CreateContentAssistantResponse | null) => result!.data.id.toString());
+
+        // Set the created IDs to ai_content_suggestions
+        methods.setValue('ai_content_suggestions', createdIds);
+      } catch {
+        toast.error("Có lỗi xảy ra khi tạo nội dung trợ lý");
+      }
+    }
+
+    const n8nSuccess = await processN8NCreateCampaignStep(campaignId, 2);
     if (!n8nSuccess) {
       return;
     }
@@ -177,7 +238,37 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     return;
   };
 
-  // Cần useCallback vì được gọi trong handleNext và có dependencies
+  const handleCreatePostListStep = useCallback(
+    async (data: CampaignFormData) => {
+    const campaignId = methods.getValues("id");
+    if (!campaignId) {
+      toast.error("Không tìm thấy ID chiến dịch");
+      return;
+    }
+
+    // Use the new buildCampaignDataStep3 function
+    const updateData = buildCampaignDataStep3(data, campaignId.toString(), selectedContentSuggestions);
+
+    await updateCampaignHandler(campaignId, updateData);
+
+    // call n8n create post
+    const n8nPostInput: PostRequest = selectedContentSuggestions.map((postId) => ({
+      id: Number(postId),
+      startStep: 1,
+      endStep: 4,
+    }));
+    createPost(n8nPostInput);
+    toast.success(
+        `Đã bắt đầu tạo ${n8nPostInput.length} bài viết. Quá trình sẽ hoàn thành trong khoảng 10 phút.`
+      );
+      setTimeout(() => {
+        router.push(paths.dashboard.marketingCampaign.root)
+      }, 1000);
+    },
+    [methods, router, selectedContentSuggestions, updateCampaignHandler],
+  )
+  
+
   const handleStepProcess = useCallback(
     async (data: CampaignFormData, currentStep: string) => {
       setIsNextLoading(true);
@@ -187,8 +278,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
         } else if (currentStep === CAMPAIGN_STEP_KEY.POST_CONTENT_INFO) {
           await handlePostContentInfoStep(data);
         }
-      } catch (error) {
-        console.error("Error updating campaign:", error);
+      } catch {
         toast.error("Có lỗi xảy ra khi cập nhật chiến dịch");
         return;
       } finally {
@@ -201,8 +291,29 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
 
   const handleNext = useCallback(async () => {
     if (!activeStep) return;
+    
+    // Check date validation first for CAMPAIGN_INFO step
+    if (activeStep === CAMPAIGN_STEP_KEY.CAMPAIGN_INFO) {
+      const formData = methods.getValues();
+      const { start_date, end_date } = formData;
+      
+      if (!isDateRangeValid(start_date, end_date)) {
+        // Set the error manually to ensure it shows in the UI
+        if (start_date && end_date && start_date > end_date) {
+          methods.setError('end_date', {
+            type: 'manual',
+            message: 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu'
+          });
+        }
+        
+        toast.error('Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc');
+        return;
+      }
+    }
+
     const fieldsToValidate = getFieldsForStep(activeStep);
     const isStepValid = await methods.trigger(fieldsToValidate);
+    
     if (!isStepValid) {
       return;
     }
@@ -216,11 +327,12 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
         await handleStepProcess(formData, CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
         break;
       case CAMPAIGN_STEP_KEY.CREATE_POST_LIST:
+        await handleCreatePostListStep(formData);
         break;
       default:
         break;
     }
-  }, [activeStep, handleStepProcess, methods]);
+  }, [activeStep, handleStepProcess, methods, handleCreatePostListStep]);
 
   const isFirstStep = activeStep === CAMPAIGN_STEP_KEY.CAMPAIGN_INFO;
 
@@ -241,7 +353,10 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
   const renderStepContent = {
     [CAMPAIGN_STEP_KEY.CAMPAIGN_INFO]: <CampaignInfoStep />,
     [CAMPAIGN_STEP_KEY.POST_CONTENT_INFO]: <PostContentInfoStep />,
-    [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: <CreatePostListStep />,
+    [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: <CreatePostListStep 
+      selectedContentSuggestions={selectedContentSuggestions}
+      setSelectedContentSuggestions={setSelectedContentSuggestions}
+    />,
   };
 
   const renderLabelNextStep = {
@@ -325,7 +440,7 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
             size="large"
             variant="contained"
             onClick={handleNext}
-            disabled={isCreatingCampaign || isUpdatingCampaign}
+            disabled={isCreatingCampaign || isUpdatingCampaign || isCreatingContentAssistant}
             sx={{ minWidth: 150, borderRadius: 2 }}
           >
             {renderLabelNextStep[activeStep]}
@@ -336,3 +451,5 @@ export function CampaignMultiStepForm({ editData }: { editData?: null }) {
     </>
   );
 }
+
+export const CampaignMultiStepForm = memo(CampaignMultiStepFormComponent);

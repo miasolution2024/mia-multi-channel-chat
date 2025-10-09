@@ -4,7 +4,8 @@ import {
     CAMPAIGN_STEP_KEY,
   } from "@/constants/marketing-compaign";
 import * as zod from "zod";
-import { CampaignApiData, CampaignStep1Data, CampaignStep2Data } from "../types";
+import { CampaignApiData, CampaignStep1Data, CampaignStep2Data, CampaignStep3Data } from "../types";
+import { Campaign } from "@/types/campaign";
 
 // Schema definition
 const CampaignSchema = zod.object({
@@ -13,7 +14,7 @@ const CampaignSchema = zod.object({
 
   // Step 1: Campaign Info
   name: zod.string().min(1, "Tên chiến dịch là bắt buộc"),
-  status: zod.string().default(CAMPAIGN_STATUS.TODO),
+  status: zod.string().default(CAMPAIGN_STATUS.DRAFT),
   target_post_count: zod.number({
     required_error:"Số lượng mục tiêu bài viết là bắc buộc"
   }),
@@ -45,13 +46,83 @@ const CampaignSchema = zod.object({
   post_notes: zod.string().default(""),
 
   // Step 3: Create Post List
-  ai_content_suggestion: zod.string().array().default([]),
   ai_create_post_detail_notes: zod.string(),
   ai_content_suggestions: zod.string().array().default([]),
 });
 
 export type CampaignFormData = zod.infer<typeof CampaignSchema>;
 export { CampaignSchema };
+
+// Date validation utility function
+export const validateDateRange = (
+  startDate: Date | null,
+  endDate: Date | null,
+  setError: (field: "start_date" | "end_date", error: { type: string; message: string }) => void,
+  clearErrors: (fields?: ("start_date" | "end_date") | ("start_date" | "end_date")[]) => void
+) => {
+  if (startDate && endDate) {
+    // Kiểm tra nếu ngày bắt đầu lớn hơn ngày kết thúc
+    if (startDate > endDate) {
+      setError("end_date", {
+        type: "manual",
+        message: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu",
+      });
+      // Clear error on start_date if any
+      clearErrors("start_date");
+    } 
+    // Kiểm tra nếu ngày kết thúc nhỏ hơn ngày bắt đầu (trường hợp ngược lại)
+    else if (endDate < startDate) {
+      setError("start_date", {
+        type: "manual", 
+        message: "Ngày bắt đầu phải trước ngày kết thúc",
+      });
+      // Clear error on end_date if any
+      clearErrors("end_date");
+    } 
+    // Nếu dates hợp lệ, clear tất cả errors
+    else {
+      clearErrors(["start_date", "end_date"]);
+    }
+  } else {
+    // Nếu thiếu một trong hai dates, clear errors
+    clearErrors(["start_date", "end_date"]);
+  }
+};
+
+// Debounced date validation utility function
+export const createDebouncedDateValidation = (
+  startDate: Date | null,
+  endDate: Date | null,
+  setError: (field: "start_date" | "end_date", error: { type: string; message: string }) => void,
+  clearErrors: (fields?: ("start_date" | "end_date") | ("start_date" | "end_date")[]) => void,
+  formState: { errors: Record<string, unknown> },
+  debounceMs: number = 100
+) => {
+  const timeoutId = setTimeout(() => {
+    validateDateRange(startDate, endDate, setError, clearErrors);
+  }, debounceMs);
+
+  return () => clearTimeout(timeoutId);
+};
+
+// Utility function to check if date validation passes for handleNext
+export const isDateRangeValid = (
+  startDate: Date | null,
+  endDate: Date | null
+): boolean => {
+  // If both dates are null, consider it valid (no date range set)
+  if (!startDate && !endDate) {
+    return true;
+  }
+
+  // If only one date is set, consider it valid (partial date range)
+  if (!startDate || !endDate) {
+    return true;
+  }
+
+  // Both dates are set, check if start_date <= end_date
+  return startDate <= endDate;
+};
 
 export const getFieldsForStep = (step: string): (keyof CampaignFormData)[] => {
   switch (step) {
@@ -82,7 +153,7 @@ export const getFieldsForStep = (step: string): (keyof CampaignFormData)[] => {
         "ai_create_post_list_notes",
       ];
     case CAMPAIGN_STEP_KEY.CREATE_POST_LIST:
-      return ["ai_create_post_detail_notes"];
+      return ["ai_create_post_detail_notes", "ai_content_suggestions"];
     default:
       return [];
   }
@@ -119,18 +190,7 @@ export const buildCampaignDataStep1 = (formData: CampaignFormData): CampaignStep
       update: [],
       delete: [],
     },
-    omni_channels: formData.omni_channels ? {
-      create: [{
-        campaign_id: "+",
-        omni_channels_id: { id: formData.omni_channels },
-      }],
-      update: [],
-      delete: [],
-    } : {
-      create: [],
-      update: [],
-      delete: [],
-    },
+    omni_channels: formData.omni_channels ? Number(formData.omni_channels) : undefined,
   };
 };
 
@@ -168,21 +228,72 @@ export const buildCampaignDataStep2 = (formData: CampaignFormData, campaignId: s
   };
 };
 
+export const buildCampaignDataStep3 = (
+  formData: CampaignFormData, 
+  campaignId: string, 
+  selectedContentSuggestions: (string | number)[]
+): CampaignStep3Data => {
+  return {
+    status: 'in_progress' as const,
+    ai_content_suggestions: {
+      create: [],
+      update: selectedContentSuggestions.map((id) => ({
+        campaign: campaignId,
+        id: typeof id === 'string' ? parseInt(id, 10) : id,
+      })),
+      delete: [],
+    },
+  };
+};
+
 export const getDefaultValues = (
-  editData?: null
+  editData?: Campaign | null
 ): Partial<CampaignFormData> => {
   console.log('editData',editData)
+  
+  // If editData is provided, transform it to form data
+  if (editData) {
+    return {
+      id: editData.id,
+      name: editData.name || "",
+      status: editData.status || CAMPAIGN_STATUS.DRAFT,
+      target_post_count: Number(editData.target_post_count) || 5,
+      start_date: editData.start_date ? new Date(editData.start_date) : new Date(),
+      end_date: editData.end_date ? new Date(editData.end_date) : new Date(),
+      post_type: editData.post_type || POST_TYPE.FACEBOOK_POST,
+      customer_group: editData.customer_group?.map(cg => cg.customer_group_id?.id).filter(id => id !== undefined) || [],
+      services: editData.services?.map(s => s.services_id?.id).filter(id => id !== undefined) || [],
+      omni_channels: editData['38a0c536']?.id || editData['704a9f83'] ? 1 : 1,
+      post_topic: editData.post_topic || "",
+      objectives: editData.objectives || "",
+      description: editData.description || "",
+      ai_create_post_info_notes: "",
+      
+      main_seo_keyword: editData.main_seo_keyword || "",
+      secondary_seo_keywords: editData.secondary_seo_keywords || [],
+      customer_journey: editData.customer_journey?.[0]?.customer_journey_id?.id,
+      content_tone: editData.content_tone?.map(ct => ct.content_tone_id?.id).filter(id => id !== undefined) || [],
+      ai_rule_based: editData.ai_rule_based?.map(ar => ar.ai_rule_based_id?.id).filter(id => id !== undefined) || [],
+      ai_create_post_list_notes: "",
+      need_create_post_amount: editData.need_create_post_amount ? Number(editData.need_create_post_amount) : undefined,
+      post_notes: "",
+      
+      ai_create_post_detail_notes: "",
+      ai_content_suggestions: editData.ai_content_suggestions?.map(acs => acs.id?.toString()).filter(id => id !== undefined) || [],
+    };
+  }
+  
   return {
     id: null,
     name: "Chiến dịch làm mát da",
-    status: CAMPAIGN_STATUS.TODO,
+    status: CAMPAIGN_STATUS.DRAFT,
     target_post_count: 5,
     start_date: new Date(),
     end_date: new Date(),
     post_type: POST_TYPE.FACEBOOK_POST,
     customer_group: [3],
     services: [2, 3],
-    omni_channels: 269,
+    omni_channels: 1,
     post_topic: "Làm mát da",
     objectives: "Tăng tương tác",
     description: "",
@@ -197,7 +308,6 @@ export const getDefaultValues = (
     need_create_post_amount: undefined,
     post_notes: "",
 
-    ai_content_suggestion: [],
     ai_create_post_detail_notes: "",
     ai_content_suggestions: [],
   };
@@ -278,7 +388,7 @@ export const buildCampaignData = (formData: CampaignFormData): CampaignApiData =
       delete: [],
     },
     ai_content_suggestions: {
-      create: (formData.ai_content_suggestion || []).map((suggestion: string) => ({
+      create: (formData.ai_content_suggestions || []).map((suggestion: string) => ({
         campaign_id: "+",
         ai_content_suggestion: suggestion,
         ai_create_post_detail_notes: formData.ai_create_post_detail_notes || "",
@@ -343,4 +453,34 @@ export const extractStepData = (
   });
 
   return stepData;
+};
+
+// Transform campaign data to content assistant FormData format
+export const transformCampaignToContentAssistant = (data: CampaignFormData) => {
+  return {
+    post_type: data.post_type || POST_TYPE.FACEBOOK_POST,
+    topic: data.post_topic,
+    main_seo_keyword: data.main_seo_keyword,
+    secondary_seo_keywords: data.secondary_seo_keywords || [],
+    customer_group: data.customer_group || [],
+    services: data.services || [],
+    customer_journey: data.customer_journey,
+    content_tone: data.content_tone || [],
+    ai_rule_based: data.ai_rule_based || [],
+    ai_notes_make_outline: data.ai_create_post_list_notes || "",
+    omni_channels: [data.omni_channels],
+    video: [],
+    // Required fields for FormData type
+    id: null,
+    status: CAMPAIGN_STATUS.DRAFT,
+    outline_post: "",
+    post_goal: "",
+    post_notes: "",
+    ai_notes_write_article: "",
+    post_content: "",
+    ai_notes_create_image: "",
+    media: [],
+    media_generated_ai: [],
+    is_generated_by_AI: false,
+  };
 };
