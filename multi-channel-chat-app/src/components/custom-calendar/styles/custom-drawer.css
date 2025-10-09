@@ -1,0 +1,103 @@
+.drawer-calendar .fc {
+  height: auto;
+  margin-top: 10px;
+}
+
+.drawer-calendar .fc-header-toolbar {
+  display: none;
+}
+
+.drawer-calendar .fc-theme-standard td,
+.drawer-calendar .fc-theme-standard th {
+  border: none;
+}
+
+.drawer-calendar .fc-scrollgrid {
+  border: none;
+}
+
+.drawer-calendar .fc-scrollgrid-sync-table {
+  border: none;
+}
+
+.drawer-calendar .fc-daygrid-day {
+  cursor: pointer;
+}
+
+.drawer-calendar .fc-daygrid-day-top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+  border: none;
+  pointer-events: none;
+}
+
+.drawer-calendar .fc-daygrid-day-number {
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  line-height: 1;
+  text-align: center;
+  padding: 0;
+  transition: background-color 0.2s ease;
+  pointer-events: none;
+}
+
+.drawer-calendar .fc-day-today {
+  background-color: transparent !important;
+}
+
+.drawer-calendar .fc-day-today .fc-daygrid-day-number {
+  background-color: #fef3c7;
+  font-weight: 600;
+}
+
+.drawer-calendar .fc-col-header-cell {
+  padding: 4px 2px;
+  font-size: 12px;
+  color: #2373d3;
+  font-weight: 400;
+}
+
+.drawer-calendar .fc-daygrid-day-frame {
+  border: none;
+  min-height: 40px;
+}
+
+.drawer-calendar .fc-day-other .fc-daygrid-day-number {
+  color: #d1d5db;
+}
+
+.drawer-calendar .fc-daygrid-day-events {
+  display: none;
+}
+
+.drawer-calendar .fc-highlight {
+  background-color: transparent !important;
+}
+
+.drawer-calendar .fc-daygrid-day-bg {
+  display: none;
+}
+
+.drawer-calendar .fc-daygrid-day.fc-day-selected .fc-daygrid-day-number {
+  background-color: #f2f7fc;
+  color: #3b82d9;
+}
+
+.drawer-calendar .fc-daygrid-day:hover .fc-daygrid-day-number {
+  background-color: #d7e6f8;
+  color: #2373d3;
+}
+
+.drawer-calendar .fc-daygrid-day:active .fc-daygrid-day-number {
+  background-color: #bcd5f4;
+  color: #2373d3;
+}
