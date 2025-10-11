@@ -11,14 +11,14 @@ import {
 import React, { useState } from "react";
 import { OmniChoices } from "../type";
 
-interface DrawerSidebarProps {
+interface DrawerDropdownOmniProps {
   title: string;
   handleDataToggle: (id: number) => void;
   data: OmniChoices[];
   dataChoices: number[];
 }
 
-const DrawerSidebar: React.FC<DrawerSidebarProps> = ({
+const DrawerDropdownOmni: React.FC<DrawerDropdownOmniProps> = ({
   title,
   handleDataToggle,
   data,
@@ -53,6 +53,7 @@ const DrawerSidebar: React.FC<DrawerSidebarProps> = ({
             sx={{
               flexGrow: 1,
               fontWeight: 700,
+              fontFamily: "Public Sans Variable",
               fontSize: "16px",
               color: "#171A1F",
             }}
@@ -124,7 +125,7 @@ const DrawerSidebar: React.FC<DrawerSidebarProps> = ({
                   />
                 </Box>
                 <ListItemText
-                  id={data.id.toString()}
+                  id={data.id?.toString() || ""}
                   primary={data.page_name}
                 />
               </ListItem>
@@ -136,4 +137,4 @@ const DrawerSidebar: React.FC<DrawerSidebarProps> = ({
   );
 };
 
-export default DrawerSidebar;
+export default DrawerDropdownOmni;

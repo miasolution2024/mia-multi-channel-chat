@@ -37,6 +37,7 @@
   width: 24px;
   height: 24px;
   font-size: 14px;
+  font-family: Public Sans Variable;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -62,6 +63,7 @@
 .drawer-calendar .fc-col-header-cell {
   padding: 4px 2px;
   font-size: 12px;
+  font-family: Public Sans Variable;
   color: #2373d3;
   font-weight: 400;
 }

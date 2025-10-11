@@ -34,6 +34,8 @@ export function PostCalendarView() {
                 sx={{
                   height: 36,
                   width: 124,
+                  fontWeight: "normal",
+                  fontSize: "14px",
                   borderRadius: "6px",
                   backgroundColor: "#2373D3",
                   color: "#fff",

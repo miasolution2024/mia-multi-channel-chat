@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { formatToDDMMYYYY } from "../hooks/use-format-date-time";
-import { updateWorkingSchedulePost } from "@/actions/post-calendar";
+import { updateWorkingSchedulePost } from "@/actions/schedule-post-calendar";
 import { mutate } from "swr";
 
 interface ModalScheduleProps {
@@ -191,7 +191,14 @@ const ModalSchedule: React.FC<ModalScheduleProps> = ({
 
         <DialogContent>
           <Box sx={{ mb: 2 }}>
-            <Typography variant="body1" sx={{ mb: 1, fontWeight: "medium" }}>
+            <Typography
+              variant="body1"
+              sx={{
+                mb: 1,
+                fontWeight: "medium",
+                fontFamily: "Public Sans Variable",
+              }}
+            >
               {workingTitle}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
