@@ -7,7 +7,7 @@ import { Box, Button, FormControl, MenuItem, Select } from "@mui/material";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-export function PostCalendarView() {
+export function ScheduleCalendarView() {
   const router = useRouter();
   return (
     <>
