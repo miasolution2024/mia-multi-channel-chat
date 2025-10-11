@@ -7,8 +7,9 @@ import { Box, Container } from "@mui/material";
 import { CustomBreadcrumbs } from "@/components/custom-breadcrumbs";
 import { paths } from "@/routes/path";
 import { CampaignMultiStepForm } from "../campaign-multi-step-form";
-import { useGetCampaignById } from "@/hooks/apis/use-get-campaign-by-id";
 import { LoadingScreen } from "@/components/loading-screen";
+import { getCampaigns } from "@/actions/campaign";
+import { Campaign } from "@/types/campaign";
 
 interface CampaignEditViewProps {
   campaignId: string;
@@ -16,19 +17,33 @@ interface CampaignEditViewProps {
 
 function CampaignEditView({ campaignId }: CampaignEditViewProps) {
   const settings = useSettingsContext();
-  const { data: editData, isLoading, error, fetchData } = useGetCampaignById();
-  const [hasInitialized, setHasInitialized] = useState(false);
+  const [loading, setLoading] = useState(true);
+    const [editData, setEditData] = useState<Campaign | null>(null);
+
+    const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (campaignId && !hasInitialized) {
-      setHasInitialized(true);
-      fetchData(campaignId).catch((err) => {
-        console.error('Failed to fetch campaign data:', err);
-      });
+   async function loadData() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getCampaigns(1, 25,
+          Number(campaignId),
+        );
+        setEditData(data.data[0]);
+      } catch (err) {
+        console.error("Error loading content assistant:", err);
+        setError("Không thể tải thông tin nội dung");
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [campaignId, fetchData, hasInitialized]);
+    if (campaignId) {
+      loadData();
+    }
+  }, [campaignId]);
 
-  if (isLoading) {
+  if (loading) {
     return <LoadingScreen />;
   }
 

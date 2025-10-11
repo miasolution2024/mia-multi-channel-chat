@@ -225,6 +225,7 @@ export const buildCampaignDataStep2 = (formData: CampaignFormData, campaignId: s
     },
     post_notes: formData.post_notes || "",
     ai_create_post_list_notes: formData.ai_create_post_list_notes || "",
+    need_create_post_amount: formData.need_create_post_amount || undefined,
   };
 };
 
@@ -249,15 +250,13 @@ export const buildCampaignDataStep3 = (
 export const getDefaultValues = (
   editData?: Campaign | null
 ): Partial<CampaignFormData> => {
-  console.log('editData',editData)
-  
   // If editData is provided, transform it to form data
   if (editData) {
     return {
       id: editData.id,
       name: editData.name || "",
       status: editData.status || CAMPAIGN_STATUS.DRAFT,
-      target_post_count: Number(editData.target_post_count) || 5,
+      target_post_count: Number(editData.target_post_count) || undefined,
       start_date: editData.start_date ? new Date(editData.start_date) : new Date(),
       end_date: editData.end_date ? new Date(editData.end_date) : new Date(),
       post_type: editData.post_type || POST_TYPE.FACEBOOK_POST,
@@ -285,19 +284,19 @@ export const getDefaultValues = (
   
   return {
     id: null,
-    name: "Chiến dịch làm mát da",
+    name: undefined,
     status: CAMPAIGN_STATUS.DRAFT,
-    target_post_count: 5,
+    target_post_count: undefined,
     start_date: new Date(),
     end_date: new Date(),
     post_type: POST_TYPE.FACEBOOK_POST,
-    customer_group: [3],
-    services: [2, 3],
-    omni_channels: 1,
-    post_topic: "Làm mát da",
-    objectives: "Tăng tương tác",
-    description: "",
-    ai_create_post_info_notes: "",
+    customer_group: undefined,
+    services: undefined,
+    omni_channels: undefined,
+    post_topic: undefined,
+    objectives: undefined,
+    description: undefined,
+    ai_create_post_info_notes: undefined,
 
     main_seo_keyword: "",
     secondary_seo_keywords: [],

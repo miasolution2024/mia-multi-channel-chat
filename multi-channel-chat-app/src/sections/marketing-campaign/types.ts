@@ -28,6 +28,7 @@ export interface CampaignStep2Data {
   };
   post_notes: string;
   ai_create_post_list_notes: string;
+  need_create_post_amount: number | undefined;
 }
 
 // Type for Step 3 campaign update

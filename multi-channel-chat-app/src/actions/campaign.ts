@@ -7,7 +7,7 @@ import { CampaignApiData } from '@/sections/marketing-campaign/types';
  * @param page Page number (1-based)
  * @param limit Number of items per page
  */
-export async function getCampaigns(page?: number, limit: number = 25) {
+export async function getCampaigns(page?: number, limit: number = 25, id?: number) {
   try {
     let url = endpoints.campaign.list;
     
@@ -59,6 +59,11 @@ export async function getCampaigns(page?: number, limit: number = 25) {
     
     // Add sorting
     params.append('sort[]', 'id');
+
+    if (id) {
+      params.append('filter[id][_eq]', id.toString());
+    }
+    
     
     url = `${url}?${params.toString()}`;
     
