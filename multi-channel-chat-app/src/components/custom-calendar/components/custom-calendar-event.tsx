@@ -2,17 +2,36 @@ import React, { useState } from "react";
 import { Box, Tooltip, Typography } from "@mui/material";
 import type { EventContentArg } from "@fullcalendar/core";
 import { Iconify } from "@/components/iconify";
-import { formatToDDMMYYYY } from "../hooks/use-format-date-time";
+import { useRouter } from "next/navigation";
 import ModalSchedule from "./modal-schedule";
+import { paths } from "@/routes/path";
 
 type CustomCalendarEventProps = EventContentArg & {
   timeSetup: string;
 };
 
 const colorByStatus = [
-  { id: 1, status: "draft", color: "#FEF6B8", noteColor: "#EFB034" },
-  { id: 2, status: "in_progress", color: "#F2F7FD", noteColor: "#2373D3" },
-  { id: 3, status: "published", color: "#E8F7E9", noteColor: "#34A853" },
+  {
+    id: 1,
+    status: "draft",
+    color: "#FEF6B8",
+    noteColor: "#EFB034",
+    hoverColor: "#FDEF86",
+  },
+  {
+    id: 2,
+    status: "in_progress",
+    color: "#F2F7FD",
+    noteColor: "#2373D3",
+    hoverColor: "#CADEF7",
+  },
+  {
+    id: 3,
+    status: "published",
+    color: "#E8F7E9",
+    noteColor: "#34A853",
+    hoverColor: "#D2EFD4",
+  },
 ];
 
 const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
@@ -22,13 +41,15 @@ const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
   const extended = arg.event.extendedProps as {
     channelIds: number[];
     channelName: string;
+    creatorName: string;
     userCreated: string;
     postType: string;
-    campaign: string;
+    campaignName: string;
     status: string;
     timeCreated: string;
   };
 
+  const router = useRouter();
   const [openModalSchedule, setOpenModalSchedule] = useState(false);
   const getColors = colorByStatus.find((c) => c.status === extended.status);
 
@@ -50,11 +71,13 @@ const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
           flexDirection: "column",
           overflow: "hidden",
           width: "100%",
-          p: "8px",
-          my: 0.5,
+          p: "16px 22px",
+          cursor: "pointer",
+          // my: 0.5,
           "&:hover": {
-            bgcolor: getColors?.color ? `${getColors.color}80` : "transparent",
-            cursor: "pointer",
+            bgcolor: getColors?.color
+              ? `${getColors.hoverColor}`
+              : "transparent",
           },
         }}
         onClick={() => openSchedule(true)}
@@ -62,7 +85,7 @@ const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
         <Typography
           sx={{
             color: getColors?.noteColor,
-            fontFamily: "Inter",
+            fontFamily: "Public Sans Variable",
             fontSize: "14px",
             lineHeight: "22px",
             fontWeight: 700,
@@ -72,78 +95,97 @@ const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
             width: "100%",
           }}
         >
-          {title}
+          <span
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent the parent Box's onClick from firing
+              router.push(paths.dashboard.contentAssistant.edit(id));
+            }}
+          >
+            {title}
+          </span>
         </Typography>
 
         {arg.timeSetup === "Tuần" || arg.timeSetup === "Ngày" ? (
           <>
-            <Box
-              sx={{
-                display: "flex",
-                // justifyContent: "center",
-                alignItems: "center",
-                mt: 1,
-                gap: 1,
-                width: "100%",
-              }}
-            >
-              <Iconify
-                icon="iconamoon:clock-light"
-                width="16"
-                height="16"
-                style={{ color: "#6F7787" }}
-              />
-              <Typography
+            {extended.status === "published" && (
+              <Box
                 sx={{
-                  color: "#323743",
-                  fontFamily: "Inter",
-                  fontSize: "12px",
-                  lineHeight: "20px",
-                  fontWeight: 400,
+                  display: "flex",
+                  alignItems: "center",
+                  mt: 0.5,
+                  gap: 1,
+                  width: "100%",
                 }}
               >
-                {extended.timeCreated}
-              </Typography>
-            </Box>
+                <Iconify
+                  icon="iconamoon:clock-light"
+                  width="16"
+                  height="16"
+                  style={{ color: "#6F7787", flexShrink: 0 }}
+                />
+                <Typography
+                  sx={{
+                    color: "#323743",
+                    fontFamily: "Public Sans Variable",
+                    fontSize: "12px",
+                    lineHeight: "20px",
+                    fontWeight: 400,
+                  }}
+                >
+                  {extended.timeCreated}
+                </Typography>
+              </Box>
+            )}
+
+            {extended.postType && (
+              <>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    // alignItems: "flex-start",
+                    mt: 0.5,
+                    gap: 1,
+                    width: "100%",
+                  }}
+                >
+                  <Iconify
+                    icon={
+                      extended.postType === "facebook_post"
+                        ? "logos:facebook"
+                        : extended.postType === "instagram_post"
+                        ? "logos:facebook"
+                        : "logos:zalo"
+                    }
+                    width="16"
+                    height="16"
+                    style={{ flexShrink: 0 }}
+                  />
+                  <Typography
+                    sx={{
+                      color: "#323743",
+                      fontFamily: "Public Sans Variable",
+                      fontSize: "12px",
+                      lineHeight: "20px",
+                      fontWeight: 400,
+                      whiteSpace: "normal",
+                      wordBreak: "break-word",
+                      overflowWrap: "anywhere",
+                      // flex: "1 1 0%",
+                      minWidth: 0,
+                    }}
+                  >
+                    {extended.channelName || "No Channel"}
+                  </Typography>
+                </Box>
+              </>
+            )}
 
             <Box
               sx={{
                 display: "flex",
-                // justifyContent: "center",
-                alignItems: "flex-start",
-                gap: 1,
-                width: "100%",
-              }}
-            >
-              <Iconify
-                icon="logos:facebook"
-                width="16"
-                height="16"
-                style={{ marginTop: 2 }}
-              />
-              <Typography
-                sx={{
-                  color: "#323743",
-                  fontFamily: "Inter",
-                  fontSize: "12px",
-                  lineHeight: "20px",
-                  fontWeight: 400,
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  overflowWrap: "anywhere",
-                  flex: "1 1 0%",
-                  minWidth: 0,
-                }}
-              >
-                {extended.channelName || "No Channel"}
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
                 alignItems: "center",
-                mt: 1,
+                mt: 0.5,
                 gap: 1,
               }}
             >
@@ -151,33 +193,33 @@ const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
                 icon="ion:person-circle-outline"
                 width="16"
                 height="16"
-                style={{ color: "#6F7787" }}
+                style={{ color: "#6F7787", flexShrink: 0 }}
               />
               <Typography
                 sx={{
                   color: "#323743",
-                  fontFamily: "Inter",
-                  fontSize: "11px",
+                  fontFamily: "Public Sans Variable",
+                  fontSize: "12px",
                   lineHeight: "18px",
                   fontWeight: 400,
                 }}
               >
-                {extended.userCreated || "Unknown User"}
+                {extended.creatorName || "Unknown User"}
               </Typography>
             </Box>
 
-            {extended.campaign && (
+            {extended.campaignName && (
               <Box
                 sx={{
                   mt: 0.5,
                   width: "fit-content",
-                  fontFamily: "Inter",
+                  fontFamily: "Public Sans Variable",
                   fontSize: "11px",
                   lineHeight: "18px",
                   fontWeight: 400,
                   display: "flex",
                   alignItems: "center",
-                  padding: 0.5,
+                  padding: "0 4px",
                   gap: 1,
                   backgroundColor: getColors?.noteColor,
                   border: "none",
@@ -188,13 +230,13 @@ const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
                   icon="ri:calendar-line"
                   width="16"
                   height="16"
-                  style={{ color: "#fff" }}
+                  style={{ color: "#fff", flexShrink: 0 }}
                 />
                 <Typography
                   sx={{
                     color: "#fff",
-                    fontFamily: "Inter",
-                    fontSize: "11px",
+                    fontFamily: "Public Sans Variable",
+                    fontSize: "12px",
                     lineHeight: "18px",
                     fontWeight: 400,
                     whiteSpace: "normal",
@@ -203,7 +245,7 @@ const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
                     flex: 1,
                   }}
                 >
-                  {extended.campaign}
+                  {extended.campaignName}
                 </Typography>
               </Box>
             )}
@@ -237,15 +279,16 @@ const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
                 <Typography
                   sx={{
                     color: "#323743",
-                    fontFamily: "Inter",
+                    fontFamily: "Public Sans Variable",
                     fontSize: "12px",
                     lineHeight: "20px",
                     fontWeight: 400,
                   }}
                 >
-                  {extended.timeCreated +
+                  {/* {extended.timeCreated +
                     " " +
-                    (startDate ? formatToDDMMYYYY(startDate) : "")}
+                    (startDate ? formatToDDMMYYYY(startDate) : "")} */}
+                  {extended.timeCreated}
                 </Typography>
               </Box>
 

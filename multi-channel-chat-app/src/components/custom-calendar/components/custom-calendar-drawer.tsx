@@ -7,17 +7,17 @@ import { Box, Button, Drawer, Typography } from "@mui/material";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import "../styles/custom-drawer.css";
 import { Iconify } from "@/components/iconify";
-import DrawerSidebar from "./drawer-sidebar";
-import { useCalendarPositions } from "../hooks/use-calendar-navigations";
-import { OmniChoices } from "../type";
-import { useGetWorkingScheduleOmniChannels } from "@/actions/post-calendar";
+import { useCalendarNavigations } from "../hooks/use-calendar-navigations";
+import DrawerDropdownOmni from "./drawer-dropdown-omni";
+import DrawerDropdownCreator from "./drawer-dropdown-creator";
+import { useOmniCreatorSetup } from "../hooks/use-omni-creator-setup";
 
 interface CustomCalendarDrawerProps {
   isOpened: boolean;
   handleCloseDrawer: () => void;
   onSelectedDateChange?: (date: Date | null) => void;
   onChannelsChange?: (choices: number[]) => void;
-  onPeopleChange?: (choices: number[]) => void;
+  onCreatorChange?: (choices: string[]) => void;
 }
 
 const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
@@ -25,87 +25,25 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
   handleCloseDrawer,
   onSelectedDateChange,
   onChannelsChange,
-  // onPeopleChange,
+  onCreatorChange,
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [channelsChoices, setChannelsChoices] = useState<number[]>([0]);
-  // const [peopleChoices, setPeopleChoices] = useState<number[]>([0]);
-  const [omniChannels, setOmniChannels] = useState<OmniChoices[]>([
-    { id: 0, page_name: "Tất cả" },
-  ]);
-  const { omniChannelsData } = useGetWorkingScheduleOmniChannels();
-  const omniChannelsLength = Array.isArray(omniChannelsData)
-    ? omniChannelsData.length
-    : 0;
+  const [creatorsChoices, setCreatorsChoices] = useState<string[]>(["0"]);
+  const {
+    createToggleHandlerOmni,
+    createToggleHandleCreator,
+    omniChannels,
+    creators,
+  } = useOmniCreatorSetup();
 
-  useEffect(() => {
-    if (omniChannelsData) {
-      const apiOmni: OmniChoices[] = omniChannelsData.map((item) => ({
-        id: item.id,
-        page_name: item.page_name,
-      }));
+  const handleChannelToggle = createToggleHandlerOmni(setChannelsChoices);
+  const handleCreatorToggle = createToggleHandleCreator(setCreatorsChoices);
 
-      const allOmniChannels: OmniChoices[] = [
-        { id: 0, page_name: "Tất cả" },
-        ...apiOmni,
-      ];
-      setOmniChannels(allOmniChannels);
-    }
-  }, [omniChannelsLength]);
-
-  const createToggleHandler = (
-    setChoices: React.Dispatch<React.SetStateAction<number[]>>
-  ) => {
-    return (id: number) => {
-      setChoices((prev) => {
-        if (id === 0) {
-          if (prev.includes(0)) {
-            return [];
-          } else {
-            return [0];
-          }
-        } else {
-          if (prev.includes(id)) {
-            const newSelection = prev.filter((selectedId) => selectedId !== id);
-            return newSelection.length === 0 ? [] : newSelection;
-          } else {
-            const newSelection = prev.filter((selectedId) => selectedId !== 0);
-            return [...newSelection, id];
-          }
-        }
-      });
-    };
-  };
-
-  const handleChannelToggle = createToggleHandler(setChannelsChoices);
-  // const handlePeopleToggle = createToggleHandler(setPeopleChoices);
-
-  const { handlePrevious, handleNext } = useCalendarPositions(
-    calendarRef,
-    setCurrentDate
-  );
-
-  const formatDateForDisplay = (date: Date) => {
-    const monthNames = [
-      "01",
-      "02",
-      "03",
-      "04",
-      "05",
-      "06",
-      "07",
-      "08",
-      "09",
-      "10",
-      "11",
-      "12",
-    ];
-    const month = monthNames[date.getMonth()];
-    const year = date.getFullYear();
-    return `Tháng ${month}, ${year}`;
-  };
+  const { handlePrevious, handleNext, formatDateForDisplay } =
+    useCalendarNavigations(calendarRef, setCurrentDate);
 
   const applySelectionHighlight = useCallback((targetDate: Date) => {
     const allDays = document.querySelectorAll(
@@ -151,7 +89,7 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
   useEffect(() => {
     if (onSelectedDateChange) onSelectedDateChange(selectedDate);
     if (onChannelsChange) onChannelsChange(channelsChoices);
-    // if (onPeopleChange) onPeopleChange(peopleChoices);
+    if (onCreatorChange) onCreatorChange(creatorsChoices);
   }, [selectedDate, channelsChoices]);
 
   useEffect(() => {
@@ -176,7 +114,7 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
         onClose={handleCloseDrawer}
         anchor="right"
         slotProps={{ backdrop: { invisible: true } }}
-        PaperProps={{ sx: { width: 320, boxShadow: 0 } }}
+        PaperProps={{ sx: { width: 253.6, boxShadow: 0 } }}
       >
         <Box sx={{ width: "100%", p: "0 5px" }} role="presentation">
           <Box
@@ -195,6 +133,7 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
                   fontWeight: 700,
                   fontSize: "16px",
                   color: "#171A1F",
+                  fontFamily: "Public Sans Variable",
                 }}
               >
                 {formatDateForDisplay(currentDate)}
@@ -287,7 +226,7 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
           </Box>
 
           <Box>
-            <DrawerSidebar
+            <DrawerDropdownOmni
               title="Trang đặt lịch hẹn"
               handleDataToggle={handleChannelToggle}
               data={omniChannels}
@@ -295,14 +234,14 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
             />
           </Box>
 
-          {/* <Box>
-            <DrawerSidebar
+          <Box>
+            <DrawerDropdownCreator
               title="Người thực hiện"
-              handleDataToggle={handlePeopleToggle}
-              data={People}
-              dataChoices={peopleChoices}
+              handleDataToggle={handleCreatorToggle}
+              data={creators}
+              dataChoices={creatorsChoices}
             />
-          </Box> */}
+          </Box>
         </Box>
       </Drawer>
     </>

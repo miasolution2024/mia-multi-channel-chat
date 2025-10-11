@@ -17,10 +17,10 @@ import CustomCalendarTimeChoice from "./components/custom-calendar-timechoices";
 import CustomCalendarStatusChoices from "./components/custom-calendar-statuschoices";
 import CustomCalendarDrawer from "./components/custom-calendar-drawer";
 import CustomCalendarEvent from "./components/custom-calendar-event";
-import { useCalendarPositions } from "./hooks/use-calendar-navigations";
+import { useCalendarNavigations } from "./hooks/use-calendar-navigations";
 import CustomCalendarTooltip from "./components/custom-calendar-tooltip";
 import { WorkingSchedule } from "./type";
-import { useGetWorkingSchedule } from "@/actions/post-calendar";
+import { useGetWorkingSchedule } from "@/actions/schedule-post-calendar";
 import {
   formatScheduledTimeToDate,
   formatScheduledTimeToTime,
@@ -38,7 +38,7 @@ const CustomCalendar = () => {
   );
   const [schedules, setSchedules] = useState<WorkingSchedule[]>([]);
   const [drawerChannels, setDrawerChannels] = useState<number[]>([0]);
-  // const [drawerPeople, setDrawerPeople] = useState<number[]>([1]);
+  const [drawerCreators, setDrawerCreators] = useState<string[]>(["0"]);
   const [, setSelectedDate] = useState<Date | null>(null);
   const [searchData, setSearchData] = useState("");
   const [inputData, setInputData] = useState("");
@@ -47,7 +47,8 @@ const CustomCalendar = () => {
   const { workingSchedules } = useGetWorkingSchedule(
     searchData,
     statusChoice,
-    drawerChannels
+    drawerChannels,
+    drawerCreators
   );
 
   useEffect(() => {
@@ -167,30 +168,8 @@ const CustomCalendar = () => {
     };
   }, [showTooltip]);
 
-  const { handlePrevious, handleNext, handleToday } = useCalendarPositions(
-    calendarRef,
-    setCurrentDate
-  );
-
-  const formatDateForDisplay = (date: Date) => {
-    const monthNames = [
-      "01",
-      "02",
-      "03",
-      "04",
-      "05",
-      "06",
-      "07",
-      "08",
-      "09",
-      "10",
-      "11",
-      "12",
-    ];
-    const month = monthNames[date.getMonth()];
-    const year = date.getFullYear();
-    return `Tháng ${month}, ${year}`;
-  };
+  const { handlePrevious, handleNext, handleToday, formatDateForDisplay } =
+    useCalendarNavigations(calendarRef, setCurrentDate);
 
   const WeekDayCalendarSetup =
     timeChoice === "Tuần" || timeChoice === "Ngày"
@@ -226,15 +205,17 @@ const CustomCalendar = () => {
                     margin: "0 auto 8px",
                     fontWeight: "bold",
                     fontSize: "16px",
+                    fontFamily: "Public Sans Variable",
                   }}
                 >
                   {dayNumber}
                 </div>
                 <div
                   style={{
-                    fontSize: "12px",
+                    fontSize: "14px",
                     color: "#666",
                     fontWeight: "normal",
+                    fontFamily: "Public Sans Variable",
                   }}
                 >
                   {dayName}
@@ -257,7 +238,7 @@ const CustomCalendar = () => {
     });
 
     return sortedSchedules.map((schedule) => ({
-      id: schedule.id.toString(),
+      id: schedule.id?.toString() || "",
       title: schedule.topic,
       date: formatScheduledTimeToDate(
         schedule.scheduled_post_time || schedule.date_created
@@ -268,10 +249,10 @@ const CustomCalendar = () => {
       extendedProps: {
         channelIds: schedule.omni_channels,
         channelName: schedule.omni_channel_name,
+        creatorName: schedule.user_created_name,
         userCreated: schedule.user_created,
         postType: schedule.post_type,
-        // note: schedule.post_notes,
-        campaign: schedule.campaign,
+        campaignName: schedule.campaign_name,
         status: schedule.status,
         timeCreated: formatScheduledTimeToTime(
           schedule.scheduled_post_time || schedule.date_created
@@ -296,7 +277,12 @@ const CustomCalendar = () => {
             >
               <Box>
                 <Typography
-                  sx={{ flexGrow: 1, fontWeight: "bold", fontSize: 18 }}
+                  sx={{
+                    flexGrow: 1,
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                    fontFamily: "Public Sans Variable",
+                  }}
                 >
                   {formatDateForDisplay(currentDate)}
                 </Typography>
@@ -341,6 +327,7 @@ const CustomCalendar = () => {
                     width: 32,
                     height: 32,
                     minWidth: 0,
+                    // fontFamily: "Public Sans Variable",
                     p: 0,
                     borderRadius: "6px",
                     "&:hover": {
@@ -377,8 +364,8 @@ const CustomCalendar = () => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontFamily: "Inter",
-                    fontSize: "12px",
+                    fontFamily: "Public Sans Variable",
+                    fontSize: "14px",
                     lineHeight: "20px",
                     fontWeight: 400,
                     textTransform: "none",
@@ -418,7 +405,7 @@ const CustomCalendar = () => {
                     height: "36px",
                     "& .MuiOutlinedInput-root": {
                       borderRadius: "6px 0 0 6px",
-                      fontFamily: "Inter",
+                      fontFamily: "Public Sans Variable",
                       fontSize: "14px",
                       lineHeight: "22px",
                       fontWeight: 400,
@@ -491,54 +478,55 @@ const CustomCalendar = () => {
                   onChange={setStatusChoice}
                 />
               </Box>
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "end",
-              mt: 3,
-            }}
-          >
-            <Button
-              onClick={() => toggleDrawer(true)}
-              sx={{
-                flexShrink: 0,
-                backgroundColor: "#f3f4f6",
-                width: 32,
-                height: 32,
-                minWidth: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                p: 0,
-                borderRadius: "6px",
-                "&:hover": {
-                  backgroundColor: "#DEE1E6",
-                  "&:active": {
-                    backgroundColor: "#CFD2DA",
-                  },
-                },
-                "&:disabled": {
-                  opacity: 0.4,
-                },
-              }}
-              value="openDrawer"
-            >
-              <Iconify
-                icon="fe:arrow-left"
+
+              <Box
                 sx={{
-                  color: "#565D6D",
-                  transform: `${
-                    openDrawer ? "rotate(180deg)" : "rotate(0deg)"
-                  }`,
-                  transition: "transform 0.3s ease-in-out",
-                  pointerEvents: "none",
+                  display: "flex",
+                  justifyContent: "end",
                 }}
-                width={12}
-                height={12}
-              />
-            </Button>
+              >
+                <Button
+                  onClick={() => toggleDrawer(true)}
+                  sx={{
+                    flexShrink: 0,
+                    backgroundColor: "#f3f4f6",
+                    width: 32,
+                    height: 32,
+                    minWidth: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    p: 0,
+                    borderRadius: "6px",
+                    cursor: "pointer !important",
+                    "&:hover": {
+                      backgroundColor: "#DEE1E6",
+                      "&:active": {
+                        backgroundColor: "#CFD2DA",
+                      },
+                    },
+                    "&:disabled": {
+                      opacity: 0.4,
+                    },
+                  }}
+                  value="openDrawer"
+                >
+                  <Iconify
+                    icon="fe:arrow-left"
+                    sx={{
+                      color: "#565D6D",
+                      transform: `${
+                        openDrawer ? "rotate(180deg)" : "rotate(0deg)"
+                      }`,
+                      transition: "transform 0.3s ease-in-out",
+                      pointerEvents: "none",
+                    }}
+                    width={12}
+                    height={12}
+                  />
+                </Button>
+              </Box>
+            </Box>
           </Box>
 
           {/* Calendar Container */}
@@ -600,7 +588,7 @@ const CustomCalendar = () => {
                 handleCloseDrawer={handleCloseDrawer}
                 onSelectedDateChange={setDrawerSelectedDate}
                 onChannelsChange={(ids) => setDrawerChannels(ids)}
-                onPeopleChange={() => {}}
+                onCreatorChange={(ids) => setDrawerCreators(ids)}
               />
             </Box>
           </Paper>

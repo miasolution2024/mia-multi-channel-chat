@@ -22,10 +22,10 @@ const CustomCalendarTimeChoice: React.FC<CustomCalendarTimeChoiceProps> = ({
             height: "36px",
             fontSize: "14px",
             lineHeight: "22px",
+            fontFamily: "Public Sans Variable",
             fontWeight: 400,
             border: "none",
             gap: "6px",
-            fontFamily: "Inter",
             "&:hover": {
               backgroundColor: "#1C5CAA",
               "&:active": {

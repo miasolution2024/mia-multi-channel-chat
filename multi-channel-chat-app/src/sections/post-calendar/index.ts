@@ -1,1 +1,1 @@
-export * from "./view/post-calendar-view";
+export * from "./view/schedule-calendar-view";
