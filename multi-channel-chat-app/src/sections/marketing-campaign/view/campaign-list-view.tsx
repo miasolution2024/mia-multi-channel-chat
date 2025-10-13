@@ -37,9 +37,10 @@ import { CustomTable } from "@/components/custom-table";
 import type { TableConfig } from "@/components/custom-table/custom-table";
 import { usePopover } from "@/components/custom-popover";
 import { deleteCampaign, deleteCampaigns } from "@/actions/campaign";
-import { useGetCampaigns } from "@/hooks/apis/use-get-campaigns";
+import { useGetCampaignList } from "@/hooks/apis/use-get-campaigns";
 import { Campaign } from "@/types/campaign";
 import { POST_TYPE_OPTIONS } from "@/constants/auto-post";
+import { CAMPAIGN_STATUS } from "@/constants/marketing-compaign";
 
 // Tạo interface riêng cho table config
 interface ItemsPopupProps {
@@ -124,12 +125,12 @@ const getCampaignStatusLabelAndColor = (
     | "info";
 } => {
   switch (status) {
-    case "completed":
+    case CAMPAIGN_STATUS.COMPLETED:
       return { label: "Hoàn thành", color: "success" };
-    case "in_progress":
+    case CAMPAIGN_STATUS.IN_PROGRESS:
       return { label: "Đang thực hiện", color: "warning" };
-    case "draft":
-      return { label: "Nháp", color: "default" };
+    case CAMPAIGN_STATUS.TODO:
+      return { label: "Khởi tạo", color: "default" };
     default:
       return { label: "N/A", color: "default" };
   }
@@ -149,6 +150,7 @@ function CampaignActionMenu({
   onDelete,
 }: CampaignActionMenuProps) {
   const popover = usePopover();
+  const canDelete = campaign.status === CAMPAIGN_STATUS.TODO && campaign.ai_content_suggestions?.length === 0;
 
   return (
     <>
@@ -172,16 +174,17 @@ function CampaignActionMenu({
             <Iconify icon="solar:pen-bold" />
             Chỉnh sửa
           </MenuItem>
-
-          <MenuItem
-            onClick={() => {
-              onDelete(campaign.id);
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Xóa
-          </MenuItem>
+          {canDelete && (
+            <MenuItem
+              onClick={() => {
+                onDelete(campaign.id);
+                popover.onClose();
+              }}
+            >
+              <Iconify icon="solar:trash-bin-trash-bold" />
+              Xóa
+            </MenuItem>
+          )}
         </MenuList>
       </Popover>
     </>
@@ -219,9 +222,10 @@ export function CampaignListView() {
   const debouncedName = useDebounce(filters.state.name, 500);
 
   // Use the custom hook for data fetching
-  const { data, total, isLoading, refetch } = useGetCampaigns({
+  const { data, total, isLoading, refetch } = useGetCampaignList({
     page: page + 1, // API sử dụng 1-based pagination
-    limit: pageSize,
+    pageSize,
+    name: debouncedName,
   });
 
   // Move TABLE_CONFIG inside component to access setPopupState
@@ -467,7 +471,6 @@ export function CampaignListView() {
           size="small"
         />
       ),
-      sticky: "right",
       width: 150,
     },
     {
@@ -489,21 +492,6 @@ export function CampaignListView() {
       width: 80,
     },
   ];
-
-  // Filter data based on local filters
-  const filteredData = data.filter((campaign) => {
-    const matchesName = !debouncedName || 
-      campaign.name.toLowerCase().includes(debouncedName.toLowerCase()) ||
-      campaign.post_topic.toLowerCase().includes(debouncedName.toLowerCase());
-    
-    const matchesStatus = !filters.state.status || 
-      filters.state.status === campaign.status;
-    
-    const matchesPostType = !filters.state.post_type || 
-      filters.state.post_type === campaign.post_type;
-
-    return matchesName && matchesStatus && matchesPostType;
-  });
 
   const handleResetFilters = useCallback(() => {
     filters.setState({
@@ -530,7 +518,6 @@ export function CampaignListView() {
         const errorMessage =
           error instanceof Error ? error.message : "Lỗi khi xóa chiến dịch!";
         toast.error(errorMessage);
-        console.log(error);
       } finally {
         setIsDeleting(false);
       }
@@ -557,7 +544,6 @@ export function CampaignListView() {
       const errorMessage =
         error instanceof Error ? error.message : "Lỗi khi xóa chiến dịch!";
       toast.error(errorMessage);
-      console.log(error);
     } finally {
       setIsDeleting(false);
     }
@@ -628,9 +614,6 @@ export function CampaignListView() {
                 }
                 label="Trạng thái"
               >
-                <MenuItem value="">
-                  <em>Tất cả</em>
-                </MenuItem>
                 {statusOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
@@ -650,9 +633,6 @@ export function CampaignListView() {
                 }
                 label="Loại bài viết"
               >
-                <MenuItem value="">
-                  <em>Tất cả</em>
-                </MenuItem>
                 {POST_TYPE_OPTIONS.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
@@ -674,12 +654,15 @@ export function CampaignListView() {
         </Stack>
 
         <CustomTable
-          data={filteredData as CampaignDataItem[]}
+          data={data as CampaignDataItem[]}
           tableConfig={TABLE_CONFIG as TableConfig[]}
           page={page}
           pageSize={pageSize}
           onChangePage={(_, newPage) => setPage(newPage)}
-          onChangePageSize={(event) => setPageSize(parseInt(event.target.value, 10))}
+           onChangePageSize={(event) => {
+              setPageSize(parseInt(event.target.value, 10));
+              setPage(0);
+            }}
           onSelect={(selected) => setSelected(selected.map(String))}
           loading={isLoading}
           count={total}

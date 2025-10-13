@@ -1,23 +1,23 @@
 import axiosInstance, { endpoints } from '@/utils/axios';
 import { CampaignFormData } from '@/sections/marketing-campaign/utils';
 import { CampaignApiData } from '@/sections/marketing-campaign/types';
+import { UseGetCampaignsParams } from '@/hooks/apis/use-get-campaigns';
 
 /**
  * Get all campaigns with pagination
  * @param page Page number (1-based)
  * @param limit Number of items per page
+ * @param id Campaign ID (optional)
  */
-export async function getCampaigns(page?: number, limit: number = 25, id?: number) {
+export async function getCampaigns(filters: UseGetCampaignsParams = {}) {
   try {
     let url = endpoints.campaign.list;
     
     // Add pagination and field parameters
     const params = new URLSearchParams();
+    // Set limit (pageSize)
+    const limit = filters.pageSize || 25;
     params.append('limit', limit.toString());
-    
-    if (page !== undefined) {
-      params.append('page', page.toString());
-    }
     
     // Add specific fields based on actual API response
     params.append('fields[]', 'name');
@@ -52,23 +52,41 @@ export async function getCampaigns(page?: number, limit: number = 25, id?: numbe
     params.append('fields[]', 'ai_rule_based.ai_rule_based_id.id');
     params.append('fields[]', 'ai_rule_based.ai_rule_based_id.content');
     params.append('fields[]', 'id');
-    
+        params.append('meta', '*');
+
     // Add aliases for omni channels
     params.append('alias[704a9f83]', 'omni_channels');
     params.append('alias[38a0c536]', 'omni_channels');
     
     // Add sorting
     params.append('sort[]', 'id');
-
-    if (id) {
-      params.append('filter[id][_eq]', id.toString());
+     // Set page
+    if (filters.page !== undefined) {
+      params.append('page', filters.page.toString());
+    } else {
+      params.append('page', '1');
     }
+    if (filters.id) {
+      params.append('filter[id][_eq]', filters.id.toString());
+    }
+
+    // Add name filter if provided
+    if (filters.name) {
+      params.append('filter[name][_contains]', filters.name);
+      params.append('filter[post_topic][_contains]', filters.name);
+    }
+
     
     
     url = `${url}?${params.toString()}`;
     
     const response = await axiosInstance.get(url);
-    return response.data;
+    return {
+      data: response.data?.data || [],
+      total: response.data?.meta?.total_count || 0,
+      page: filters.page || 1,
+      pageSize: limit,
+    }
   } catch (error) {
     console.error('Error fetching campaigns:', error);
     throw error;

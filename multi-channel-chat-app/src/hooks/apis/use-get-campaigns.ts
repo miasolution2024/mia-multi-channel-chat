@@ -5,7 +5,9 @@ import { Campaign } from '@/types/campaign';
 
 export interface UseGetCampaignsParams {
   page?: number;
-  limit?: number;
+  pageSize?: number;
+  id?: string | number;
+  name?: string;
 }
 
 export interface UseGetCampaignsReturn {
@@ -18,22 +20,27 @@ export interface UseGetCampaignsReturn {
   options: { value: string; label: string }[];
 }
 
-export function useGetCampaigns(
+export function useGetCampaignList(
   params: UseGetCampaignsParams = {}
 ): UseGetCampaignsReturn {
   const [data, setData] = useState<Campaign[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { page = 0, pageSize = 10, name } = params;
 
-  const { page = 1, limit = 25 } = params;
+
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const response = await getCampaigns(page, limit);
+        const filters = {
+        page,
+        pageSize,
+        name
+      };
+      const response = await getCampaigns(filters);
       setData(response.data || []);
       setTotal(response.total || 0);
     } catch (err) {
@@ -44,7 +51,7 @@ export function useGetCampaigns(
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit]);
+  }, [page, pageSize, name]);
 
   // Auto-fetch when parameters change
   useEffect(() => {

@@ -89,7 +89,6 @@ export function PostContentInfoStep() {
             },
           }}
         />
-        <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
           <RHFTextField
             required
             name="main_seo_keyword"
@@ -114,7 +113,6 @@ export function PostContentInfoStep() {
               </li>
             )}
           />
-        </Stack>
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
           <RHFSelect
             name="customer_journey"

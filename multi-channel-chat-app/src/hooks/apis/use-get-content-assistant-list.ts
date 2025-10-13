@@ -40,7 +40,7 @@ export function useGetContentAssistantList(
       const filters: ContentAssistantFilters = {
         topic,
         status,
-        page: page,
+        page,
         pageSize,
       };
 

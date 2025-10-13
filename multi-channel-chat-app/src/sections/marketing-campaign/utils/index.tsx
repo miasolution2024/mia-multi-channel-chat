@@ -14,10 +14,10 @@ const CampaignSchema = zod.object({
 
   // Step 1: Campaign Info
   name: zod.string().min(1, "Tên chiến dịch là bắt buộc"),
-  status: zod.string().default(CAMPAIGN_STATUS.DRAFT),
+  status: zod.string().default(CAMPAIGN_STATUS.TODO),
   target_post_count: zod.number({
     required_error:"Số lượng mục tiêu bài viết là bắc buộc"
-  }),
+  }).int().min(1, "Số lượng mục tiêu bài viết phải lớn hơn 0"),
   start_date: zod.date().nullable().default(null),
   end_date: zod.date().nullable().default(null),
   post_type: zod.string().default(POST_TYPE.FACEBOOK_POST),
@@ -28,7 +28,7 @@ const CampaignSchema = zod.object({
   }),
   post_topic: zod.string().min(1, "Chủ đề bài đăng là bắt buộc"),
   objectives: zod.string().min(1, "Mục tiêu là bắt buộc"),
-  description: zod.string(),
+  description: zod.string().optional(),
   ai_create_post_info_notes: zod.string().default(""),
 
   // Step 2: Post Content Info
@@ -42,7 +42,7 @@ const CampaignSchema = zod.object({
   content_tone: zod.number().array().default([]),
   ai_rule_based: zod.number().array().default([]),
   ai_create_post_list_notes: zod.string(),
-  need_create_post_amount: zod.number({required_error: "Số lượng bài viết cần tạo là bắt buộc"}),
+  need_create_post_amount: zod.number({required_error: "Số lượng bài viết cần tạo là bắt buộc"}).int().min(1, "Số lượng bài viết cần tạo phải lớn hơn 0"),
   post_notes: zod.string().default(""),
 
   // Step 3: Create Post List
@@ -172,7 +172,7 @@ export const buildCampaignDataStep1 = (formData: CampaignFormData): CampaignStep
     post_type: formData.post_type,
     post_topic: formData.post_topic,
     objectives: formData.objectives,
-    description: formData.description,
+    description: formData.description || "",
     ai_create_post_info_notes: formData.ai_create_post_info_notes,
     customer_group: {
       create: (formData.customer_group || []).map((id: number) => ({
@@ -255,7 +255,7 @@ export const getDefaultValues = (
     return {
       id: editData.id,
       name: editData.name || "",
-      status: editData.status || CAMPAIGN_STATUS.DRAFT,
+      status: editData.status || CAMPAIGN_STATUS.TODO,
       target_post_count: Number(editData.target_post_count) || undefined,
       start_date: editData.start_date ? new Date(editData.start_date) : new Date(),
       end_date: editData.end_date ? new Date(editData.end_date) : new Date(),
@@ -285,7 +285,7 @@ export const getDefaultValues = (
   return {
     id: null,
     name: undefined,
-    status: CAMPAIGN_STATUS.DRAFT,
+    status: CAMPAIGN_STATUS.TODO,
     target_post_count: undefined,
     start_date: new Date(),
     end_date: new Date(),
@@ -323,7 +323,7 @@ export const buildCampaignData = (formData: CampaignFormData): CampaignApiData =
     post_type: formData.post_type,
     post_topic: formData.post_topic,
     objectives: formData.objectives,
-    description: formData.description,
+    description: formData.description || "",
     ai_create_post_info_notes: formData.ai_create_post_info_notes,
     main_seo_keyword: formData.main_seo_keyword,
     secondary_seo_keywords: formData.secondary_seo_keywords,
@@ -471,7 +471,7 @@ export const transformCampaignToContentAssistant = (data: CampaignFormData) => {
     video: [],
     // Required fields for FormData type
     id: null,
-    status: CAMPAIGN_STATUS.DRAFT,
+    status: CAMPAIGN_STATUS.TODO,
     outline_post: "",
     post_goal: "",
     post_notes: "",
