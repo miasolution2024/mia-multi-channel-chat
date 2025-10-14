@@ -104,6 +104,14 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
     return cleanup;
   }, [startDate, endDate, setError, clearErrors, formState]);
 
+  useEffect(() => {
+    return () => {
+      methods.reset({});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  
+
   const handleSubmitPost = async () => {
     try {
       // Handle final form submission
@@ -204,7 +212,6 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
       toast.error("Không tìm thấy ID chiến dịch");
       return;
     }
-
     // Build previous data for comparison: use cached step data if available; otherwise null for new campaigns
     const cachedData = cachedStepData[CAMPAIGN_STEP_KEY.POST_CONTENT_INFO];
     const formValues = methods.getValues();
@@ -232,7 +239,7 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
       try {
         // Transform campaign data to content assistant FormData format
         const contentAssistantFormData = transformCampaignToContentAssistant(data);
-
+      
         // Build the research data for content assistant creation
         const researchData = await buildStepResearchData(contentAssistantFormData, true);
 
@@ -279,7 +286,6 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
     async (data: CampaignFormData) => {
     const campaignId = methods.getValues("id");
     // Cần reset lại form data khi vào chỉnh sửa các campaign khác
-    console.log("campaignId", campaignId);
     if (!campaignId) {
       toast.error("Không tìm thấy ID chiến dịch");
       return;
@@ -299,10 +305,11 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
     createPost(n8nPostInput);
     toast.success(
         `Đã bắt đầu tạo ${n8nPostInput.length} bài viết. Quá trình sẽ hoàn thành trong khoảng 10 phút.`
-      );
-      setTimeout(() => {
-        router.push(paths.dashboard.marketingCampaign.root)
-      }, 1000);
+    );
+    methods.reset({});
+    setTimeout(() => {
+      router.push(paths.dashboard.marketingCampaign.root)
+    }, 1000);
     },
     [methods, router, selectedContentSuggestions, updateCampaignHandler],
   )

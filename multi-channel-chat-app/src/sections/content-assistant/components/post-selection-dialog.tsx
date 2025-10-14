@@ -12,7 +12,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { Content } from "@/sections/content-assistant/view/content-assistant-list-view";
-import { POST_TYPE_OPTIONS } from "@/constants/auto-post";
+import { POST_STEP, POST_TYPE_OPTIONS } from "@/constants/auto-post";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Iconify } from "@/components/iconify";
 import { CustomTable } from "@/components/custom-table";
@@ -52,11 +52,12 @@ const getAIContentStatusLabelAndColor = (
 };
 
 const mappingCurrentStep: Record<string, string> = {
-  research_analysis: "Phân tích nghiên cứu",
-  make_outline: "Tạo dàn ý",
-  write_article: "Viết bài",
-  html_coding: "Mã hóa HTML",
-  publish: "Xuất bản",
+  [POST_STEP.RESEARCH_ANALYSIS]: "Tìm hiểu",
+  [POST_STEP.MAKE_OUTLINE]: "Lên dàn ý",
+  [POST_STEP.WRITE_ARTICLE]: "Viết bài",
+  [POST_STEP.GENERATE_IMAGE]: "Tạo sinh hình ảnh",
+  [POST_STEP.HTML_CODING]: "Tạo định dạng HTML",
+  [POST_STEP.PUBLISHED]: "Xuất bản",
 };
 
 interface PostSelectionDialogProps {
@@ -164,7 +165,7 @@ function PostSelectionDialog({
     },
     {
       key: "current_step",
-      label: "Bước hiện tại",
+      label: "Giai đoạn hiện tại",
       width: 150,
       render: (item: Content) => (
         <Typography variant="body2">

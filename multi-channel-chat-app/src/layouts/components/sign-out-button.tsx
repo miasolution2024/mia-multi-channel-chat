@@ -21,6 +21,7 @@ export function SignOutButton({ onClose, ...other }: any) {
 
       onClose?.();
       router.refresh();
+      router.replace("/");
     } catch (error) {
       console.error(error);
       toast.error("Unable to logout!");

@@ -23,10 +23,16 @@ import {
   Drawer,
   IconButton, 
   Stack, 
-  Typography
+  Typography,
+  TextField,
+  CircularProgress
 } from "@mui/material";
 import type { TableConfig } from "@/components/custom-table/custom-table";
 import { POST_TYPE_OPTIONS } from "@/constants/auto-post";
+import { useCreateContentAssistant } from "@/hooks/apis/use-create-content-assistant";
+import { buildStepResearchData } from "@/sections/content-assistant/utils";
+import { CampaignFormData, transformCampaignToContentAssistant } from "@/sections/marketing-campaign/utils";
+import { CreateContentAssistantRequest } from "@/sections/content-assistant/types/content-assistant-create";
 
 export function CreatePostListStep({
   selectedContentSuggestions,
@@ -35,7 +41,7 @@ export function CreatePostListStep({
   selectedContentSuggestions: (string | number)[];
   setSelectedContentSuggestions: (selected: (string | number)[]) => void;
 }) {
-  const { watch } = useFormContext();
+  const { watch, getValues } = useFormContext();
   const [contentSuggestions, setContentSuggestions] = useState<ContentSuggestionItem[]>([]);
   const [isLoadingContentAssistant, setIsLoadingContentAssistant] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -43,10 +49,15 @@ export function CreatePostListStep({
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<ContentSuggestionItem | null>(null);
   const [createPostListDialogOpen, setCreatePostListDialogOpen] = useState(false);
+  const [createAdditionalPost, setCreateAdditionalPost] = useState(false);
+  const [additionalPostQuantity, setAdditionalPostQuantity] = useState<number>(0);
+  const [isGeneratingPosts, setIsGeneratingPosts] = useState(false);
 
   // Watch form values for filtering
   const postType = watch("post_type");
   const omniChannels = watch("omni_channels");
+
+  const { createContentAssistant } = useCreateContentAssistant();
 
   
   // Use the new hook for content tones
@@ -254,6 +265,92 @@ export function CreatePostListStep({
     setCreatePostListDialogOpen(false);
   };
 
+  // Handle additional post generation
+  const handleGenerateAdditionalPosts = async () => {
+    if (!additionalPostQuantity || additionalPostQuantity <= 0) {
+      toast.error('Vui lòng nhập số lượng bài viết hợp lệ');
+      return;
+    }
+
+    setIsGeneratingPosts(true);
+    try {
+      // Get current form data
+      const formData = getValues();
+      
+      // Transform campaign data to content assistant format
+      const contentAssistantFormData = transformCampaignToContentAssistant(formData as CampaignFormData);
+      
+      // Build research data
+      const researchData = await buildStepResearchData(contentAssistantFormData, true);
+      
+      // Create multiple content assistants using Promise.allSettled
+      const createPromises = Array.from({ length: additionalPostQuantity }, () =>
+        createContentAssistant(researchData as CreateContentAssistantRequest)
+      );
+      
+      const results = await Promise.allSettled(createPromises);
+      
+      // Extract IDs from successful results
+      const createdIds: string[] = [];
+      const failedCount = results.filter(result => result.status === 'rejected').length;
+      results.forEach((result) => {
+        if (result.status === 'fulfilled' && result.value?.data?.id) {
+          createdIds.push(result.value.data.id.toString());
+        }
+      });
+      
+      if (failedCount > 0) {
+        console.warn(`${failedCount} out of ${results.length} posts failed to create`);
+      }
+
+      if (createdIds.length === 0) {
+        toast.error('Không thể tạo bài viết nào');
+        return;
+      }
+
+      // Fetch detailed information for each created ID using the same logic as useEffect
+      const promises = createdIds.map(async (contentId: string) => {
+        const response = await getContentAssistantList({
+          id: Number(contentId),
+        });
+        
+        if (response.data && response.data.length > 0) {
+          const item = response.data[0]; // Lấy item đầu tiên vì filter theo ID
+          return {
+            id: item.id.toString(),
+            topic: item.topic,
+            main_seo_keyword: item.main_seo_keyword,
+            secondary_seo_keywords: item.secondary_seo_keywords || [],
+            customer_journey: item.customer_journey || [],
+            post_type: item.post_type,
+            content_tone: item.content_tone || [],
+            ai_notes_write_article: item.ai_notes_write_article,
+          } as unknown as ContentSuggestionItem;
+        }
+        return null;
+      });
+
+      const detailedResults = await Promise.all(promises);
+      const newContentSuggestions = detailedResults.filter(item => item !== null) as ContentSuggestionItem[];
+
+      // Add new content suggestions to the existing list
+      setContentSuggestions(prev => [...prev, ...newContentSuggestions]);
+      
+      // Add new IDs to selectedContentSuggestions
+      const newIds = newContentSuggestions.map(item => item.id);
+      setSelectedContentSuggestions([...selectedContentSuggestions, ...newIds]);
+      
+      toast.success(`Đã tạo thành công ${newContentSuggestions.length} bài viết`);
+      setCreateAdditionalPost(false);
+      setAdditionalPostQuantity(0);
+    } catch (error) {
+      console.error('Error generating additional posts:', error);
+      toast.error('Có lỗi xảy ra khi tạo bài viết');
+    } finally {
+      setIsGeneratingPosts(false);
+    }
+  };
+
   // Table configuration
   const TABLE_CONFIG: TableConfig[] = [
     {
@@ -352,7 +449,6 @@ export function CreatePostListStep({
     { 
       key: "customer_journey", 
       label: "Hành trình khách hàng", 
-      align: "center", 
       width: 200,
       render: (item) => {
         const suggestion = item as ContentSuggestionItem;
@@ -529,7 +625,13 @@ export function CreatePostListStep({
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
             Danh sách bài viết
           </Typography>
-          <Stack>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="contained"
+              onClick={() => setCreateAdditionalPost(true)}
+            >
+              Thêm bài viết
+            </Button>
             <Button
               variant="outlined"
               sx={{paddingInline: 0, minWidth: 32}}
@@ -710,6 +812,48 @@ export function CreatePostListStep({
             omni_channels: omniChannels
           }}
         />
+
+      {/* Additional Post Generation Dialog */}
+      <Dialog
+        open={createAdditionalPost}
+        onClose={() => setCreateAdditionalPost(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Thêm bài viết</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Nhập số lượng bài viết cần tạo thêm:
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Số lượng bài viết"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={additionalPostQuantity}
+            onChange={(e) => setAdditionalPostQuantity(parseInt(e.target.value))}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setCreateAdditionalPost(false)}
+            disabled={isGeneratingPosts}
+          >
+            Hủy
+          </Button>
+          <Button 
+            onClick={handleGenerateAdditionalPosts}
+            variant="contained"
+            disabled={isGeneratingPosts}
+            startIcon={isGeneratingPosts ? <CircularProgress size={16} /> : null}
+          >
+            {isGeneratingPosts ? 'Đang tạo...' : 'Xác nhận'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </Stack>
   );
 }
