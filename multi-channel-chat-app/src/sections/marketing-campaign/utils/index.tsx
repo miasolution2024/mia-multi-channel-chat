@@ -11,6 +11,7 @@ import { Campaign } from "@/types/campaign";
 const CampaignSchema = zod.object({
   // fields not in form
   id: zod.number().nullable().default(null),
+  current_step: zod.string().default(CAMPAIGN_STEP_KEY.CAMPAIGN_INFO),
 
   // Step 1: Campaign Info
   name: zod.string().min(1, "Tên chiến dịch là bắt buộc"),
@@ -164,6 +165,7 @@ export const getFieldsForStep = (step: string): (keyof CampaignFormData)[] => {
 // Build campaign data for Step 1 creation only
 export const buildCampaignDataStep1 = (formData: CampaignFormData): CampaignStep1Data => {
   return {
+    current_step: CAMPAIGN_STEP_KEY.POST_CONTENT_INFO,
     name: formData.name,
     status: formData.status,
     target_post_count: formData.target_post_count,
@@ -197,6 +199,7 @@ export const buildCampaignDataStep1 = (formData: CampaignFormData): CampaignStep
 // Build campaign data for Step 2 update only
 export const buildCampaignDataStep2 = (formData: CampaignFormData, campaignId: string): CampaignStep2Data => {
   return {
+    current_step: CAMPAIGN_STEP_KEY.CREATE_POST_LIST,
     main_seo_keyword: formData.main_seo_keyword,
     secondary_seo_keywords: formData.secondary_seo_keywords || [],
     customer_journey: {
@@ -235,7 +238,7 @@ export const buildCampaignDataStep3 = (
   selectedContentSuggestions: (string | number)[]
 ): CampaignStep3Data => {
   return {
-    status: 'in_progress' as const,
+    status: CAMPAIGN_STATUS.IN_PROGRESS,
     ai_content_suggestions: {
       create: [],
       update: selectedContentSuggestions.map((id) => ({

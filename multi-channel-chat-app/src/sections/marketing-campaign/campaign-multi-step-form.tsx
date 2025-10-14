@@ -87,6 +87,7 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
     if (editData) {
       const newDefaultValues = getDefaultValues(editData);
       reset(newDefaultValues);
+      setActiveStep(editData?.current_step || CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
     }
   }, [editData, reset]);
 
@@ -139,6 +140,20 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
   };
 
   const handleCampaignInfoStep = async (data: CampaignFormData) => {
+    // If editData exists, skip API call and use editData.id
+    if (editData?.id) {
+      methods.setValue("id", editData.id);
+      
+      // Cache the step data for edit mode
+      setCachedStepData(prev => ({
+        ...prev,
+        [CAMPAIGN_STEP_KEY.CAMPAIGN_INFO]: extractStepData(data, CAMPAIGN_STEP_KEY.CAMPAIGN_INFO)
+      }));
+      
+      setActiveStep(CAMPAIGN_STEP_KEY.POST_CONTENT_INFO);
+      return;
+    }
+
     // Build previous data for comparison: use cached step data if available; otherwise null for new campaigns
     const cachedData = cachedStepData[CAMPAIGN_STEP_KEY.CAMPAIGN_INFO];
     const formValues = methods.getValues();
@@ -263,6 +278,8 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
   const handleCreatePostListStep = useCallback(
     async (data: CampaignFormData) => {
     const campaignId = methods.getValues("id");
+    // Cần reset lại form data khi vào chỉnh sửa các campaign khác
+    console.log("campaignId", campaignId);
     if (!campaignId) {
       toast.error("Không tìm thấy ID chiến dịch");
       return;

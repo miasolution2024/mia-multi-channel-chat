@@ -52,6 +52,7 @@ export async function getCampaigns(filters: UseGetCampaignsParams = {}) {
     params.append('fields[]', 'ai_rule_based.ai_rule_based_id.id');
     params.append('fields[]', 'ai_rule_based.ai_rule_based_id.content');
     params.append('fields[]', 'id');
+    params.append('fields[]', 'current_step');
         params.append('meta', '*');
 
     // Add aliases for omni channels
