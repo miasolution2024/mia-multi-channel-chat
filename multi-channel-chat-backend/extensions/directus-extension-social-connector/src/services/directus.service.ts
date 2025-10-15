@@ -73,6 +73,7 @@ export async function GetintegrationSettingsData(
     if (integrationSettings.length === 0) {
       throw new Error("No intergration settings found in Directus.");
     }
+    
     const integrationSettingsData = integrationSettings[0] as AppSettings;
 
     if (

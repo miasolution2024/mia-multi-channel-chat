@@ -2,9 +2,6 @@
 
 import { DashboardContent } from "@/layouts/dashboard";
 
-import { EcommerceBestSalesman } from "../ecommerce-best-salesman";
-import { EcommerceSalesOverview } from "../ecommerce-sales-overview";
-import { EcommerceLatestProducts } from "../ecommerce-latest-products";
 // import { EcommerceCurrentBalance } from "../ecommerce-current-balance";
 import { AppointmentByTimeChart } from "../appointment-time-chart";
 import { AppointmentByChannelChart } from "../appointment-channel-chart";
@@ -214,8 +211,8 @@ export function OverviewEcommerceView() {
     prevCommentsMonthCount === 0
       ? 0
       : ((currentCommentsMonthCount - prevCommentsMonthCount) /
-          prevCommentsMonthCount) *
-        100;
+        prevCommentsMonthCount) *
+      100;
 
   return (
     <DashboardContent maxWidth="xl">
@@ -328,18 +325,20 @@ export function OverviewEcommerceView() {
           <AppointmentByStatusChart title="Appointments by status" />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6, lg: 6 }}>
-          <EcommerceSalesOverview
-            title="Sales overview"
-            data={_ecommerceSalesOverview}
-          />
-        </Grid>
-
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <ConversionRateChart title="Conversion Rate" />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 8 }}>
+          {/* <EcommerceSalesOverview
+            title="Sales overview"
+            data={_ecommerceSalesOverview}
+          /> */}
+        </Grid>
+
+
+
+        {/* <Grid size={{ xs: 12, md: 6, lg: 8 }}>
           <EcommerceBestSalesman
             title="Best salesman"
             tableData={_ecommerceBestSalesman}
@@ -358,7 +357,7 @@ export function OverviewEcommerceView() {
             title="Latest products"
             list={_ecommerceLatestProducts}
           />
-        </Grid>
+        </Grid> */}
       </Grid>
     </DashboardContent>
   );

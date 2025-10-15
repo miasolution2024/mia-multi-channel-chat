@@ -1,6 +1,7 @@
 export const CONFIG = {
   appName: "Mia Chat App",
   serverUrl: process.env.NEXT_PUBLIC_SERVER_URL ?? "",
+  staffWebhookUrl: process.env.NEXT_PUBLIC_STAFF_WEBHOOK_URL ?? "",
   utilitiesAPIUr: process.env.NEXT_PUBLIC_UTILITIES_API_URL ?? "",
   websocketUrl: process.env.NEXT_PUBLIC_WEBSOCKET_URL ?? "",
   assetsDir: process.env.NEXT_PUBLIC_ASSETS_DIR ?? "",
