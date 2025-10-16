@@ -116,7 +116,7 @@ export const navData = [
       },
       {
         title: "Lên lịch đăng bài",
-        path: paths.dashboard.postCalendar.root,
+        path: paths.dashboard.scheduleCalendar.root,
         icon: ICONS.calendar,
       },
     ],

@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Iconify } from "@/components/iconify";
 import { FormControl, Select, MenuItem } from "@mui/material";
-import { useGetWorkingScheduleStatus } from "@/actions/post-calendar";
+import { useGetWorkingScheduleStatus } from "@/actions/schedule-post-calendar";
 import React, { useEffect, useState } from "react";
 import { StatusChoices } from "../type";
 
@@ -55,7 +55,7 @@ const CustomCalendarStatusChoices: React.FC<
           sx={{
             backgroundColor: "#F2F7FD",
             height: "36px",
-            fontFamily: "Inter",
+            fontFamily: "Public Sans Variable",
             fontSize: "14px",
             lineHeight: "22px",
             fontWeight: 400,

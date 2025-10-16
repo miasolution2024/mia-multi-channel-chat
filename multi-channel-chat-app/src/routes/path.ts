@@ -41,10 +41,10 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/marketing-campaign/new`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/marketing-campaign/${id}/edit`,
     },
-    postCalendar: {
-      root: `${ROOTS.DASHBOARD}/post-calendar`,
-      new: `${ROOTS.DASHBOARD}/post-calendar/new`,
-      edit: (id: string) => `${ROOTS.DASHBOARD}/post-calendar/${id}/edit`,
+    scheduleCalendar: {
+      root: `${ROOTS.DASHBOARD}/schedule-calendar`,
+      new: `${ROOTS.DASHBOARD}/schedule-calendar/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/schedule-calendar/${id}/edit`,
     },
   },
 };
