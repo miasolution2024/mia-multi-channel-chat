@@ -41,7 +41,7 @@ export function CreatePostListStep({
   selectedContentSuggestions: (string | number)[];
   setSelectedContentSuggestions: (selected: (string | number)[]) => void;
 }) {
-  const { watch, getValues } = useFormContext();
+  const { watch, getValues, setValue } = useFormContext();
   const [contentSuggestions, setContentSuggestions] = useState<ContentSuggestionItem[]>([]);
   const [isLoadingContentAssistant, setIsLoadingContentAssistant] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -55,7 +55,7 @@ export function CreatePostListStep({
 
   // Watch form values for filtering
   const postType = watch("post_type");
-  const omniChannels = watch("omni_channels");
+  const omniChannel = watch("omni_channels");
 
   const { createContentAssistant } = useCreateContentAssistant();
 
@@ -151,6 +151,13 @@ export function CreatePostListStep({
       setContentSuggestions(prev => prev.filter(item => item.id !== itemToDelete));
       const newSelected = selectedContentSuggestions.filter(id => id !== itemToDelete);
       setSelectedContentSuggestions(newSelected);
+      
+      // Update form field ai_content_suggestions
+      const updatedContentSuggestions = contentSuggestions
+        .filter(item => item.id !== itemToDelete)
+        .map(item => item.id);
+      setValue("ai_content_suggestions", updatedContentSuggestions);
+      
       toast.success("Đã xóa bài viết thành công");
     }
     setDeleteConfirmOpen(false);
@@ -261,6 +268,9 @@ export function CreatePostListStep({
     // Update selectedContentSuggestions to match the selected items
     setSelectedContentSuggestions(selectedIds);
 
+    // Update form field ai_content_suggestions
+    setValue("ai_content_suggestions", updatedContentSuggestions.map(item => item.id));
+
     // Close the dialog
     setCreatePostListDialogOpen(false);
   };
@@ -282,7 +292,6 @@ export function CreatePostListStep({
       
       // Build research data
       const researchData = await buildStepResearchData(contentAssistantFormData, true);
-      
       // Create multiple content assistants using Promise.allSettled
       const createPromises = Array.from({ length: additionalPostQuantity }, () =>
         createContentAssistant(researchData as CreateContentAssistantRequest)
@@ -339,6 +348,10 @@ export function CreatePostListStep({
       // Add new IDs to selectedContentSuggestions
       const newIds = newContentSuggestions.map(item => item.id);
       setSelectedContentSuggestions([...selectedContentSuggestions, ...newIds]);
+      
+      // Update form field ai_content_suggestions
+      const updatedContentSuggestions = [...contentSuggestions, ...newContentSuggestions].map(item => item.id);
+      setValue("ai_content_suggestions", updatedContentSuggestions);
       
       toast.success(`Đã tạo thành công ${newContentSuggestions.length} bài viết`);
       setCreateAdditionalPost(false);
@@ -807,10 +820,8 @@ export function CreatePostListStep({
           onClose={() => setCreatePostListDialogOpen(false)}
           onConfirm={handlePostsConfirm}
           defaultSelected={contentSuggestions.map(item => item.id)}
-          postFilters={{
-            post_type: postType,
-            omni_channels: omniChannels
-          }}
+          postType={postType}
+          omniChannel={omniChannel}
         />
 
       {/* Additional Post Generation Dialog */}

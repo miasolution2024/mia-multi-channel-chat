@@ -608,6 +608,11 @@ export const buildStepResearchData = async (formData: FormData, isCreate = false
   }
 
   if (isCreate) {
+    // Remove duplicates from arrays before mapping
+    const uniqueAiRuleBased = [...new Set(formData.ai_rule_based || [])];
+    const uniqueContentTone = [...new Set(formData.content_tone || [])];
+    const uniqueOmniChannels = [...new Set(formData.omni_channels || [])];
+    
     // Format for create API
     return {
       current_step: POST_STEP.RESEARCH_ANALYSIS,
@@ -619,7 +624,7 @@ export const buildStepResearchData = async (formData: FormData, isCreate = false
       ai_notes_make_outline: formData.ai_notes_make_outline || "",
       video: videoId,
       ai_rule_based: {
-        create: (formData.ai_rule_based || []).map((id) => ({
+        create: uniqueAiRuleBased.map((id) => ({
           ai_content_suggestions_id: "+",
           ai_rule_based_id: { id },
         })),
@@ -627,7 +632,7 @@ export const buildStepResearchData = async (formData: FormData, isCreate = false
         delete: [],
       },
       content_tone: {
-        create: (formData.content_tone || []).map((id) => ({
+        create: uniqueContentTone.map((id) => ({
           ai_content_suggestions_id: "+",
           content_tone_id: { id },
         })),
@@ -635,7 +640,7 @@ export const buildStepResearchData = async (formData: FormData, isCreate = false
         delete: [],
       },
       omni_channels: {
-        create: (formData.omni_channels || []).map((id) => ({
+        create: uniqueOmniChannels.map((id) => ({
           ai_content_suggestions_id: "+",
           omni_channels_id: { id },
         })),

@@ -20,8 +20,9 @@ import type {
   TableConfig,
   DataItem,
 } from "@/components/custom-table/custom-table";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
 import { useGetContentAssistantList } from "@/hooks/apis/use-get-content-assistant-list";
+import { CAMPAIGN_STATUS } from "@/constants/marketing-compaign";
 
 // Utility functions from content-assistant-list-view
 const getAIContentStatusLabelAndColor = (
@@ -65,19 +66,17 @@ interface PostSelectionDialogProps {
   onClose: () => void;
   onConfirm: (selectedItems: Content[]) => void;
   defaultSelected?: (string | number)[];
-  postFilters?: {
-    status?: string;
-    post_type?: string;
-    omni_channels?: string[];
-  };
+  postType?: string;
+  omniChannel?: number;
 }
 
-function PostSelectionDialog({
+const PostSelectionDialog = memo(function PostSelectionDialog({
   open,
   onClose,
   onConfirm,
   defaultSelected = [],
-  postFilters,
+  postType,
+  omniChannel,
 }: PostSelectionDialogProps) {
   const [selectedItems, setSelectedItems] = useState<Content[]>([]);
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
@@ -90,11 +89,13 @@ function PostSelectionDialog({
   const variable = useMemo(
     () => ({
       topic: debouncedSearchTerm,
-      status: postFilters?.status ? [postFilters.status] : ["draft"], // Hard-coded draft status
-      page: page + 1, // API uses 1-based pagination
+      status:  [CAMPAIGN_STATUS.TODO],
+      page: page + 1,
       pageSize: rowsPerPage,
+      postType: postType || undefined,
+      omniChannel: omniChannel || undefined,
     }),
-    [debouncedSearchTerm, postFilters?.status, page, rowsPerPage]
+    [debouncedSearchTerm, page, rowsPerPage, postType, omniChannel]
   );
   // Use the hook to fetch data with filters
   const { data, total, isLoading } = useGetContentAssistantList(variable);
@@ -317,6 +318,6 @@ function PostSelectionDialog({
       </DialogActions>
     </Dialog>
   );
-}
+});
 
 export default PostSelectionDialog;

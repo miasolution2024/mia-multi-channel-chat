@@ -61,6 +61,8 @@ export interface ContentAssistantFilters {
   page?: number;
   pageSize?: number;
   id?: number;
+  postType?: string;
+  omniChannel?: number;
 }
 
 // Lấy danh sách content assistant
@@ -124,25 +126,40 @@ export async function getContentAssistantList(
       params.append('page', '1');
     }
     
-    // Set filter to exclude archived status
-    params.append('filter[status][_neq]', 'archived');
+    // Build filter conditions using _and structure
+    let filterIndex = 0;
     
     // Add id filter if provided
     if (filters.id) {
-      params.append('filter[id][_eq]', filters.id.toString());
+      params.append(`filter[_and][${filterIndex}][id][_eq]`, filters.id.toString());
+      filterIndex++;
     }
     
     // Add topic filter if provided
     if (filters.topic) {
-      params.append('filter[topic][_contains]', filters.topic);
+      params.append(`filter[_and][${filterIndex}][topic][_contains]`, filters.topic);
+      filterIndex++;
     }
     
     // Add status filter if provided (and not archived)
     if (filters.status && filters.status.length > 0) {
       const nonArchivedStatuses = filters.status.filter(status => status !== 'archived');
       if (nonArchivedStatuses.length > 0) {
-        params.append('filter[status][_in]', nonArchivedStatuses.join(','));
+        params.append(`filter[_and][${filterIndex}][status][_eq]`, nonArchivedStatuses.join(','));
+        filterIndex++;
       }
+    }
+    
+    // Add postType filter if provided
+    if (filters.postType) {
+      params.append(`filter[_and][${filterIndex}][post_type][_eq]`, filters.postType);
+      filterIndex++;
+    }
+    
+    // Add omniChannel filter if provided
+    if (filters.omniChannel) {
+      params.append(`filter[_and][${filterIndex}][omni_channels][_eq]`, filters.omniChannel.toString());
+      filterIndex++;
     }
 
     const response = await axiosInstance.get(

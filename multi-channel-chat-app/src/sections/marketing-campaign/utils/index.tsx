@@ -16,9 +16,17 @@ const CampaignSchema = zod.object({
   // Step 1: Campaign Info
   name: zod.string().min(1, "Tên chiến dịch là bắt buộc"),
   status: zod.string().default(CAMPAIGN_STATUS.TODO),
-  target_post_count: zod.number({
-    required_error:"Số lượng mục tiêu bài viết là bắc buộc"
-  }).int().min(1, "Số lượng mục tiêu bài viết phải lớn hơn 0"),
+  target_post_count: zod.preprocess(
+    (val) => {
+      if (val === "" || val === null || val === undefined) {
+        return undefined;
+      }
+      return Number(val);
+    },
+    zod.number({
+      required_error:"Số lượng mục tiêu bài viết là bắc buộc"
+    }).int().min(1, "Số lượng mục tiêu bài viết phải lớn hơn 0")
+  ),
   start_date: zod.date().nullable().default(null),
   end_date: zod.date().nullable().default(null),
   post_type: zod.string().default(POST_TYPE.FACEBOOK_POST),
@@ -43,7 +51,15 @@ const CampaignSchema = zod.object({
   content_tone: zod.number().array().default([]),
   ai_rule_based: zod.number().array().default([]),
   ai_create_post_list_notes: zod.string(),
-  need_create_post_amount: zod.number({required_error: "Số lượng bài viết cần tạo là bắt buộc"}).int().min(1, "Số lượng bài viết cần tạo phải lớn hơn 0"),
+  need_create_post_amount: zod.preprocess(
+    (val) => {
+      if (val === "" || val === null || val === undefined) {
+        return undefined;
+      }
+      return Number(val);
+    },
+    zod.number({required_error: "Số lượng bài viết cần tạo là bắt buộc"}).int().min(0, "Số lượng bài viết cần tạo phải lớn hơn hoặc bằng 0")
+  ),
   post_notes: zod.string().default(""),
 
   // Step 3: Create Post List

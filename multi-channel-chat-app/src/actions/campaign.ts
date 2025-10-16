@@ -60,7 +60,8 @@ export async function getCampaigns(filters: UseGetCampaignsParams = {}) {
     params.append('alias[38a0c536]', 'omni_channels');
     
     // Add sorting
-    params.append('sort[]', 'id');
+    params.append('sort[]', '-date_updated');
+
      // Set page
     if (filters.page !== undefined) {
       params.append('page', filters.page.toString());

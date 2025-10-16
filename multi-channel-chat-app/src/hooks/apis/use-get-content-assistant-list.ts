@@ -23,14 +23,17 @@ export interface UseGetContentAssistantListReturn {
 }
 
 export function useGetContentAssistantList(
-  params: UseGetContentAssistantListParams = {},
+  params: UseGetContentAssistantListParams & {
+    postType?: string;
+    omniChannel?: number;
+  } = {},
 ): UseGetContentAssistantListReturn {
   const [data, setData] = useState<ContentAssistantApiResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { topic = '', status = [], page = 0, pageSize = 10 } = params;
+  const { topic = '', status = [], page = 0, pageSize = 10, postType, omniChannel } = params;
 
   const fetchData = useCallback(async () => {
     try {
@@ -42,6 +45,8 @@ export function useGetContentAssistantList(
         status,
         page,
         pageSize,
+        postType: postType || undefined,
+        omniChannel: omniChannel || undefined,
       };
 
       const response = await getContentAssistantList(filters);
@@ -55,7 +60,7 @@ export function useGetContentAssistantList(
     } finally {
       setIsLoading(false);
     }
-  }, [topic, status, page, pageSize]);
+  }, [topic, status, page, pageSize, postType, omniChannel]);
 
   // Auto-fetch when parameters change
   useEffect(() => {

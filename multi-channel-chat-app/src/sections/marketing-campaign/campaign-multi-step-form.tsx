@@ -242,7 +242,8 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
       
         // Build the research data for content assistant creation
         const researchData = await buildStepResearchData(contentAssistantFormData, true);
-
+        console.log("researchData", JSON.stringify(researchData));
+        
         // Create multiple content assistants using Promise.all
         const createPromises = Array.from({ length: needCreatePostAmount }, () =>
           createContentAssistant(researchData as CreateContentAssistantRequest)
