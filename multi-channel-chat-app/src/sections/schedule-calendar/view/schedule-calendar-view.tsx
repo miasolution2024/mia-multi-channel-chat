@@ -7,7 +7,7 @@ import { Box, Button, FormControl, MenuItem, Select } from "@mui/material";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-export function PostCalendarView() {
+export function ScheduleCalendarView() {
   const router = useRouter();
   return (
     <>
@@ -18,7 +18,7 @@ export function PostCalendarView() {
             { name: "Dashboard", href: paths.dashboard.root },
             {
               name: "Lên lịch đăng bài",
-              href: paths.dashboard.postCalendar.root,
+              href: paths.dashboard.scheduleCalendar.root,
             },
           ]}
           action={
@@ -34,6 +34,8 @@ export function PostCalendarView() {
                 sx={{
                   height: 36,
                   width: 124,
+                  fontWeight: "normal",
+                  fontSize: "14px",
                   borderRadius: "6px",
                   backgroundColor: "#2373D3",
                   color: "#fff",

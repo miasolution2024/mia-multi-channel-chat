@@ -3,7 +3,7 @@ import FullCalendar from "@fullcalendar/react";
 
 export type SetCurrentDate = React.Dispatch<React.SetStateAction<Date>>;
 
-export function useCalendarPositions(
+export function useCalendarNavigations(
   calendarRef: React.RefObject<FullCalendar | null>,
   setCurrentDate: SetCurrentDate
 ) {
@@ -31,5 +31,25 @@ export function useCalendarPositions(
     }
   };
 
-  return { handlePrevious, handleNext, handleToday };
+  const formatDateForDisplay = (date: Date) => {
+    const monthNames = [
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10",
+      "11",
+      "12",
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `Tháng ${month}, ${year}`;
+  };
+
+  return { handlePrevious, handleNext, handleToday, formatDateForDisplay };
 }

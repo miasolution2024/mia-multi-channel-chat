@@ -24,7 +24,7 @@ const CustomCalendarTooltip: React.FC<CustomCalendarTooltipProps> = ({
         data-tooltip="true"
         sx={{
           position: "fixed",
-          left: tooltipPosition.x - 100,
+          left: tooltipPosition.x - 50,
           top: tooltipPosition.y,
           zIndex: 9999,
           pointerEvents: "auto",
@@ -33,11 +33,11 @@ const CustomCalendarTooltip: React.FC<CustomCalendarTooltipProps> = ({
           e.stopPropagation();
         }}
       >
-        <Box
+        <Box //arrow
           sx={{
             position: "absolute",
             top: -8,
-            left: 20,
+            left: 100,
             width: 0,
             height: 0,
             borderLeft: "8px solid transparent",
@@ -54,6 +54,7 @@ const CustomCalendarTooltip: React.FC<CustomCalendarTooltipProps> = ({
             borderRadius: "6px",
             fontSize: "14px",
             fontWeight: 500,
+            fontFamily: "Public Sans Variable",
             whiteSpace: "nowrap",
             boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
             display: "flex",
