@@ -72,11 +72,29 @@ export async function getCampaigns(filters: UseGetCampaignsParams = {}) {
       params.append('filter[id][_eq]', filters.id.toString());
     }
 
+    // Build _and filters with proper indexing
+    let andIndex = 0;
+    
+    // Add status filter if provided
+    if (filters.status) {
+      params.append(`filter[_and][${andIndex}][status][_eq]`, filters.status);
+      andIndex++;
+    }
+    
+    // Add postType filter if provided
+    if (filters.postType) {
+      params.append(`filter[_and][${andIndex}][post_type][_eq]`, filters.postType);
+      andIndex++;
+    }
+
     // Add name filter if provided
     if (filters.name) {
-      params.append('filter[name][_contains]', filters.name);
-      params.append('filter[post_topic][_contains]', filters.name);
+      params.append(`filter[_and][${andIndex}][name][_contains]`, filters.name);
+      andIndex++;
+      params.append(`filter[_and][${andIndex}][post_topic][_contains]`, filters.name);
+      andIndex++;
     }
+    
 
     
     

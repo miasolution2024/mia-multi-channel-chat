@@ -8,6 +8,8 @@ export interface UseGetCampaignsParams {
   pageSize?: number;
   id?: string | number;
   name?: string;
+  status?: string;
+  postType?: string;
 }
 
 export interface UseGetCampaignsReturn {
@@ -27,7 +29,7 @@ export function useGetCampaignList(
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { page = 0, pageSize = 10, name } = params;
+  const { page = 0, pageSize = 10, name, status, postType } = params;
 
 
 
@@ -38,7 +40,9 @@ export function useGetCampaignList(
         const filters = {
         page,
         pageSize,
-        name
+        name,
+        status,
+        postType,
       };
       const response = await getCampaigns(filters);
       setData(response.data || []);
@@ -51,7 +55,7 @@ export function useGetCampaignList(
     } finally {
       setIsLoading(false);
     }
-  }, [page, pageSize, name]);
+  }, [page, pageSize, name, status, postType]);
 
   // Auto-fetch when parameters change
   useEffect(() => {

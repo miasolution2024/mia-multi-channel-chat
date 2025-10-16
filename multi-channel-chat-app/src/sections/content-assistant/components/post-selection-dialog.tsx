@@ -12,7 +12,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { Content } from "@/sections/content-assistant/view/content-assistant-list-view";
-import { POST_STEP, POST_TYPE_OPTIONS } from "@/constants/auto-post";
+import { POST_STATUS, POST_STEP, POST_TYPE_OPTIONS } from "@/constants/auto-post";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Iconify } from "@/components/iconify";
 import { CustomTable } from "@/components/custom-table";
@@ -22,7 +22,6 @@ import type {
 } from "@/components/custom-table/custom-table";
 import { useEffect, useMemo, useState, memo } from "react";
 import { useGetContentAssistantList } from "@/hooks/apis/use-get-content-assistant-list";
-import { CAMPAIGN_STATUS } from "@/constants/marketing-compaign";
 
 // Utility functions from content-assistant-list-view
 const getAIContentStatusLabelAndColor = (
@@ -89,11 +88,12 @@ const PostSelectionDialog = memo(function PostSelectionDialog({
   const variable = useMemo(
     () => ({
       topic: debouncedSearchTerm,
-      status:  [CAMPAIGN_STATUS.TODO],
+      status:  [POST_STATUS.DRAFT],
       page: page + 1,
       pageSize: rowsPerPage,
       postType: postType || undefined,
       omniChannel: omniChannel || undefined,
+      isNotLinkToCampaign: true,
     }),
     [debouncedSearchTerm, page, rowsPerPage, postType, omniChannel]
   );

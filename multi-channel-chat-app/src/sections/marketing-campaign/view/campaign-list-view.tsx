@@ -126,9 +126,9 @@ const getCampaignStatusLabelAndColor = (
 } => {
   switch (status) {
     case CAMPAIGN_STATUS.COMPLETED:
-      return { label: "Hoàn thành", color: "success" };
+      return { label: "Hoàn tất", color: "success" };
     case CAMPAIGN_STATUS.IN_PROGRESS:
-      return { label: "Đang thực hiện", color: "warning" };
+      return { label: "Đang chạy", color: "warning" };
     case CAMPAIGN_STATUS.TODO:
       return { label: "Khởi tạo", color: "default" };
     default:
@@ -226,6 +226,8 @@ export function CampaignListView() {
     page: page + 1, // API sử dụng 1-based pagination
     pageSize,
     name: debouncedName,
+    status: filters.state.status,
+    postType: filters.state.post_type,
   });
 
   // Move TABLE_CONFIG inside component to access setPopupState
@@ -550,9 +552,9 @@ export function CampaignListView() {
   }, [selected, refetch, setIsDeleting]);
 
   const statusOptions = [
-    { value: "draft", label: "Nháp" },
-    { value: "in_progress", label: "Đang thực hiện" },
-    { value: "completed", label: "Hoàn thành" },
+    { value: CAMPAIGN_STATUS.TODO, label: "Khởi tạo" },
+    { value: CAMPAIGN_STATUS.IN_PROGRESS, label: "Đang chạy" },
+    { value: CAMPAIGN_STATUS.COMPLETED, label: "Hoàn tất" },
   ];
 
   return (

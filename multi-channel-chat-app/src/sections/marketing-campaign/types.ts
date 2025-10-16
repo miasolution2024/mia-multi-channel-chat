@@ -35,9 +35,12 @@ export interface CampaignStep2Data {
 // Type for Step 3 campaign update
 export interface CampaignStep3Data {
   current_step?: string;
-  status: string;
+  status?: string;
   ai_content_suggestions: {
-    create: never[];
+    create: Array<{
+      campaign: string;
+      id: number;
+    }> |never[];
     update: Array<{
       campaign: string;
       id: number;

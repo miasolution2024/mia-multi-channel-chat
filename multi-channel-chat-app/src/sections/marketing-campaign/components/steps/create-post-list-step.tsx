@@ -30,6 +30,7 @@ import {
 import type { TableConfig } from "@/components/custom-table/custom-table";
 import { POST_TYPE_OPTIONS } from "@/constants/auto-post";
 import { useCreateContentAssistant } from "@/hooks/apis/use-create-content-assistant";
+import { useUpdateContentAssistant } from "@/hooks/apis/use-update-content-assistant";
 import { buildStepResearchData } from "@/sections/content-assistant/utils";
 import { CampaignFormData, transformCampaignToContentAssistant } from "@/sections/marketing-campaign/utils";
 import { CreateContentAssistantRequest } from "@/sections/content-assistant/types/content-assistant-create";
@@ -58,6 +59,7 @@ export function CreatePostListStep({
   const omniChannel = watch("omni_channels");
 
   const { createContentAssistant } = useCreateContentAssistant();
+  const { updateContentAssistant } = useUpdateContentAssistant();
 
   
   // Use the new hook for content tones
@@ -194,7 +196,7 @@ export function CreatePostListStep({
     editForm.reset();
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!itemToEdit) return;
     
     const formData = editForm.getValues();
@@ -224,23 +226,46 @@ export function CreatePostListStep({
       return suggestion;
     });
     
-    setContentSuggestions(updatedSuggestions);
-    handleCloseEditDrawer();
-    toast.success('Cập nhật bài viết thành công!');
+    // Handle save data change (call hook api)
+    try {
+      await updateContentAssistant(itemToEdit.id, {
+        topic: formData.topic,
+        main_seo_keyword: formData.main_seo_keyword,
+        secondary_seo_keywords: Array.isArray(formData.secondary_seo_keywords) 
+          ? formData.secondary_seo_keywords
+          : (formData.secondary_seo_keywords as string).split(',').map((k: string) => k.trim()),
+        content_tone: {
+          create: formData.content_tone.map(toneId => ({
+            ai_content_suggestions_id: itemToEdit.id,
+            content_tone_id: {
+              id: parseInt(toneId)
+            }
+          })),
+          update: [],
+          delete: []
+        },
+        ai_notes_write_article: formData.ai_notes_write_article,
+      });
+      
+      setContentSuggestions(updatedSuggestions);
+      handleCloseEditDrawer();
+      toast.success('Cập nhật bài viết thành công!');
+    } catch (error) {
+      console.error('Error updating content assistant:', error);
+      toast.error('Có lỗi xảy ra khi cập nhật bài viết');
+    }
   };
 
   const handlePostsConfirm = (selectedItems: Content[]) => {
-    const selectedIds = selectedItems.map(item => item.id.toString());
-    const existingIds = contentSuggestions.map(item => item.id);
+
+    // Lấy danh sách ID hiện tại
+    const currentIds = new Set(contentSuggestions.map(item => item.id));
+
+    const trulyNewItems = selectedItems.filter(item => !currentIds.has(item.id.toString()));
+
+    const remainingItems = contentSuggestions;
     
-    // Find items to add (selected but not in existing)
-    const itemsToAdd = selectedItems.filter(item => !existingIds.includes(item.id.toString()));
-    
-    // Find items to remove (existing but not selected)
-    const idsToRemove = existingIds.filter(id => !selectedIds.includes(id));
-    
-    // Convert new Content items to ContentSuggestionItem format
-    const newContentSuggestions: ContentSuggestionItem[] = itemsToAdd.map(item => ({
+    const newContentSuggestions: ContentSuggestionItem[] = trulyNewItems.map(item => ({
       id: item.id.toString(),
       topic: item.topic,
       main_seo_keyword: item.main_seo_keyword,
@@ -260,13 +285,14 @@ export function CreatePostListStep({
       ai_notes_write_article: item.additional_notes || null,
     }));
 
-    // Update contentSuggestions: remove unchecked items and add new items
-    const filteredExistingSuggestions = contentSuggestions.filter(item => !idsToRemove.includes(item.id));
-    const updatedContentSuggestions = [...filteredExistingSuggestions, ...newContentSuggestions];
+    
+    const updatedContentSuggestions = [...remainingItems, ...newContentSuggestions];
     setContentSuggestions(updatedContentSuggestions);
 
-    // Update selectedContentSuggestions to match the selected items
-    setSelectedContentSuggestions(selectedIds);
+    const newSelectedIds = trulyNewItems.map(item => item.id.toString());
+    const updatedSelectedIds = [...selectedContentSuggestions, ...newSelectedIds];
+    
+    setSelectedContentSuggestions(updatedSelectedIds);
 
     // Update form field ai_content_suggestions
     setValue("ai_content_suggestions", updatedContentSuggestions.map(item => item.id));
@@ -815,6 +841,7 @@ export function CreatePostListStep({
       </Drawer>
 
       {/* Content Posts Selection Dialog */}
+      {createPostListDialogOpen &&
       <PostSelectionDialog
           open={createPostListDialogOpen}
           onClose={() => setCreatePostListDialogOpen(false)}
@@ -823,6 +850,7 @@ export function CreatePostListStep({
           postType={postType}
           omniChannel={omniChannel}
         />
+      }
 
       {/* Additional Post Generation Dialog */}
       <Dialog

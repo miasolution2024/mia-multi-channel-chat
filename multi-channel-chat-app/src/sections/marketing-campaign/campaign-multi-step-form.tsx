@@ -242,7 +242,6 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
       
         // Build the research data for content assistant creation
         const researchData = await buildStepResearchData(contentAssistantFormData, true);
-        console.log("researchData", JSON.stringify(researchData));
         
         // Create multiple content assistants using Promise.all
         const createPromises = Array.from({ length: needCreatePostAmount }, () =>
@@ -258,6 +257,7 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
 
         // Set the created IDs to ai_content_suggestions
         methods.setValue('ai_content_suggestions', createdIds);
+
       } catch {
         toast.error("Có lỗi xảy ra khi tạo nội dung trợ lý");
       }
@@ -409,7 +409,7 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
   const renderLabelNextStep = {
     [CAMPAIGN_STEP_KEY.CAMPAIGN_INFO]: "Lên thông tin bài viết",
     [CAMPAIGN_STEP_KEY.POST_CONTENT_INFO]: "Tạo bài viết",
-    [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: "Tạo bài viết (2)",
+    [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: `Tạo bài viết (${selectedContentSuggestions.length})`,
   };
 
   if (!activeStep) return null;

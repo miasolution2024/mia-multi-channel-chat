@@ -26,6 +26,7 @@ export function useGetContentAssistantList(
   params: UseGetContentAssistantListParams & {
     postType?: string;
     omniChannel?: number;
+    isNotLinkToCampaign?: boolean;
   } = {},
 ): UseGetContentAssistantListReturn {
   const [data, setData] = useState<ContentAssistantApiResponse[]>([]);
@@ -33,7 +34,7 @@ export function useGetContentAssistantList(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { topic = '', status = [], page = 0, pageSize = 10, postType, omniChannel } = params;
+  const { topic = '', status = [], page = 0, pageSize = 10, postType, omniChannel, isNotLinkToCampaign = false } = params;
 
   const fetchData = useCallback(async () => {
     try {
@@ -47,6 +48,7 @@ export function useGetContentAssistantList(
         pageSize,
         postType: postType || undefined,
         omniChannel: omniChannel || undefined,
+        isNotLinkToCampaign,
       };
 
       const response = await getContentAssistantList(filters);
