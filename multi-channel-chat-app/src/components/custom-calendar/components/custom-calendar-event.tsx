@@ -80,7 +80,9 @@ const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
               : "transparent",
           },
         }}
-        onClick={() => openSchedule(true)}
+        onClick={() => {
+          openSchedule(extended.status !== "published");
+        }}
       >
         <Typography
           sx={{
