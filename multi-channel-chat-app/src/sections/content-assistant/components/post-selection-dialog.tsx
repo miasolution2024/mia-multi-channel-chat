@@ -64,7 +64,6 @@ interface PostSelectionDialogProps {
   open: boolean;
   onClose: () => void;
   onConfirm: (selectedItems: Content[]) => void;
-  defaultSelected?: (string | number)[];
   postType?: string;
   omniChannel?: number;
 }
@@ -73,7 +72,6 @@ const PostSelectionDialog = memo(function PostSelectionDialog({
   open,
   onClose,
   onConfirm,
-  defaultSelected = [],
   postType,
   omniChannel,
 }: PostSelectionDialogProps) {
@@ -226,15 +224,11 @@ const PostSelectionDialog = memo(function PostSelectionDialog({
 
   useEffect(() => {
     if (open) {
-      // Initialize selectedIds with defaultSelected when dialog opens
-      setSelectedIds(defaultSelected.map((item) => Number(item)));
-      // Find corresponding items for defaultSelected IDs
-      const preSelectedItems = items.filter((item) =>
-        defaultSelected.includes(item.id)
-      );
-      setSelectedItems(preSelectedItems);
+      // Reset selection when dialog opens
+      setSelectedIds([]);
+      setSelectedItems([]);
     }
-  }, [open, defaultSelected, items]);
+  }, [open]);
 
   const handleConfirm = () => {
     onConfirm(selectedItems);

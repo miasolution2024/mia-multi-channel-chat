@@ -56,7 +56,6 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
   
   // Cache for storing step data after successful API calls
   const [cachedStepData, setCachedStepData] = useState<Record<string, Partial<CampaignFormData> | null>>({});
-    const [selectedContentSuggestions, setSelectedContentSuggestions] = useState<(string | number)[]>([]);
 
 
   const { createCampaignHandler, isLoading: isCreatingCampaign } =
@@ -283,6 +282,9 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
     return;
   };
 
+    const selectedContentSuggestions = methods.watch("ai_content_suggestions");
+
+
   const handleCreatePostListStep = useCallback(
     async (data: CampaignFormData) => {
     const campaignId = methods.getValues("id");
@@ -400,10 +402,7 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
   const renderStepContent = {
     [CAMPAIGN_STEP_KEY.CAMPAIGN_INFO]: <CampaignInfoStep />,
     [CAMPAIGN_STEP_KEY.POST_CONTENT_INFO]: <PostContentInfoStep />,
-    [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: <CreatePostListStep 
-      selectedContentSuggestions={selectedContentSuggestions}
-      setSelectedContentSuggestions={setSelectedContentSuggestions}
-    />,
+    [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: <CreatePostListStep />,
   };
 
   const renderLabelNextStep = {

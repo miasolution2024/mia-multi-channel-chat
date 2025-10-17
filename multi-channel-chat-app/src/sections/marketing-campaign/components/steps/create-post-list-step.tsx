@@ -35,13 +35,7 @@ import { buildStepResearchData } from "@/sections/content-assistant/utils";
 import { CampaignFormData, transformCampaignToContentAssistant } from "@/sections/marketing-campaign/utils";
 import { CreateContentAssistantRequest } from "@/sections/content-assistant/types/content-assistant-create";
 
-export function CreatePostListStep({
-  selectedContentSuggestions,
-  setSelectedContentSuggestions,
-}: {
-  selectedContentSuggestions: (string | number)[];
-  setSelectedContentSuggestions: (selected: (string | number)[]) => void;
-}) {
+export function CreatePostListStep() {
   const { watch, getValues, setValue } = useFormContext();
   const [contentSuggestions, setContentSuggestions] = useState<ContentSuggestionItem[]>([]);
   const [isLoadingContentAssistant, setIsLoadingContentAssistant] = useState(false);
@@ -120,12 +114,9 @@ export function CreatePostListStep({
         const results = await Promise.all(promises);
         const filteredResults = results.filter(item => item !== null) as ContentSuggestionItem[];
         setContentSuggestions(filteredResults);
-        // Mặc định tick hết tất cả items
-        setSelectedContentSuggestions(filteredResults.map(item => item.id));
       } catch {
         toast.error("Không thể tải danh sách content assistants");
         setContentSuggestions([]);
-        setSelectedContentSuggestions([]);
       } finally {
         setIsLoadingContentAssistant(false);
       }
@@ -134,11 +125,6 @@ export function CreatePostListStep({
     loadContentAssistants();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(aiContentSuggestions)]);
-
-  // Xử lý khi user select/deselect items
-  const handleSelectChange = (selected: (string | number)[]) => {
-    setSelectedContentSuggestions(selected);
-  };
 
   // Handle delete item from list
   const handleDeleteItem = (id: string) => {
@@ -151,8 +137,6 @@ export function CreatePostListStep({
     if (itemToDelete) {
       
       setContentSuggestions(prev => prev.filter(item => item.id !== itemToDelete));
-      const newSelected = selectedContentSuggestions.filter(id => id !== itemToDelete);
-      setSelectedContentSuggestions(newSelected);
       
       // Update form field ai_content_suggestions
       const updatedContentSuggestions = contentSuggestions
@@ -289,11 +273,6 @@ export function CreatePostListStep({
     const updatedContentSuggestions = [...remainingItems, ...newContentSuggestions];
     setContentSuggestions(updatedContentSuggestions);
 
-    const newSelectedIds = trulyNewItems.map(item => item.id.toString());
-    const updatedSelectedIds = [...selectedContentSuggestions, ...newSelectedIds];
-    
-    setSelectedContentSuggestions(updatedSelectedIds);
-
     // Update form field ai_content_suggestions
     setValue("ai_content_suggestions", updatedContentSuggestions.map(item => item.id));
 
@@ -370,10 +349,6 @@ export function CreatePostListStep({
 
       // Add new content suggestions to the existing list
       setContentSuggestions(prev => [...prev, ...newContentSuggestions]);
-      
-      // Add new IDs to selectedContentSuggestions
-      const newIds = newContentSuggestions.map(item => item.id);
-      setSelectedContentSuggestions([...selectedContentSuggestions, ...newIds]);
       
       // Update form field ai_content_suggestions
       const updatedContentSuggestions = [...contentSuggestions, ...newContentSuggestions].map(item => item.id);
@@ -684,10 +659,6 @@ export function CreatePostListStep({
           data={contentSuggestions}
           tableConfig={TABLE_CONFIG}
           loading={isLoadingContentAssistant}
-          onSelect={handleSelectChange}
-          defaultSelected={selectedContentSuggestions}
-          checkKey="id"
-          canSelectRow={() => true}
         />
       </Box>
 
@@ -846,7 +817,6 @@ export function CreatePostListStep({
           open={createPostListDialogOpen}
           onClose={() => setCreatePostListDialogOpen(false)}
           onConfirm={handlePostsConfirm}
-          defaultSelected={contentSuggestions.map(item => item.id)}
           postType={postType}
           omniChannel={omniChannel}
         />
