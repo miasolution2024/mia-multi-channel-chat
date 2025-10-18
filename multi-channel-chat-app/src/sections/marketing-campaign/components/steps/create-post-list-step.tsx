@@ -74,10 +74,13 @@ export function CreatePostListStep() {
       main_seo_keyword: "",
       secondary_seo_keywords: [],
       ai_notes_write_article: "",
+      content_tone: [],
     },
   });
 
   const aiContentSuggestions = watch("ai_content_suggestions");
+
+  console.log('values', watch('content_tone'));
 
   // Load content assistants when ai_content_suggestions changes
   useEffect(() => {
@@ -746,7 +749,6 @@ export function CreatePostListStep() {
                     label: tone.tone_description,
                   })) || []
                 }
-                placeholder="Chọn văn phong AI"
                 chip
                 slotProps={{
                   chip: {

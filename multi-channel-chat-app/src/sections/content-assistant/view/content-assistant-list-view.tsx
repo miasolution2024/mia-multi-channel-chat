@@ -560,7 +560,7 @@ export function ContentAssistantListView() {
           {item.services.slice(0, 1).map((service, index) => (
             <Chip
               key={index}
-              label={service.services_id.name}
+              label={service.services_id?.name}
               size="small"
               variant="outlined"
             />
@@ -575,7 +575,7 @@ export function ContentAssistantListView() {
                   open: true,
                   title: "Dịch vụ",
                   items: item.services.map((service) => ({
-                    label: service.services_id.name,
+                    label: service.services_id?.name,
                     color: "default" as const,
                   })),
                 })

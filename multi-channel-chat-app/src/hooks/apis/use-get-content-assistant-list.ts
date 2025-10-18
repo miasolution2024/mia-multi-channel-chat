@@ -58,10 +58,10 @@ export function useGetContentAssistantList(
       const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách trợ lý nội dung';
       setError(errorMessage);
       toast.error(errorMessage);
-      console.error('Error fetching content assistant:', err);
     } finally {
       setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topic, status, page, pageSize, postType, omniChannel]);
 
   // Auto-fetch when parameters change

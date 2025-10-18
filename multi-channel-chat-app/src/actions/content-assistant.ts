@@ -178,9 +178,24 @@ export async function getContentAssistantList(
       `/items/ai_content_suggestions?${params}`
     );
 
+    // Check if any filters are applied (excluding page and pageSize)
+    const hasFilters = !!(
+      filters.omniChannel ||
+      filters.postType ||
+      (filters.status && filters.status.length > 0) ||
+      filters.id ||
+      filters.topic ||
+      filters.isNotLinkToCampaign
+    );
+
+    // Use total_filter if filters are applied, otherwise use total_count
+    const totalCount = hasFilters 
+      ? response.data.meta?.filter_count || 0
+      : response.data.meta?.total_count || 0;
+
     return {
       data: response.data.data || [],
-      total: response.data.meta?.total_count || 0,
+      total: totalCount,
       page: filters.page || 1,
       pageSize: limit,
     };
