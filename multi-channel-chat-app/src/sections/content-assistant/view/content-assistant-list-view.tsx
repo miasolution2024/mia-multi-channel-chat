@@ -458,7 +458,7 @@ export function ContentAssistantListView() {
                   open: true,
                   title: "Hành trình khách hàng",
                   items: item.customer_journey.map((journey) => ({
-                    label: journey.customer_journey_id.name,
+                    label: journey?.customer_journey_id?.name,
                     color: "info" as const,
                   })),
                 })
