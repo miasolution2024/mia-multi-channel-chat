@@ -442,7 +442,7 @@ export function ContentAssistantListView() {
           {item.customer_journey.slice(0, 1).map((journey, index) => (
             <Chip
               key={index}
-              label={journey.customer_journey_id.name}
+              label={journey?.customer_journey_id?.name }
               size="small"
               variant="outlined"
               color="info"
