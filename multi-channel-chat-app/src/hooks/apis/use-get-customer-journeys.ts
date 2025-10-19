@@ -35,7 +35,7 @@ export function useGetCustomerJourneys(
       setError(null);
       
       const response = await getCustomerJourneys(page, limit, name);
-      setData(response.data?.data || []);
+      setData(response.data || []);
       setTotal(response.total || 0);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách customer journey';

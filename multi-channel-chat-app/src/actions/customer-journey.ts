@@ -50,7 +50,7 @@ export async function getCustomerJourneys(page?: number, limit: number = 25, nam
       : response.data.meta?.total_count || 0;
     
     return {
-      data: response.data || [],
+      data: response.data?.data || [],
       total: totalCount,
       page: page || 1,
       pageSize: limit,
