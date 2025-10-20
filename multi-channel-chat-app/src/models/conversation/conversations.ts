@@ -13,7 +13,7 @@ export enum ConversationType {
 export enum ConversationChannel {
   ZALO = "Zalo",
   FACEBOOK = "Facebook",
-  WHATSAPP = "WhatsApp",
+  WHATSAPP = "whatsapp",
   WEBSITE = "Website",
   INSTAGRAM = "Instagram",
   ZALO_OA = "ZaloOA",
