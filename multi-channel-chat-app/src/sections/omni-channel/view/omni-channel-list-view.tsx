@@ -252,6 +252,7 @@ export function OmniChannelsListView() {
         <MenuList>
           {CHANNELS.map((c, index) => (
             <MenuItem
+              disabled={!c.enableAddFeature}
               key={index}
               onClick={() => {
                 openZaloLoginDialog.onTrue();

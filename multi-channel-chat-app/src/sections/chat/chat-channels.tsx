@@ -27,6 +27,7 @@ export const CHANNELS = [
   {
     name: ConversationChannel.ZALO,
     src: `${CONFIG.assetsDir}/assets/images/logo/zalo.webp`,
+    enableAddFeature: true,
   },
   {
     name: ConversationChannel.ZALO_OA,
