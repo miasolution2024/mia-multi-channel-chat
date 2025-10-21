@@ -31,7 +31,7 @@ export function initialConversation({
   );
 
   const messageData: MessageCreateRequest = {
-    channel: selectedChannel,
+    channel: conversation?.channel || selectedChannel,
     conversation: selectedConversationId ?? 0,
     attachments: [],
     content: message,

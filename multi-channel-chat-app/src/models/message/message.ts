@@ -32,6 +32,7 @@ export type MessageCreateRequest = {
   attachments: {
     id: string;
     fileExtension: string;
+    fileName: string;
   }[];
   external_receive_id?: string;
   external_sender_id?: string;

@@ -88,7 +88,7 @@ export function ChatMessageInput({
       try {
         const response = await uploadFile(file);
         messageData.attachments = [
-          { id: response.data.id, fileExtension: fileTypeByUrl(file.name) },
+          { id: response.data.id, fileExtension: fileTypeByUrl(file.name), fileName: file.name },
         ];
         messageData.type = getMessageType(file.name);
       } catch (error) {
