@@ -120,6 +120,11 @@ export const navData = [
         icon: ICONS.course,
       },
       {
+        title: "Nhóm hành trình khách hàng",
+        path: paths.dashboard.customerJourneyProcess.root,
+        icon: ICONS.course,
+      },
+      {
         title: "Lên lịch đăng bài",
         path: paths.dashboard.scheduleCalendar.root,
         icon: ICONS.calendar,

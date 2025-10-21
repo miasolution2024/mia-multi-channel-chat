@@ -80,8 +80,6 @@ export function CreatePostListStep() {
 
   const aiContentSuggestions = watch("ai_content_suggestions");
 
-  console.log('values', watch('content_tone'));
-
   // Load content assistants when ai_content_suggestions changes
   useEffect(() => {
     const loadContentAssistants = async () => {
