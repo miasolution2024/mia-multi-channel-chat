@@ -51,5 +51,10 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/customer-journey/new`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/customer-journey/${id}/edit`,
     },
+    customerJourneyProcess: {
+      root: `${ROOTS.DASHBOARD}/customer-journey-process`,
+      new: `${ROOTS.DASHBOARD}/customer-journey-process/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/customer-journey-process/${id}/edit`,
+    },
   },
 };

@@ -222,6 +222,12 @@ export const endpoints = {
     update: "/items/customer_journey",
     delete: "/items/customer_journey",
   },
+  customerJourneyProcess: {
+    list: "/items/customer_journey_process",
+    create: "/items/customer_journey_process",
+    update: "/items/customer_journey_process",
+    delete: "/items/customer_journey_process",
+  },
   omniChannels: {
     list: "/items/omni_channels",
   },
