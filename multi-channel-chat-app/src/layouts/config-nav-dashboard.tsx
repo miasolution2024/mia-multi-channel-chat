@@ -117,12 +117,17 @@ export const navData = [
       {
         title: "Hành trình khách hàng",
         path: paths.dashboard.customerJourney.root,
-        icon: ICONS.course,
+        icon: ICONS.suppier,
       },
       {
         title: "Nhóm hành trình khách hàng",
         path: paths.dashboard.customerJourneyProcess.root,
-        icon: ICONS.course,
+        icon: ICONS.category,
+      },
+       {
+        title: "Hành vi khách hàng",
+        path: paths.dashboard.customerInsight.root,
+        icon: ICONS.blog,
       },
       {
         title: "Lên lịch đăng bài",

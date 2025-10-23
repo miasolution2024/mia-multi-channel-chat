@@ -6,8 +6,9 @@ import { CustomerJourneyFormData } from '@/sections/customer-journey/types';
  * @param page Page number (1-based)
  * @param limit Number of items per page
  * @param name Optional name filter
+ * @param isNotInCustomerJourneyProcess Optional filter to get customer journeys not in any process
  */
-export async function getCustomerJourneys(page?: number, limit: number = 25, name?: string) {
+export async function getCustomerJourneys(page?: number, limit: number = 25, name?: string, isNotInCustomerJourneyProcess?: boolean) {
   try {
     let url = endpoints.customerJourneys.list;
     
@@ -27,6 +28,7 @@ export async function getCustomerJourneys(page?: number, limit: number = 25, nam
     params.append("fields[]", "date_created");
     params.append("fields[]", "date_updated");
     params.append("fields[]", "active");
+    params.append('fields[]', 'customer_journey_process');
 
 
     params.append('meta', '*');
@@ -34,10 +36,15 @@ export async function getCustomerJourneys(page?: number, limit: number = 25, nam
     // Add sorting
     params.append('sort[]', 'id');
 
-    // filter name
+    // filter name if provided
     if(name){
       params.append('filter[_and][0][name][_contains]', name);
     }
+    // filter customer journeys not in any process if provided
+    if(isNotInCustomerJourneyProcess){
+      params.append('filter[_and][0][customer_journey_process][_null]', 'true');
+    }
+
     
     url = `${url}?${params.toString()}`;
     

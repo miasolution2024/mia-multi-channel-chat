@@ -38,8 +38,8 @@ export function CustomerJourneySelectionDialog({
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>(selectedIds);
 const {data: customerJourneys, isLoading} = useGetCustomerJourneys({
   limit: 200,
+  isNotInCustomerJourneyProcess: true,
 });
-
   useEffect(() => {
     if (open) {
       setTempSelectedIds(selectedIds);

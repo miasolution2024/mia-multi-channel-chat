@@ -306,7 +306,7 @@ export function CustomerJourneyListView() {
           justifyContent="space-between"
         >
           <TextField
-          size="small"
+            size="small"
             fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}

@@ -63,7 +63,7 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
   });
 
   const {watch, setValue} = methods;
-  const customerJourneys = watch("customer_journey") || [];
+  const customerJourneys = useMemo(() => watch("customer_journey") || [], [watch]);
 
   const {
     reset,

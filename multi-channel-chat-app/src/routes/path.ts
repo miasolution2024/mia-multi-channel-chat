@@ -56,5 +56,10 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/customer-journey-process/new`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/customer-journey-process/${id}/edit`,
     },
+    customerInsight: {
+      root: `${ROOTS.DASHBOARD}/customer-insight`,
+      new: `${ROOTS.DASHBOARD}/customer-insight/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/customer-insight/${id}/edit`,
+    },
   },
 };

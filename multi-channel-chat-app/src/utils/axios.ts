@@ -243,4 +243,14 @@ export const endpoints = {
     update: "/items/campaign",
     delete: "/items/campaign",
   },
+  customerInsights: {
+    list: "/items/customer_insight",
+    create: "/items/customer_insight",
+    update: "/items/customer_insight",
+    delete: "/items/customer_insight",
+  },
+  customerGroupCustomerJourney: {
+    create: "/items/customer_group_customer_journey",
+    update: "/items/customer_group_customer_journey",
+  },
 };

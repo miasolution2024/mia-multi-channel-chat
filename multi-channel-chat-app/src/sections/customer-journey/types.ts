@@ -5,6 +5,7 @@ export interface CustomerJourney {
   name: string;
   description: string;
   ai_content_suggestions: unknown[];
+  customer_journey_process: unknown[];
   date_created: string;
   date_updated: string;
   active: boolean;
