@@ -58,6 +58,26 @@ export { autoMiaAxiosInstance };
 
 // ----------------------------------------------------------------------
 
+// Facebook axios instance
+const facebookAxiosInstance = axios.create({
+  baseURL: "https://graph.facebook.com/v24.0/",
+  httpsAgent: process.env.NODE_ENV === "development" ? agent : undefined,
+});
+
+facebookAxiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    Promise.reject(
+      (error.response &&
+        error.response.data &&
+        error.response.data.errorMessage) ||
+        "Something went wrong!"
+    );
+  }
+);
+
+// ----------------------------------------------------------------------
+
 export const fetcher = async (args: any) => {
   try {
     const [url, config] = Array.isArray(args) ? args : [args];
@@ -81,6 +101,19 @@ export const autoMiaFetcher = async (args: any) => {
     return res.data;
   } catch (error) {
     console.error("Failed to fetch from Auto MIA:", error);
+    throw error;
+  }
+};
+
+// Facebook fetcher
+export const facebookFetcher = async (args: any) => {
+  try {
+    const [url, config] = Array.isArray(args) ? args : [args];
+
+    const res = await facebookAxiosInstance.get(url, { ...config });
+    return res.data;
+  } catch (error) {
+    console.error("Failed to fetch from Facebook:", error);
     throw error;
   }
 };
