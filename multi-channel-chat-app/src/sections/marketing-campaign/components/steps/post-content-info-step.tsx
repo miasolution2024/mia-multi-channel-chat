@@ -5,13 +5,13 @@ import {
 } from "@/components/hook-form";
 import { Iconify } from "@/components/iconify";
 import {
-  CustomerJourneyData,
-  useGetCustomerJourneys,
+  useGetCustomerJourneys
 } from "@/hooks/apis/use-get-customer-journeys";
 import {
   ContentSelectionDialog,
   SelectedItemsTable,
 } from "@/sections/content-assistant/components";
+import { CustomerJourney } from "@/sections/customer-journey/types";
 import {
   Box,
   Button,
@@ -120,7 +120,7 @@ export function PostContentInfoStep() {
             required
             sx={{ width: "100%" }}
           >
-            {customerJourneyData?.map((item: CustomerJourneyData) => (
+            {customerJourneyData?.map((item: CustomerJourney) => (
               <MenuItem key={item.id} value={item.id}>
                 {item.name}
               </MenuItem>

@@ -1,17 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/snackbar';
-import { getCustomerJourneys } from '@/actions/customer-journey';
-import { CustomerJourney } from '@/sections/customer-journey/types';
+import { getCustomerJourneyProcesses } from '@/actions/customer-journey-process';
+import { CustomerJourneyProcess } from '@/sections/customer-journey-process/types';
 
-export interface UseGetCustomerJourneysParams {
+export interface UseGetCustomerJourneyProcessParams {
   page?: number;
   limit?: number;
   name?: string;
-  isNotInCustomerJourneyProcess?: boolean;
+  id?: string;
 }
 
-export interface UseGetCustomerJourneysReturn {
-  data: CustomerJourney[];
+export interface UseGetCustomerJourneyProcessReturn {
+  data: CustomerJourneyProcess[];
   total: number;
   isLoading: boolean;
   error: string | null;
@@ -20,32 +20,32 @@ export interface UseGetCustomerJourneysReturn {
   options: { value: string; label: string }[];
 }
 
-export function useGetCustomerJourneys(
-  params: UseGetCustomerJourneysParams = {}
-): UseGetCustomerJourneysReturn {
-  const [data, setData] = useState<CustomerJourney[]>([]);
+export function useGetCustomerJourneyProcess(
+  params: UseGetCustomerJourneyProcessParams = {}
+): UseGetCustomerJourneyProcessReturn {
+  const [data, setData] = useState<CustomerJourneyProcess[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { page = 1, limit = 25, name= '',isNotInCustomerJourneyProcess = false } = params;
+  const { page = 1, limit = 25, name = '', id = '' } = params;
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await getCustomerJourneys(page, limit, name, isNotInCustomerJourneyProcess);
+      const response = await getCustomerJourneyProcesses(page, limit, name, id);
       setData(response.data || []);
       setTotal(response.total || 0);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách customer journey';
+      const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách customer journey process';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, name, isNotInCustomerJourneyProcess]);
+  }, [page, limit, name, id]);
 
   // Auto-fetch when parameters change
   useEffect(() => {
@@ -55,6 +55,7 @@ export function useGetCustomerJourneys(
   const refetch = useCallback(async () => {
     await fetchData();
   }, [fetchData]);
+
   return {
     data,
     total,

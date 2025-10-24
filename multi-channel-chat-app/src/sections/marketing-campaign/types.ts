@@ -36,6 +36,7 @@ export interface CampaignStep2Data {
 export interface CampaignStep3Data {
   current_step?: string;
   status?: string;
+  is_generated_by_AI?: boolean;
   ai_content_suggestions: {
     create: Array<{
       campaign: string;

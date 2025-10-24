@@ -45,6 +45,7 @@ import { CreateContentAssistantResponse, CreateContentAssistantRequest } from "@
 import { useRouter } from "next/navigation";
 import { paths } from "@/routes/path";
 import { Campaign } from "@/types/campaign";
+import { updateContentAssistant } from "@/actions/content-assistant";
 
 function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | null }) {
   const [activeStep, setActiveStep] = useState(
@@ -304,7 +305,17 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
       id: Number(postId),
       startStep: 1,
       endStep: 4,
+      isGenByAI: true,
     }));
+    
+    // update content assistant status to generated
+    for (const postId of selectedContentSuggestions) {
+      await updateContentAssistant(postId, {
+        is_generated_by_AI: true,
+      });
+    }
+
+
     createPost(n8nPostInput);
     toast.success(
         `Đã bắt đầu tạo ${n8nPostInput.length} bài viết. Quá trình sẽ hoàn thành trong khoảng 10 phút.`

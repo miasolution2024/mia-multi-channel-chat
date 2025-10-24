@@ -6,6 +6,8 @@ import https from "https";
 
 import { CONFIG } from "@/config-global";
 import { SWRConfiguration } from "swr";
+import { signOut } from "@/actions/auth";
+import { toast } from "@/components/snackbar";
 
 export const swrConfig: SWRConfiguration = {
   revalidateOnFocus: false,
@@ -23,7 +25,22 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    Promise.reject(
+    // Handle 403 Forbidden - Auto logout
+    if (error.response?.status === 403) {
+      try {
+        signOut();
+        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+        
+        // Redirect to login page
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/sign-in';
+        }
+      } catch (logoutError) {
+        console.error("Error during auto logout:", logoutError);
+      }
+    }
+
+    return Promise.reject(
       (error.response &&
         error.response.data &&
         error.response.data.errorMessage) ||
@@ -45,7 +62,22 @@ const autoMiaAxiosInstance = axios.create({
 autoMiaAxiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    Promise.reject(
+    // Handle 403 Forbidden - Auto logout
+    if (error.response?.status === 403) {
+      try {
+        signOut();
+        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+        
+        // Redirect to login page
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/sign-in';
+        }
+      } catch (logoutError) {
+        console.error("Error during auto logout:", logoutError);
+      }
+    }
+
+    return Promise.reject(
       (error.response &&
         error.response.data &&
         error.response.data.errorMessage) ||
@@ -223,6 +255,12 @@ export const endpoints = {
     update: "/items/customer_journey",
     delete: "/items/customer_journey",
   },
+  customerJourneyProcess: {
+    list: "/items/customer_journey_process",
+    create: "/items/customer_journey_process",
+    update: "/items/customer_journey_process",
+    delete: "/items/customer_journey_process",
+  },
   omniChannels: {
     list: "/items/omni_channels",
   },
@@ -237,5 +275,15 @@ export const endpoints = {
     create: "/items/campaign",
     update: "/items/campaign",
     delete: "/items/campaign",
+  },
+  customerInsights: {
+    list: "/items/customer_insight",
+    create: "/items/customer_insight",
+    update: "/items/customer_insight",
+    delete: "/items/customer_insight",
+  },
+  customerGroupCustomerJourney: {
+    create: "/items/customer_group_customer_journey",
+    update: "/items/customer_group_customer_journey",
   },
 };

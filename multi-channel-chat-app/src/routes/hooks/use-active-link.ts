@@ -62,5 +62,8 @@ export function useActiveLink(itemPath: string | Record<string, unknown> | ((...
    * @itemPath 			 = '/dashboard/calendar'
    * @match pathname = '/dashboard/calendar'
    */
-  return pathname === itemPath ||  pathname.includes(itemPath);
+  const itemPathAfterDashboard = itemPath.split('dashboard')[1]?.split('/')[1] ? `/${itemPath.split('dashboard')[1].split('/')[1]}` : itemPath.split('dashboard')[1]
+  const pathnameAfterDashboard = pathname.split('dashboard')[1]?.split('/')[1] ? `/${pathname.split('dashboard')[1].split('/')[1]}` : pathname.split('dashboard')[1]
+
+  return pathnameAfterDashboard === itemPathAfterDashboard;
 }
