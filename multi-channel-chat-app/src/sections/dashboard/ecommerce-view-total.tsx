@@ -3,7 +3,10 @@ import { Box, Card, Typography } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { FacebookView, OmniChoices } from "./type";
 import { useGetMultipleFacebookPageData } from "@/actions/dashboard-channels";
-
+import {
+  calculateDateDistance,
+  calculatePreviousDates,
+} from "./hooks/use-date-calculation";
 interface EcommerceViewTotalProps {
   pages: OmniChoices[];
   startDate: string;
@@ -18,99 +21,11 @@ const EcommerceViewTotal: React.FC<EcommerceViewTotalProps> = ({
   period,
 }) => {
   const [totalCurrentData, setTotalCurrentData] = useState(0);
-  const [totalThenData, setTotalThenData] = useState(0); // Used for percentage calculation
+  const [totalThenData, setTotalThenData] = useState(0);
   const [arrowDirection, setArrowDirection] = useState("mdi:arrow-up");
   const [arrowColor, setArrowColor] = useState("#1AC052");
   const [percentage, setPercentage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-
-  // console.log(period);
-
-  const calculateDateDistance = (
-    period: string,
-    startDate: string,
-    endDate: string
-  ): number => {
-    switch (period) {
-      case "7days":
-      case "thisWeek":
-        return 7;
-      case "28days":
-        return 28;
-      case "90days":
-        return 90;
-      case "thisMonth":
-        return 30;
-      case "custom":
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-          console.error(
-            "Invalid dates for custom period calculation:",
-            startDate,
-            endDate
-          );
-          return 7;
-        }
-
-        return Math.ceil(
-          (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-        );
-      default:
-        return 7;
-    }
-  };
-
-  const calculatePreviousDates = (
-    startDate: string,
-    endDate: string,
-    dateDistance: number
-  ) => {
-    if (!startDate || !endDate) {
-      return {
-        prevStartDate: startDate,
-        prevEndDate: endDate,
-      };
-    }
-
-    const start = new Date(startDate);
-
-    if (isNaN(start.getTime())) {
-      console.error("Invalid start date:", startDate);
-      return {
-        prevStartDate: startDate,
-        prevEndDate: endDate,
-      };
-    }
-
-    const prevEnd = new Date(start);
-    prevEnd.setDate(prevEnd.getDate());
-
-    if (isNaN(prevEnd.getTime())) {
-      console.error("Invalid previous end date calculated");
-      return {
-        prevStartDate: startDate,
-        prevEndDate: endDate,
-      };
-    }
-
-    const prevStart = new Date(prevEnd);
-    prevStart.setDate(prevStart.getDate() - dateDistance);
-
-    if (isNaN(prevStart.getTime())) {
-      console.error("Invalid previous start date calculated");
-      return {
-        prevStartDate: startDate,
-        prevEndDate: endDate,
-      };
-    }
-
-    return {
-      prevStartDate: prevStart.toISOString().split("T")[0],
-      prevEndDate: prevEnd.toISOString().split("T")[0],
-    };
-  };
 
   const dateDistance =
     startDate && endDate
@@ -125,14 +40,16 @@ const EcommerceViewTotal: React.FC<EcommerceViewTotalProps> = ({
     pages,
     "page_views_total",
     startDate,
-    endDate
+    endDate,
+    "total"
   );
 
   const previousDataResult = useGetMultipleFacebookPageData(
     pages,
     "page_views_total",
     prevStartDate,
-    prevEndDate
+    prevEndDate,
+    "total"
   );
 
   useEffect(() => {
@@ -239,18 +156,14 @@ const EcommerceViewTotal: React.FC<EcommerceViewTotalProps> = ({
                 height: "32px",
                 borderRadius: "100%",
                 padding: "6px",
-                backgroundColor: "#FDF1F5",
+                backgroundColor: "#D7E6F8",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
+                fontSize: "20px",
               }}
             >
-              <Iconify
-                icon="mdi:heart"
-                width="20"
-                height="20"
-                style={{ color: "#E8618C" }}
-              />
+              <Iconify icon="flowbite:eye-solid" style={{ color: "#2373D3" }} />
             </Box>
 
             <Box
@@ -267,7 +180,7 @@ const EcommerceViewTotal: React.FC<EcommerceViewTotalProps> = ({
                   fontWeight: "500px",
                 }}
               >
-                Lượt tương tác
+                Lượt xem
               </Typography>
             </Box>
           </Box>

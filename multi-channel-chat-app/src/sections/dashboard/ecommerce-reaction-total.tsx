@@ -3,6 +3,11 @@ import { Box, Card, Typography } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { FacebookReaction, OmniChoices } from "./type";
 import { useGetMultipleFacebookPageData } from "@/actions/dashboard-channels";
+import {
+  calculateDateDistance,
+  calculatePreviousDates,
+} from "./hooks/use-date-calculation";
+import { sumAllEmotions } from "./hooks/use-sum-emotes";
 
 interface EcommerceReactionTotalProps {
   pages: OmniChoices[];
@@ -18,97 +23,11 @@ const EcommerceReactionTotal: React.FC<EcommerceReactionTotalProps> = ({
   period,
 }) => {
   const [totalCurrentData, setTotalCurrentData] = useState(0);
-  const [totalThenData, setTotalThenData] = useState(0); // Used for percentage calculation
+  const [totalThenData, setTotalThenData] = useState(0);
   const [arrowDirection, setArrowDirection] = useState("mdi:arrow-up");
   const [arrowColor, setArrowColor] = useState("#1AC052");
   const [percentage, setPercentage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-
-  const calculateDateDistance = (
-    period: string,
-    startDate: string,
-    endDate: string
-  ): number => {
-    switch (period) {
-      case "7days":
-      case "thisWeek":
-        return 7;
-      case "28days":
-        return 28;
-      case "90days":
-        return 90;
-      case "thisMonth":
-        return 30;
-      case "custom":
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-          console.error(
-            "Invalid dates for custom period calculation:",
-            startDate,
-            endDate
-          );
-          return 7;
-        }
-
-        return Math.ceil(
-          (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-        );
-      default:
-        return 7;
-    }
-  };
-
-  const calculatePreviousDates = (
-    startDate: string,
-    endDate: string,
-    dateDistance: number
-  ) => {
-    if (!startDate || !endDate) {
-      return {
-        prevStartDate: startDate,
-        prevEndDate: endDate,
-      };
-    }
-
-    const start = new Date(startDate);
-
-    if (isNaN(start.getTime())) {
-      console.error("Invalid start date:", startDate);
-      return {
-        prevStartDate: startDate,
-        prevEndDate: endDate,
-      };
-    }
-
-    const prevEnd = new Date(start);
-    prevEnd.setDate(prevEnd.getDate());
-
-    if (isNaN(prevEnd.getTime())) {
-      console.error("Invalid previous end date calculated");
-      return {
-        prevStartDate: startDate,
-        prevEndDate: endDate,
-      };
-    }
-
-    const prevStart = new Date(prevEnd);
-    prevStart.setDate(prevStart.getDate() - dateDistance);
-
-    if (isNaN(prevStart.getTime())) {
-      console.error("Invalid previous start date calculated");
-      return {
-        prevStartDate: startDate,
-        prevEndDate: endDate,
-      };
-    }
-
-    return {
-      prevStartDate: prevStart.toISOString().split("T")[0],
-      prevEndDate: prevEnd.toISOString().split("T")[0],
-    };
-  };
 
   const dateDistance =
     startDate && endDate
@@ -123,43 +42,42 @@ const EcommerceReactionTotal: React.FC<EcommerceReactionTotalProps> = ({
     pages,
     "page_actions_post_reactions_total",
     startDate,
-    endDate
+    endDate,
+    "total"
   );
 
   const previousDataResult = useGetMultipleFacebookPageData(
     pages,
     "page_actions_post_reactions_total",
     prevStartDate,
-    prevEndDate
+    prevEndDate,
+    "total"
   );
 
-  // Helper function to sum all emotions from reaction data
-  const sumAllEmotions = (reactionData: FacebookReaction): number => {
-    if (!reactionData || !reactionData.data || reactionData.data.length === 0) {
-      return 0;
-    }
+  // const sumAllEmotions = (reactionData: FacebookReaction): number => {
+  //   if (!reactionData || !reactionData.data || reactionData.data.length === 0) {
+  //     return 0;
+  //   }
 
-    let total = 0;
-    reactionData.data.forEach((dataItem) => {
-      if (dataItem.values && dataItem.values.length > 0) {
-        dataItem.values.forEach((valueItem) => {
-          if (valueItem.value && Array.isArray(valueItem.value)) {
-            valueItem.value.forEach((emotion) => {
-              total +=
-                (emotion.like || 0) +
-                (emotion.love || 0) +
-                (emotion.wow || 0) +
-                (emotion.haha || 0) +
-                (emotion.sad || 0) +
-                (emotion.angry || 0);
-            });
-          }
-        });
-      }
-    });
+  //   let total = 0;
+  //   reactionData.data.forEach((dataItem) => {
+  //     if (dataItem.values && dataItem.values.length > 0) {
+  //       dataItem.values.forEach((valueItem) => {
+  //         if (valueItem.value && typeof valueItem.value === "object") {
+  //           total +=
+  //             (valueItem.value.like || 0) +
+  //             (valueItem.value.love || 0) +
+  //             (valueItem.value.wow || 0) +
+  //             (valueItem.value.haha || 0) +
+  //             (valueItem.value.sorry || 0) +
+  //             (valueItem.value.anger || 0);
+  //         }
+  //       });
+  //     }
+  //   });
 
-    return total;
-  };
+  //   return total;
+  // };
 
   useEffect(() => {
     if (!pages || pages.length === 0 || !startDate || !endDate) {
@@ -258,14 +176,10 @@ const EcommerceReactionTotal: React.FC<EcommerceReactionTotalProps> = ({
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
+                fontSize: "20px",
               }}
             >
-              <Iconify
-                icon="mdi:heart"
-                width="20"
-                height="20"
-                style={{ color: "#E8618C" }}
-              />
+              <Iconify icon="mdi:heart" style={{ color: "#E8618C" }} />
             </Box>
 
             <Box
@@ -282,7 +196,7 @@ const EcommerceReactionTotal: React.FC<EcommerceReactionTotalProps> = ({
                   fontWeight: "500px",
                 }}
               >
-                Tổng lượt tương tác
+                Lượt tương tác
               </Typography>
             </Box>
           </Box>

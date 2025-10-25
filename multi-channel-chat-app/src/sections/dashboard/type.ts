@@ -16,14 +16,14 @@ export interface FacebookView {
 export interface FacebookReaction {
   data: Array<{
     values: Array<{
-      value: Array<{
+      value: {
         like: number;
         love: number;
         wow: number;
         haha: number;
-        sad: number;
-        angry: number;
-      }>;
+        sorry: number;
+        anger: number;
+      };
     }>;
   }>;
 }

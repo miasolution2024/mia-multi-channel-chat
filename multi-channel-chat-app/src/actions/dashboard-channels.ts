@@ -23,42 +23,17 @@ export function useGetPostSocialChannel() {
   }
 }
 
-export function useGetFacebookPageTotalData(
-  page_id: string,
-  method: string,
-  token: string,
-  startDate: string,
-  endDate: string
-) {
-  const fbUrl = `${page_id}/insights?metric=${method}&access_token=${token}&since=${startDate}&until=${endDate}&period=total_over_range`;
-
-  try {
-    const { data, isLoading, error } = useSWR(fbUrl, facebookFetcher);
-
-    const memoizedValue = useMemo(
-      () => ({
-        fbPageData: data,
-        isLoading: isLoading,
-        error: error,
-      }),
-      [data, isLoading, error]
-    );
-    return memoizedValue;
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    throw error;
-  }
-}
-
 export function useGetMultipleFacebookPageData(
   pages: Array<{ page_id: string; token: string }>,
   method: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  form: string
 ) {
-  const urls = pages.map(
-    (page) =>
-      `${page.page_id}/insights?metric=${method}&access_token=${page.token}&since=${startDate}&until=${endDate}&period=total_over_range`
+  const urls = pages.map((page) =>
+    form !== "chart"
+      ? `${page.page_id}/insights?metric=${method}&access_token=${page.token}&since=${startDate}&until=${endDate}&period=total_over_range`
+      : `${page.page_id}/insights?metric=${method}&access_token=${page.token}&since=${startDate}&until=${endDate}&period=day`
   );
 
   const { data, isLoading, error } = useSWR(
@@ -70,6 +45,8 @@ export function useGetMultipleFacebookPageData(
       return results;
     }
   );
+
+  console.log(data);
 
   const memoizedValue = useMemo(
     () => ({
