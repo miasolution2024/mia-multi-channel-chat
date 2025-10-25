@@ -14,6 +14,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import React, { useState, useRef, useEffect } from "react";
+import { toast } from "sonner";
 import "../styles/calendar-dropdown.css";
 
 interface DropdownCalendarChoiceProps {
@@ -142,16 +143,33 @@ const DropdownCalendarChoice: React.FC<DropdownCalendarChoiceProps> = ({
   };
 
   const handleApply = () => {
-    setSelectedPeriod(tempSelectedPeriod);
-    setCustomStartDate(tempSDate);
-    setCustomEndDate(tempEDate);
+    const dateDifferent =
+      Math.floor(
+        new Date(tempEDate).getTime() - new Date(tempSDate).getTime()
+      ) /
+      (1000 * 60 * 60 * 24);
 
-    onChange(tempSelectedPeriod);
-    onDateRangeChange?.(
-      formatDateToString(tempSDate),
-      formatDateToString(tempEDate)
-    );
-    setOpen(false);
+    if (dateDifferent > 90) {
+      toast.warning(
+        "Khoảng thời gian không được vượt quá 90 ngày. Vui lòng chọn lại khoảng thời gian phù hợp."
+      );
+      return; // Prevent applying the changes
+    } else {
+      setSelectedPeriod(tempSelectedPeriod);
+      setCustomStartDate(tempSDate);
+      setCustomEndDate(tempEDate);
+
+      // Create a new date that is 1 day before the start date
+      const adjustedStartDate = new Date(tempSDate);
+      adjustedStartDate.setDate(adjustedStartDate.getDate() - 1);
+
+      onChange(tempSelectedPeriod);
+      onDateRangeChange?.(
+        formatDateToString(adjustedStartDate),
+        formatDateToString(tempEDate)
+      );
+      setOpen(false);
+    }
   };
 
   const handleCancel = () => {

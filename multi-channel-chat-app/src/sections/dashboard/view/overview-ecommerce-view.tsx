@@ -13,6 +13,7 @@ import EcommerceReactionTotal from "../ecommerce-reaction-total";
 import EcommerceViewChart from "../ecommerce-view-chart";
 import EcommerceReactionChart from "../ecommerce-reaction-chart";
 import EcommercePagesData from "../ecommerce-pages-data";
+import EcommerceTotal from "../ecommerce-total";
 
 // ECOMMERCE
 // ----------------------------------------------------------------------
@@ -159,6 +160,15 @@ export function OverviewEcommerceView() {
             endDate={endDayChoice}
             period={periodChoice}
           />
+        </Grid>
+        <Grid size={{ xs: 12, md: 2.4 }}>
+          <EcommerceTotal type={"comments"} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 2.4 }}>
+          <EcommerceTotal type={"shares"} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 2.4 }}>
+          <EcommerceTotal type={"converts"} />
         </Grid>
 
         <Grid size={{ xs: 12, md: 12, lg: 12 }}>
