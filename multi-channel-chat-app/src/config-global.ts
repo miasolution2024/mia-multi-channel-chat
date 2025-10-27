@@ -7,6 +7,6 @@ export const CONFIG = {
   STORAGE_KEY: "jwt_access_token",
   auth: {
     skip: true,
-    redirectPath: "/dashboard/content-assistant",
+    redirectPath: "/dashboard",
   },
 };
