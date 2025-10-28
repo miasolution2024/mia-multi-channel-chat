@@ -210,7 +210,7 @@ export function CustomerJourneyProcessListView() {
           )}
         </Box>
       ),
-    },,
+    },
     {
       key: "status",
       id: "status",

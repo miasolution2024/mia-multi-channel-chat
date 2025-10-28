@@ -85,7 +85,10 @@ export function StepResearch() {
   useEffect(() => {
     const fetchCustomerGroups = async () => {
       try {
-        const response = await getCustomerGroups(1, 100);
+        const response = await getCustomerGroups({
+          page: 1,
+          limit: 100,
+        });
         setCustomerGroupsData(response.data || []);
       } catch (error) {
         console.error("Error fetching customer groups:", error);
