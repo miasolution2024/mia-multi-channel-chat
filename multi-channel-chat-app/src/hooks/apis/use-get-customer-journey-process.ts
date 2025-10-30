@@ -8,6 +8,7 @@ export interface UseGetCustomerJourneyProcessParams {
   limit?: number;
   name?: string;
   id?: string;
+  status?: string;
 }
 
 export interface UseGetCustomerJourneyProcessReturn {
@@ -28,14 +29,14 @@ export function useGetCustomerJourneyProcess(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { page = 1, limit = 25, name = '', id = '' } = params;
+  const { page = 1, limit = 25, name = '', id = '', status = '' } = params;
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await getCustomerJourneyProcesses(page, limit, name, id);
+      const response = await getCustomerJourneyProcesses(page, limit, name, id, status);
       setData(response.data || []);
       setTotal(response.total || 0);
     } catch (err) {

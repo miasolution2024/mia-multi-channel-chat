@@ -4,6 +4,7 @@ import {
   RHFTextField,
 } from "@/components/hook-form";
 import { Iconify } from "@/components/iconify";
+import { CUSTOMER_JOURNEY_PROCESS_STATUS } from "@/constants/customer-journey-process";
 import { useGetCustomerJourneyProcess } from "@/hooks/apis/use-get-customer-journey-process";
 import { useGetServices } from "@/hooks/apis/use-get-services";
 import { CustomerGroup } from "@/sections/customer-group/types";
@@ -17,7 +18,8 @@ export function ResearchCustomer() {
   });
   const {data: customerJourneyProcessData} = useGetCustomerJourneyProcess({
     limit: 100,
-    page: 1
+    page: 1,
+    status: CUSTOMER_JOURNEY_PROCESS_STATUS.PUBLISHED,
   });
 
   return (

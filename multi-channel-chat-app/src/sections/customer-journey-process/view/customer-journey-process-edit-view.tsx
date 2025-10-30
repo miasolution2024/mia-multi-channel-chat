@@ -59,6 +59,7 @@ export function CustomerJourneyProcessEditView({ customerJourneyProcessId }: Pro
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
             { name: 'Nhóm hành trình khách hàng', href: paths.dashboard.customerJourneyProcess.root },
+            { name: 'Chỉnh sửa' },
           ]}
           sx={{ mb: { xs: 3, md: 5 } }}
         />

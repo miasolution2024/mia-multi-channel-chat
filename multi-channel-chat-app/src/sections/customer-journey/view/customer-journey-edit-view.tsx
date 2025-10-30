@@ -75,6 +75,7 @@ export function CustomerJourneyEditView({ customerJourneyId }: Props) {
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
             { name: 'Hành trình khách hàng', href: paths.dashboard.customerJourney.root },
+            { name: 'Chỉnh sửa' },
           ]}
           sx={{ mb: { xs: 3, md: 5 } }}
         />

@@ -54,6 +54,8 @@ const getCustomerJourneyProcessStatusLabelAndColor = (
   switch (status) {
     case CUSTOMER_JOURNEY_PROCESS_STATUS.DRAFT:
       return { label: "Nháp", color: "default" };
+    case CUSTOMER_JOURNEY_PROCESS_STATUS.PUBLISHED:
+      return { label: "Đang hoạt đông", color: "success" };
     default:
       return { label: "N/A", color: "default" };
   }
