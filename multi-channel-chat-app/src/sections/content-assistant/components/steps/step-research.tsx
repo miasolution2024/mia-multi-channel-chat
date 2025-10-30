@@ -23,12 +23,21 @@ import { getCustomerGroups } from "@/actions/customer-group";
 import { CustomerGroup } from "@/sections/customer-group/types";
 import { getCustomerJourneys } from "@/actions/customer-journey";
 import { CustomerJourney } from "@/sections/customer-journey/types";
-import { MenuItem, Switch, Tooltip } from "@mui/material";
+import { MenuItem, SelectChangeEvent, Switch, Tooltip } from "@mui/material";
 import { getOmniChannels } from "@/actions/omni-channels";
 import { getServices } from "@/actions/services";
 import { Services } from "@/sections/services/types";
 import { CONFIG } from "@/config-global";
 import { OmniChannel } from "@/sections/omni-channel/types";
+
+// ----------------------------------------------------------------------
+
+const PostOptions = [
+  { id: 1, value: "social_post", label: "Bài viết xã hội", type: "" },
+  { id: 2, value: "seo_post", label: "Bài viết SEO", type: "" },
+  { id: 3, value: "facebook_post", label: "Bài viết Facebook", type: "" },
+  { id: 4, value: "zalo_oa_post", label: "Bài viết Zalo", type: "Zalo" },
+];
 
 // ----------------------------------------------------------------------
 
@@ -51,6 +60,7 @@ export function StepResearch() {
   >([]);
   const [omniChannelsData, setOmniChannelsData] = useState<OmniChannel[]>([]);
   const [servicesData, setServicesData] = useState<Services[]>([]);
+  const [source, setSource] = useState("");
 
   const { watch, setValue } = useFormContext();
   const contentTones = watch("content_tone") || [];
@@ -77,7 +87,11 @@ export function StepResearch() {
 
   // Check if video data exists and set isShowVideo accordingly
   useEffect(() => {
-    if (videoData && ((Array.isArray(videoData) && videoData.length > 0) || (!Array.isArray(videoData) && videoData))) {
+    if (
+      videoData &&
+      ((Array.isArray(videoData) && videoData.length > 0) ||
+        (!Array.isArray(videoData) && videoData))
+    ) {
       setIsShowVideo(true);
     }
   }, [videoData]);
@@ -103,8 +117,11 @@ export function StepResearch() {
 
     const fetchOmniChannels = async () => {
       try {
-        const response = await getOmniChannels(1, 100);
-        setOmniChannelsData(response.data || []);
+        const response = await getOmniChannels(1, 100, undefined, source);
+        const filteredData = (response.data || []).filter(
+          (item) => item.page_name !== null
+        );
+        setOmniChannelsData(filteredData);
       } catch (error) {
         console.error("Error fetching omni channels:", error);
       }
@@ -123,7 +140,7 @@ export function StepResearch() {
     fetchCustomerJourneys();
     fetchOmniChannels();
     fetchServices();
-  }, []);
+  }, [source]);
   const handleChangeShowVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.checked) {
       setValue("video", undefined);
@@ -177,13 +194,23 @@ export function StepResearch() {
         <Stack spacing={3} sx={{ p: 3 }}>
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <RHFTextField required name="topic" label="Chủ đề bài viết" />
-            <RHFSelect required name="post_type" label="Loại bài viết">
-              {[
-                { value: "social_post", label: "Bài viết xã hội" },
-                { value: "seo_post", label: "Bài viết SEO" },
-                { value: "facebook_post", label: "Bài viết Facebook" },
-              ].map((item) => (
-                <MenuItem key={item.value} value={item.value}>
+            <RHFSelect
+              required
+              name="post_type"
+              label="Loại bài viết"
+              onChange={(e: SelectChangeEvent) => {
+                const selectedValue = e.target.value;
+                const selectedOption = PostOptions.find(
+                  (item) => item.value === selectedValue
+                );
+                if (selectedOption) {
+                  setSource(selectedOption.type);
+                  setValue("post_type", selectedValue);
+                }
+              }}
+            >
+              {PostOptions.map((item) => (
+                <MenuItem key={item.id} value={item.value}>
                   {item.label}
                 </MenuItem>
               ))}
@@ -235,7 +262,10 @@ export function StepResearch() {
               getOptionLabel={(option: CustomerGroup) => option.name}
               getOptionValue={(option: CustomerGroup) => option.id}
               useValueAsId={true}
-              isOptionEqualToValue={(option: CustomerGroup, value: CustomerGroup) => option.id === value.id}
+              isOptionEqualToValue={(
+                option: CustomerGroup,
+                value: CustomerGroup
+              ) => option.id === value.id}
               renderOption={(
                 props: React.HTMLAttributes<HTMLLIElement>,
                 option: CustomerGroup
@@ -271,7 +301,9 @@ export function StepResearch() {
               getOptionLabel={(option: Services) => option.name}
               getOptionValue={(option: Services) => option.id}
               useValueAsId={true}
-              isOptionEqualToValue={(option: Services, value: Services) => option.id === value.id}
+              isOptionEqualToValue={(option: Services, value: Services) =>
+                option.id === value.id
+              }
               renderOption={(
                 props: React.HTMLAttributes<HTMLLIElement>,
                 option: Services
@@ -292,7 +324,9 @@ export function StepResearch() {
               getOptionLabel={(option: OmniChannel) => option.page_name}
               getOptionValue={(option: OmniChannel) => option.id}
               useValueAsId={true}
-              isOptionEqualToValue={(option: OmniChannel, value: OmniChannel) => option.id === value.id}
+              isOptionEqualToValue={(option: OmniChannel, value: OmniChannel) =>
+                option.id === value.id
+              }
               renderOption={(
                 props: React.HTMLAttributes<HTMLLIElement>,
                 option: OmniChannel
@@ -356,21 +390,23 @@ export function StepResearch() {
 
       {/* Video Upload Section */}
       <Stack alignItems={"center"} direction={"row"}>
-        <Typography sx={{fontWeight: 600}}>Tạo bài viết chuyên sâu</Typography>
+        <Typography sx={{ fontWeight: 600 }}>
+          Tạo bài viết chuyên sâu
+        </Typography>
         <Switch checked={isShowVideo} onChange={handleChangeShowVideo} />
       </Stack>
       {isShowVideo ? (
         <Card>
           <Stack direction="row" alignItems={"center"}>
             <CardHeader title="Video" sx={{ mb: 3 }} />
-            <Tooltip 
+            <Tooltip
               title="Bạn có thể tải lên video và bước tiếp theo AI sẽ mô tả phù hợp cho video của bạn"
               componentsProps={{
                 tooltip: {
                   sx: {
-                    fontSize: '14px'
-                  }
-                }
+                    fontSize: "14px",
+                  },
+                },
               }}
             >
               <Iconify
