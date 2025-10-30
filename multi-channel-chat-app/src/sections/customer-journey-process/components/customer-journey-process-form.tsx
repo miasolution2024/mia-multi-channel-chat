@@ -63,7 +63,11 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
   });
 
   const {watch, setValue} = methods;
-  const customerJourneys = useMemo(() => watch("customer_journey") || [], [watch]);
+  const customerJourneys = useMemo(() => {
+    const journeys = watch("customer_journey") || [];
+    console.log("🔍 [customerJourneys] Current customer journeys:", journeys);
+    return journeys;
+  }, [watch]);
 
   const {
     reset,
@@ -102,15 +106,23 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
   }, [router]);
 
   const handleRemoveCustomerJourney = useCallback((id: string) => {
-    const updatedCustomerJourneys = customerJourneys.filter((item: number) => item !== Number(id));
-    setValue("customer_journey", updatedCustomerJourneys);
-  }, [customerJourneys, setValue]);
+    console.log("🗑️ [handleRemoveCustomerJourney] Removing ID:", id);
+    console.log("📝 [handleRemoveCustomerJourney] Current customer journeys before removal:", customerJourneys);
+    const updatedJourneys = customerJourneys.filter(journeyId => journeyId.toString() !== id);
+    console.log("🔄 [handleRemoveCustomerJourney] Updated journeys after removal:", updatedJourneys);
+    setValue("customer_journey", updatedJourneys);
+    console.log("✅ [handleRemoveCustomerJourney] Form value after setValue:", watch("customer_journey"));
+  }, [customerJourneys, setValue, watch]);
 
   const handleConfirmCustomerJourneys = useCallback((selectedIds: string[]) => {
+    console.log("🚀 [handleConfirmCustomerJourneys] Received selectedIds:", selectedIds);
     const numericIds = selectedIds.map(id => Number(id));
+    console.log("🔢 [handleConfirmCustomerJourneys] Converted to numeric IDs:", numericIds);
+    console.log("📝 [handleConfirmCustomerJourneys] Current form value before setValue:", watch("customer_journey"));
     setValue("customer_journey", numericIds);
+    console.log("✅ [handleConfirmCustomerJourneys] Form value after setValue:", watch("customer_journey"));
     createCustomerJourneyDialogOpen.onFalse();
-  }, [setValue, createCustomerJourneyDialogOpen]);
+  }, [setValue, createCustomerJourneyDialogOpen, watch]);
 
   const statusOptions = [
     {
@@ -165,10 +177,17 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
         />
         <Divider />
         <Box sx={{ p: 3 }}>
-          <SelectedItemsTable
-          selectedIds={customerJourneys.map(id => id.toString())}
-          onRemove={handleRemoveCustomerJourney}  
-        />
+          {(() => {
+            const selectedIds = customerJourneys.map(id => id.toString());
+            console.log("🎯 [SelectedItemsTable] Rendering with selectedIds:", selectedIds);
+            console.log("🎯 [SelectedItemsTable] customerJourneys source:", customerJourneys);
+            return (
+              <SelectedItemsTable
+                selectedIds={selectedIds}
+                onRemove={handleRemoveCustomerJourney}  
+              />
+            );
+          })()}
         </Box>
       </Card>
 
@@ -176,7 +195,7 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
           spacing={2}
           direction="row"
           justifyContent="flex-end"
-          sx={{ p: 3, pt: 0 }}
+          sx={{ p: 3 }}
         >
           <Button
             variant="outlined"
