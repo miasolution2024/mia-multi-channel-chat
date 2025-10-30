@@ -20,7 +20,8 @@ import axiosInstance, { endpoints } from '@/utils/axios';
 export async function getOmniChannels(
   page?: number,
   limit: number = 25,
-  status?: string
+  status?: string,
+  source?: string
 ): Promise<OmniChannelsResponse> {
   try {
     let url = endpoints.omniChannels?.list || '/items/omni_channels';
@@ -60,7 +61,9 @@ export async function getOmniChannels(
       // Default filter to exclude archived items
       params.append('filter[status][_neq]', 'archived');
     }
-    
+
+    if (source) params.append("filter[source][_eq]", source);
+
     url = `${url}?${params.toString()}`;
     
     const response = await axiosInstance.get(url);
