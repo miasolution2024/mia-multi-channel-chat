@@ -26,8 +26,15 @@ import type {
 } from "@/components/custom-table/custom-table";
 import { usePopover } from "@/components/custom-popover";
 
-import { getContentTones, deleteContentTone } from "@/actions/content-tone";
+import {
+  // getContentTones,
+  deleteContentTone,
+  // getContentToneList,
+} from "@/actions/content-tone";
 import { ContentTone } from "../types";
+import { InputAdornment, TextField } from "@mui/material";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useFetchData } from "@/hooks/use-fetch-data";
 
 // ----------------------------------------------------------------------
 
@@ -99,52 +106,110 @@ function ContentToneActionMenu({
 
 export function ContentToneListView() {
   const router = useRouter();
-  const [tones, setTones] = useState<ContentTone[]>([]);
+  // const [tones, setTones] = useState<ContentTone[]>([]);
   const [selectedToneId, setSelectedToneId] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [totalCount, setTotalCount] = useState<number>(0);
+  // const [loading, setLoading] = useState<boolean>(true);
+  // const [totalCount, setTotalCount] = useState<number>(0);
   const [page, setPage] = useState<number>(0); // 0-based for MUI pagination
   const [pageSize, setPageSize] = useState<number>(20); // Default to 20 items per page
 
   const confirm = useBoolean();
 
-  useEffect(() => {
-    const fetchTones = async () => {
-      try {
-        setLoading(true);
-        const data = await getContentTones(page + 1, pageSize); // Convert to 1-based for API
-        setTones(data.data || []);
-        setTotalCount(data.meta?.total_count || 0);
-      } catch (error) {
-        console.error("Error fetching content tones:", error);
-        toast.error("Không thể tải danh sách văn phong AI");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTones();
-  }, [page, pageSize]); // Re-fetch when page or pageSize changes
-
   const filters = useSetState({
     tone_description: "",
+    // searchTerm: "",
   });
 
-  const dataFiltered = tones.filter((tone) => {
-    if (
-      filters.state.tone_description &&
-      !tone.tone_description
-        .toLowerCase()
-        .includes(filters.state.tone_description.toLowerCase())
-    ) {
-      return false;
-    }
-    return true;
+  const debouncedToneFilter = useDebounce(filters.state.tone_description, 500);
+  // const debouncedToneSearch = useDebounce(filters.state.searchTerm, 500);
+
+  const { tones, loading, totalCount, refetch } = useFetchData({
+    tone_description: debouncedToneFilter,
+    page,
+    pageSize,
   });
+
+  // const fetchTones = useCallback(async () => {
+  //   try {
+  //     setLoading(true);
+  //     const data = await getContentToneList({
+  //       // searchTerm: debouncedToneSearch || undefined,
+  //       tone_description: debouncedToneFilter || undefined,
+  //       page: page + 1,
+  //       pageSize,
+  //     });
+  //     setTones(
+  //       (data.data || []).map((item) => ({
+  //         id: item.id,
+  //         tone_description: item.tone_description,
+  //       }))
+  //     );
+  //     setTotalCount(data.total || 0);
+  //   } catch (error) {
+  //     console.error("Error fetching content tones:", error);
+  //     toast.error("Không thể tải danh sách văn phong AI");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  //   // }, [debouncedToneSearch, page, pageSize]);
+  // }, [debouncedToneFilter, page, pageSize]);
+
+  // useEffect(() => {
+  //   fetchTones();
+  // }, [fetchTones]);
+
+  // useEffect(() => {
+  //   const fetchTones = async () => {
+  //     try {
+  //       setLoading(true);
+  //       //const data = await getContentTones(page + 1, pageSize); // Convert to 1-based for API
+  //       const data = await getContentToneList({
+  //         tone_description: debouncedToneDescription || undefined,
+  //         page: page + 1,
+  //         pageSize,
+  //       });
+  //       setTones(
+  //         (data.data || []).map((item) => ({
+  //           id: item.id,
+  //           tone_description: item.tone_description,
+  //           // add other fields as needed to match ContentTone type
+  //         }))
+  //       );
+  //       setTotalCount(data.total || 0);
+  //       // setTotalCount(data.meta?.total_count || 0);
+  //     } catch (error) {
+  //       console.error("Error fetching content tones:", error);
+  //       toast.error("Không thể tải danh sách văn phong AI");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchTones();
+  // }, [page, pageSize, debouncedToneDescription]); // Re-fetch when page or pageSize changes
+
+  useEffect(() => {
+    if (page !== 0) setPage(0);
+    // }, [debouncedToneSearch, page]);
+  }, [debouncedToneFilter, page]);
+
+  // const dataFiltered = tones.filter((tone) => {
+  //   if (
+  //     filters.state.tone_description &&
+  //     !tone.tone_description
+  //       .toLowerCase()
+  //       .includes(filters.state.tone_description.toLowerCase())
+  //   ) {
+  //     return false;
+  //   }
+  //   return true;
+  // });
 
   const canReset = !!filters.state.tone_description;
+  // const canReset = !!filters.state.searchTerm;
 
   const handleResetFilters = useCallback(() => {
+    // filters.setState({ searchTerm: "" });
     filters.setState({ tone_description: "" });
   }, [filters]);
 
@@ -185,10 +250,10 @@ export function ContentToneListView() {
       try {
         await deleteContentTone(selectedToneId);
         // Refresh the current page after deletion
-        const data = await getContentTones(page + 1, pageSize);
-        setTones(data.data || []);
-        setTotalCount(data.meta?.total_count || 0);
-
+        // const data = await getContentTones(page + 1, pageSize);
+        // setTones(data.data || []);
+        // setTotalCount(data.meta?.total_count || 0);
+        await refetch();
         toast.success("Xóa văn phong AI thành công!");
       } catch (error) {
         console.error("Error deleting content tone:", error);
@@ -198,7 +263,7 @@ export function ContentToneListView() {
         confirm.onFalse();
       }
     }
-  }, [selectedToneId, confirm, page, pageSize]);
+  }, [selectedToneId, confirm, refetch]);
 
   return (
     <>
@@ -234,7 +299,35 @@ export function ContentToneListView() {
               flexWrap: { xs: "wrap", md: "nowrap" },
             }}
           >
-            {canReset && (
+            <TextField
+              value={filters.state.tone_description}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                filters.setState({ tone_description: event.target.value })
+              }
+              placeholder="Tìm kiếm mô tả..."
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Iconify
+                      icon="eva:search-fill"
+                      sx={{ color: "text.disabled" }}
+                    />
+                  </InputAdornment>
+                ),
+                endAdornment: canReset && (
+                  <Button
+                    color="error"
+                    sx={{ flexShrink: 0 }}
+                    onClick={handleResetFilters}
+                  >
+                    <Iconify icon="solar:trash-bin-trash-bold" />
+                  </Button>
+                ),
+              }}
+              sx={{ width: 240 }}
+            />
+
+            {/* {canReset && (
               <Button
                 color="error"
                 sx={{ flexShrink: 0 }}
@@ -243,11 +336,11 @@ export function ContentToneListView() {
               >
                 Xóa
               </Button>
-            )}
+            )} */}
           </Box>
 
           <CustomTable
-            data={dataFiltered}
+            data={tones}
             loading={loading}
             tableConfig={TABLE_HEAD.map((col) => ({
               ...col,
