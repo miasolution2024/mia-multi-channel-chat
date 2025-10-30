@@ -13,6 +13,12 @@ export const getFieldsForStep = (step: string): (keyof CustomerGroupFormData)[] 
       ];
     case CUSTOMER_GROUP_ACTION.ANALYSIS_CONTEXT:
       return [
+        "what",
+        "who", 
+        "why",
+        "where",
+        "How",
+        "When",
         "ai_note_analysis_need",
       ];
     case CUSTOMER_GROUP_ACTION.ANALYSIS_NEED:
@@ -106,27 +112,35 @@ export const hasStepDataChanged = (
   cachedData: Partial<CustomerGroupFormData> | null,
   step: string
 ): boolean => {
-  if (!cachedData) return true;
+  
+  if (!cachedData) {
+    return true;
+  }
 
   const fieldsToCompare = getFieldsForStep(step);
   
-  return fieldsToCompare.some((field) => {
+  const hasChanges = fieldsToCompare.some((field) => {
     const currentValue = currentData[field];
     const cachedValue = cachedData[field];
-
+    
     // Handle array comparison
     if (Array.isArray(currentValue) && Array.isArray(cachedValue)) {
-      return !compareArrays(currentValue, cachedValue);
+      const arrayChanged = !compareArrays(currentValue, cachedValue);
+      return arrayChanged;
     }
 
     // Handle date comparison
     if (currentValue instanceof Date || cachedValue instanceof Date) {
-      return !compareDates(currentValue as Date | null, cachedValue as Date | null);
+      const dateChanged = !compareDates(currentValue as Date | null, cachedValue as Date | null);
+      return dateChanged;
     }
 
     // Handle primitive values
-    return currentValue !== cachedValue;
+    const primitiveChanged = currentValue !== cachedValue;
+    return primitiveChanged;
   });
+  
+  return hasChanges;
 };
 
 // Extract data for specific step
@@ -134,11 +148,14 @@ export const extractStepData = (
   formData: CustomerGroupFormData,
   step: string
 ): Partial<CustomerGroupFormData> => {
+  
   const fieldsForStep = getFieldsForStep(step);
+  
   const stepData: Partial<CustomerGroupFormData> = {};
 
   fieldsForStep.forEach((field) => {
-    (stepData as Record<string, unknown>)[field] = formData[field];
+    const value = formData[field];
+    (stepData as Record<string, unknown>)[field] = value;
   });
 
   return stepData;
