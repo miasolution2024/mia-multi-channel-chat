@@ -207,7 +207,10 @@ export function CustomerGroupForm({ editData }: Props) {
       }
       
       const apiData = buildCustomerResearchData(data);
-      const response = await createCustomerGroup(apiData);
+
+      // check if id is exist in form -> update data to db, if not, create new customer group
+      const idFromForm = methods.getValues("id")
+      const response = idFromForm ? await updateCustomerGroup(Number(idFromForm), apiData) : await createCustomerGroup(apiData);
       if (response?.data?.id) {
         methods.setValue("id", response.data.id);
 

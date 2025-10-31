@@ -82,6 +82,7 @@ export function CustomerGroupEditView({ customerGroupId }: Props) {
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
             { name: 'Nhóm khách hàng', href: paths.dashboard.customerGroup.root },
+            { name: 'Chỉnh sửa' },
           ]}
           sx={{ mb: { xs: 3, md: 5 } }}
         />
