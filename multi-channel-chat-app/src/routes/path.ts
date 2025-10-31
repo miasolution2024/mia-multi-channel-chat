@@ -19,7 +19,7 @@ export const paths = {
     seamlessAuth: `${ROOTS.AUTH}/seamless-auth`,
   },
   dashboard: {
-    root: `${ROOTS.DASHBOARD}/content-assistant`,
+    root: `${ROOTS.DASHBOARD}`,
     chat: `${ROOTS.DASHBOARD}/chat`,
     contentAssistant: {
       root: `${ROOTS.DASHBOARD}/content-assistant`,
