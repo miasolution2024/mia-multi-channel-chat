@@ -11,16 +11,18 @@ import { Box } from "@mui/material";
 // ----------------------------------------------------------------------
 
 export function ZaloLoginQR({
+  requestId,
   open,
   onClose,
 }: {
+  requestId: string;
   open: boolean;
   onClose: () => void;
 }) {
   const [imageSrc, setImageSrc] = useState("");
   useEffect(() => {
     const getImage = async () => {
-      const imageBase64 = await getZaloQRLoginImage();
+      const imageBase64 = await getZaloQRLoginImage(requestId);
       setImageSrc(`data:image/png;base64,${imageBase64}`);
     };
 
@@ -29,7 +31,7 @@ export function ZaloLoginQR({
     } else {
       setImageSrc("");
     }
-  }, [open]);
+  }, [open, requestId]);
 
   return (
     <Dialog

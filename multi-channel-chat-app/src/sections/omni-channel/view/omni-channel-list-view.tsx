@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import Table from "@mui/material/Table";
 import Button from "@mui/material/Button";
@@ -29,13 +29,17 @@ import { Scrollbar } from "@/components/scrollbar";
 import { endpoints } from "@/utils/axios";
 import { mutate } from "swr";
 import { OmniChannel } from "@/models/omni-channel/omni-channel";
-import { useGetOmniChannels } from "@/actions/omni-channel";
+import { getOmniChannelsURL, useGetOmniChannels } from "@/actions/omni-channel";
 import { OmniChannelsTableToolbar } from "../omni-channel-table-toolbar";
 import { OmniChannelsTableFiltersResult } from "../omni-channel-table-filters-result";
 import { OmniChannelsTableRow } from "../omni-channel-table-row";
 import { CustomPopover, usePopover } from "@/components/custom-popover";
 import { CHANNELS } from "@/sections/chat/chat-channels";
 import { ZaloLoginQR } from "../omni-channel-zalo-qr";
+import { uuidv4 } from "@/utils/uuidv4";
+import { CONFIG } from "@/config-global";
+import { useAuthContext } from "@/auth/hooks/use-auth-context";
+import { websocketMessage } from "@/models/websocket-message";
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
@@ -60,8 +64,11 @@ export function OmniChannelsListView() {
   const confirm = useBoolean();
 
   const openZaloLoginDialog = useBoolean();
-
+  const { user } = useAuthContext();
   // const router = useRouter();
+  const websocketRef = useRef<WebSocket | null>(null);
+
+  const requestId = uuidv4();
 
   const { omniChannels: tableData } = useGetOmniChannels();
 
@@ -92,12 +99,116 @@ export function OmniChannelsListView() {
     }
   }, [table]);
 
-  // const handleEditRow = useCallback(
-  //   (id: string | number) => {
-  //     router.push(paths.dashboard.omniChannels.edit(id));
-  //   },
-  //   [router]
-  // );
+  useEffect(() => {
+    if (!user?.accessToken || !user?.id) {
+      if (websocketRef.current) {
+        console.log("Closing existing connection due to missing dependencies.");
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+      return;
+    }
+
+    // Close any existing connection before opening a new one
+    if (websocketRef.current) {
+      console.log(`Closing old connection for intergration log subscription`);
+      websocketRef.current.close();
+      websocketRef.current = null; // Clear the ref
+    }
+
+    const connection = new WebSocket(CONFIG.websocketUrl);
+
+    const sendAuth = () => {
+      connection.send(
+        JSON.stringify({
+          type: "auth",
+          access_token: user?.accessToken,
+        })
+      );
+    };
+
+    const sendSubscribeIntegrationLog = () => {
+      connection.send(
+        JSON.stringify({
+          type: "subscribe",
+          action: "read",
+          collection: "integration_logs",
+          uid: uuidv4(),
+          query: {
+            fields: ["id,message,request_string,level"],
+            filter: {
+              request_string: requestId,
+              context: "ZaloLoginWebsocketSilnal"
+            },
+          },
+        })
+      );
+    };
+
+    const handleOpen = () => {
+      websocketRef.current = connection;
+
+      console.log(`WebSocket connection opened for intergration log subscription`);
+      sendAuth();
+    };
+
+    const handleMessage = (message: MessageEvent) => {
+      const data = JSON.parse(message.data) as websocketMessage;
+
+      if (data.type == "auth" && data.status == "ok") {
+        sendSubscribeIntegrationLog();
+      }
+
+      if (data.event === "create") {
+        const log = data.data[0];
+        if (log && log.request_string === requestId) {
+          if (log.level === "error") {
+            toast.error(log.message);
+          }
+          else {
+            mutate(getOmniChannelsURL());
+            toast.success(log.message);
+          }
+
+          openZaloLoginDialog.onFalse();
+        }
+      }
+
+      if (data.type === "ping") {
+        connection.send(JSON.stringify({ type: "pong" }));
+      }
+    };
+
+    const handleClose = () => {
+      console.log(`WebSocket connection closed for intergration log subscription`);
+      websocketRef.current = null;
+    };
+
+    const handleError = (error: Event) => {
+      console.error({
+        event: "onerror",
+        error,
+        message: `WebSocket error for intergration log subscription`,
+      });
+      websocketRef.current = null;
+    };
+
+    connection.addEventListener("open", handleOpen);
+    connection.addEventListener("message", handleMessage);
+    connection.addEventListener("close", handleClose);
+    connection.addEventListener("error", handleError);
+
+    return () => {
+      if (websocketRef.current) {
+        console.log(
+          `Cleaning up: Closing WebSocket connection for intergration log subscription`
+        );
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+    };
+  }, [user?.accessToken, user?.id, requestId, openZaloLoginDialog]);
+
 
   const popover = usePopover();
 
@@ -148,13 +259,13 @@ export function OmniChannelsListView() {
                   dataFiltered.map((row: OmniChannel) => row.id)
                 )
               }
-              // action={
-              //   <Tooltip title="Delete">
-              //     <IconButton color="primary" onClick={confirm.onTrue}>
-              //       <Iconify icon="solar:trash-bin-trash-bold" />
-              //     </IconButton>
-              //   </Tooltip>
-              // }
+            // action={
+            //   <Tooltip title="Delete">
+            //     <IconButton color="primary" onClick={confirm.onTrue}>
+            //       <Iconify icon="solar:trash-bin-trash-bold" />
+            //     </IconButton>
+            //   </Tooltip>
+            // }
             />
 
             <Scrollbar>
@@ -267,7 +378,7 @@ export function OmniChannelsListView() {
         </MenuList>
       </CustomPopover>
 
-      <ZaloLoginQR open={openZaloLoginDialog.value} onClose={openZaloLoginDialog.onFalse}></ZaloLoginQR>
+      <ZaloLoginQR requestId={requestId} open={openZaloLoginDialog.value} onClose={openZaloLoginDialog.onFalse}></ZaloLoginQR>
     </>
   );
 }

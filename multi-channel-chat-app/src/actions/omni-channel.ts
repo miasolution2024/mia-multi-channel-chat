@@ -8,7 +8,11 @@ import { useMemo } from "react";
 import useSWR from "swr";
 
 export function getOmniChannelsURL() {
-  return `${endpoints.omniChannels.list}`;
+    const queryParams = new URLSearchParams({
+    fields: ["id", "page_id", "page_name","source","is_enabled","expired_date"].join(","),
+    sort: "sort",
+  }).toString();
+  return `${endpoints.omniChannels.list}?${queryParams}`;
 }
 
 export function useGetOmniChannels() {
@@ -72,9 +76,9 @@ export function useGetOmniChannelsByChannel(
   return memoizedValue;
 }
 
-export async function getZaloQRLoginImage() {
+export async function getZaloQRLoginImage(requestId: string) {
   try {
-    const url = `${CONFIG.utilitiesAPIUr}/qr-login`;
+    const url = `${CONFIG.utilitiesAPIUr}/qr-login/${requestId}`;
     const response = await axiosInstance.get(url);
     return response.data;
   } catch (error) {
