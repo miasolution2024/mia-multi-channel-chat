@@ -15,11 +15,12 @@ export function ConfirmDialog({ open, title, action, content, onClose, ...other 
       {content && <DialogContent sx={{ typography: 'body2' }}> {content} </DialogContent>}
 
       <DialogActions>
-        {action}
+       
 
         <Button variant="outlined" color="inherit" onClick={onClose}>
-          Cancel
+          Huỷ
         </Button>
+         {action}
       </DialogActions>
     </Dialog>
   );

@@ -1,22 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/snackbar';
 import { getCustomerGroups } from '@/actions/customer-group';
+import type { CustomerGroup } from '@/sections/customer-group/types';
 
 export interface UseGetCustomerGroupsParams {
   page?: number;
   limit?: number;
-}
-
-export interface CustomerGroupData {
-  id: string;
-  name: string;
-  action: string;
-  descriptions: string;
-  services: string[];
+  name?: string;
+  id?: number;
 }
 
 export interface UseGetCustomerGroupsReturn {
-  data: CustomerGroupData[];
+  data: CustomerGroup[];
   total: number;
   isLoading: boolean;
   error: string | null;
@@ -28,7 +23,7 @@ export interface UseGetCustomerGroupsReturn {
 export function useGetCustomerGroups(
   params: UseGetCustomerGroupsParams = {}
 ): UseGetCustomerGroupsReturn {
-  const [data, setData] = useState<CustomerGroupData[]>([]);
+  const [data, setData] = useState<CustomerGroup[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +35,12 @@ export function useGetCustomerGroups(
       setIsLoading(true);
       setError(null);
       
-      const response = await getCustomerGroups(page, limit);
+      const response = await getCustomerGroups({
+        page, 
+        limit,
+        name: params.name,
+        id: params.id
+      });
       setData(response.data || []);
       setTotal(response.total || 0);
     } catch (err) {
@@ -51,7 +51,7 @@ export function useGetCustomerGroups(
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit]);
+  }, [page, limit, params.name, params.id]);
 
   // Auto-fetch when parameters change
   useEffect(() => {
@@ -66,7 +66,7 @@ export function useGetCustomerGroups(
     data,
     total,
     options: data.map((item) => ({
-      value: item.id,
+      value: String(item.id),
       label: item.name,
     })),
     isLoading,

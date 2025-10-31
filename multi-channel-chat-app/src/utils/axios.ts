@@ -285,5 +285,7 @@ export const endpoints = {
   customerGroupCustomerJourney: {
     create: "/items/customer_group_customer_journey",
     update: "/items/customer_group_customer_journey",
+    list: "/items/customer_group_customer_journey",
+    delete: "/items/customer_group_customer_journey",
   },
 };

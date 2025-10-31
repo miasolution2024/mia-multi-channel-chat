@@ -10,6 +10,15 @@ export type CampaignRequest = {
   campaignId: number;
   step: number;
 }
+export type CustomerInsightRequest = {
+  customer_group_id: number;
+  startStep: number;
+  endStep: number;
+}
+
+export type CustomerInsightResponse = PostResponse
+
+
 
 interface PostResponse {
   success: boolean;
@@ -58,6 +67,26 @@ export const createCampaignN8N = async (
     };
   } catch (error: unknown) {
     console.error("Error calling campaign API:", error);
+    return {
+      success: false,
+      message: 'Có lỗi xảy ra'
+    };
+  }
+};
+
+export const createCustomerInsightN8N = async (
+  data: CustomerInsightRequest[]
+): Promise<CustomerInsightResponse> => {
+  try {
+    const response = await autoMiaAxiosInstance.post("/webhook/insight", 
+     { data}
+    );
+    return {
+      success: true,
+      data: response.data || []
+    };
+  } catch (error: unknown) {
+    console.error("Error calling customer insight API:", error);
     return {
       success: false,
       message: 'Có lỗi xảy ra'

@@ -31,7 +31,6 @@ import { useGetCustomerJourneys } from "@/hooks/apis/use-get-customer-journeys";
 import type { CustomerJourney } from "../types";
 import { deleteCustomerJourney, deleteCustomerJourneys } from "@/actions/customer-journey";
 import { fDate } from "@/utils/format-time";
-import { SwitchCustomerJourneyComponent } from "../components/switch-customer-journey-component";
 
 // ----------------------------------------------------------------------
 
@@ -127,16 +126,6 @@ export function CustomerJourneyListView() {
             {item.name}
           </Typography>
         </Tooltip>
-      ),
-    },
-    {
-      key: "active",
-      id: "active",
-      label: "Trạng thái",
-      align: "left",
-      width: 100,
-      render: (item: CustomerJourney) => (
-       <SwitchCustomerJourneyComponent item={item} />
       ),
     },
     {
