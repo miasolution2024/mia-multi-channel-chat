@@ -83,7 +83,7 @@ export function CampaignInfoStep() {
             />
             <RHFSelect required name="status" label="Trạng thái">
               {[
-                { value: CAMPAIGN_STATUS.DRAFT, label: "Khởi tạo" },
+                { value: CAMPAIGN_STATUS.TODO, label: "Khởi tạo" },
                 { value: CAMPAIGN_STATUS.IN_PROGRESS, label: "Đang chạy" },
                 { value: CAMPAIGN_STATUS.COMPLETED, label: "Hoàn tất" },
               ].map((item) => (

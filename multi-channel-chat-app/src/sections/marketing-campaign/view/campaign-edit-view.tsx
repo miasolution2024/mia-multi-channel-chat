@@ -18,18 +18,21 @@ interface CampaignEditViewProps {
 function CampaignEditView({ campaignId }: CampaignEditViewProps) {
   const settings = useSettingsContext();
   const [loading, setLoading] = useState(true);
-    const [editData, setEditData] = useState<Campaign | null>(null);
+  const [editData, setEditData] = useState<Campaign | null>(null);
 
-    const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-   async function loadData() {
+    async function loadData() {
       try {
         setLoading(true);
         setError(null);
-        const data = await getCampaigns(1, 25,
-          Number(campaignId),
-        );
+        const filters = {
+          page: 1,
+          limit: 25,
+          id: Number(campaignId),
+        };
+        const data = await getCampaigns(filters);
         setEditData(data.data[0]);
       } catch (err) {
         console.error("Error loading content assistant:", err);
@@ -51,7 +54,7 @@ function CampaignEditView({ campaignId }: CampaignEditViewProps) {
     return (
       <DashboardContent>
         <Container maxWidth={settings.themeStretch ? false : "lg"}>
-          <Box sx={{ textAlign: 'center', py: 5 }}>
+          <Box sx={{ textAlign: "center", py: 5 }}>
             <p>Lỗi: {error}</p>
           </Box>
         </Container>
@@ -74,15 +77,15 @@ function CampaignEditView({ campaignId }: CampaignEditViewProps) {
           ]}
           sx={{ mb: { xs: 3, md: 5 } }}
         />
-         <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 3,
-        }}
-      >
-        <CampaignMultiStepForm editData={editData} />
-      </Box>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+          }}
+        >
+          <CampaignMultiStepForm editData={editData} />
+        </Box>
       </Container>
     </DashboardContent>
   );

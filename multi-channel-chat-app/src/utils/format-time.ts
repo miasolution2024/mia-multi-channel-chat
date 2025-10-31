@@ -53,7 +53,7 @@ export function fDateTime(date: any, format?: string) {
  */
 export function fDate(date: any, format?: string) {
   if (!date) {
-    return null;
+    return "-/-";
   }
 
   const isValid = dayjs(date).isValid();

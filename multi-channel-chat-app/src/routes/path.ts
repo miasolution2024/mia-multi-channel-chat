@@ -46,5 +46,26 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/schedule-calendar/new`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/schedule-calendar/${id}/edit`,
     },
+    customerJourney: {
+      root: `${ROOTS.DASHBOARD}/customer-journey`,
+      new: `${ROOTS.DASHBOARD}/customer-journey/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/customer-journey/${id}/edit`,
+    },
+    customerJourneyProcess: {
+      root: `${ROOTS.DASHBOARD}/customer-journey-process`,
+      new: `${ROOTS.DASHBOARD}/customer-journey-process/new`,
+      edit: (id: string) =>
+        `${ROOTS.DASHBOARD}/customer-journey-process/${id}/edit`,
+    },
+    customerInsight: {
+      root: `${ROOTS.DASHBOARD}/customer-insight`,
+      new: `${ROOTS.DASHBOARD}/customer-insight/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/customer-insight/${id}/edit`,
+    },
+    customerGroup: {
+      root: `${ROOTS.DASHBOARD}/customer-group`,
+      new: `${ROOTS.DASHBOARD}/customer-group/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/customer-group/${id}/edit`,
+    },
   },
 };

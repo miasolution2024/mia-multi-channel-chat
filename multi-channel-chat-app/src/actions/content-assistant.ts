@@ -61,6 +61,9 @@ export interface ContentAssistantFilters {
   page?: number;
   pageSize?: number;
   id?: number;
+  postType?: string;
+  omniChannel?: number;
+  isNotLinkToCampaign?: boolean;
 }
 
 // Lấy danh sách content assistant
@@ -124,34 +127,75 @@ export async function getContentAssistantList(
       params.append('page', '1');
     }
     
-    // Set filter to exclude archived status
-    params.append('filter[status][_neq]', 'archived');
+    // Build filter conditions using nested _and structure
+    let mainFilterIndex = 0;
+    let nestedFilterIndex = 0;
     
-    // Add id filter if provided
-    if (filters.id) {
-      params.append('filter[id][_eq]', filters.id.toString());
+    // Add omniChannel filter if provided
+    if (filters.omniChannel) {
+      params.append(`filter[_and][${mainFilterIndex}][_and][${nestedFilterIndex}][omni_channels][omni_channels_id][id][_eq]`, filters.omniChannel.toString());
+      nestedFilterIndex++;
     }
     
-    // Add topic filter if provided
-    if (filters.topic) {
-      params.append('filter[topic][_contains]', filters.topic);
+    // Add postType filter if provided
+    if (filters.postType) {
+      params.append(`filter[_and][${mainFilterIndex}][_and][${nestedFilterIndex}][post_type][_eq]`, filters.postType);
+      nestedFilterIndex++;
     }
     
     // Add status filter if provided (and not archived)
     if (filters.status && filters.status.length > 0) {
       const nonArchivedStatuses = filters.status.filter(status => status !== 'archived');
       if (nonArchivedStatuses.length > 0) {
-        params.append('filter[status][_in]', nonArchivedStatuses.join(','));
+        params.append(`filter[_and][${mainFilterIndex}][_and][${nestedFilterIndex}][status][_eq]`, nonArchivedStatuses.join(','));
+        nestedFilterIndex++;
       }
     }
+
+    // Add id filter if provided
+    if (filters.id) {
+      params.append(`filter[_and][${mainFilterIndex}][_and][${nestedFilterIndex}][id][_eq]`, filters.id.toString());
+      nestedFilterIndex++;
+    }
+    
+    // Add topic filter if provided
+    if (filters.topic) {
+      params.append(`filter[_and][${mainFilterIndex}][_and][${nestedFilterIndex}][topic][_contains]`, filters.topic);
+      nestedFilterIndex++;
+    }
+    if (filters?.isNotLinkToCampaign) {
+      params.append(`filter[_and][${mainFilterIndex}][_and][${nestedFilterIndex}][campaign][id][_null]`, 'true');
+      nestedFilterIndex++;
+    }
+    
+    // Always exclude archived status
+    mainFilterIndex++;
+    params.append(`filter[_and][${mainFilterIndex}][status][_neq]`, 'archived');
+    
+    
 
     const response = await axiosInstance.get(
       `/items/ai_content_suggestions?${params}`
     );
 
+    // Check if any filters are applied (excluding page and pageSize)
+    const hasFilters = !!(
+      filters.omniChannel ||
+      filters.postType ||
+      (filters.status && filters.status.length > 0) ||
+      filters.id ||
+      filters.topic ||
+      filters.isNotLinkToCampaign
+    );
+
+    // Use total_filter if filters are applied, otherwise use total_count
+    const totalCount = hasFilters 
+      ? response.data.meta?.filter_count || 0
+      : response.data.meta?.total_count || 0;
+
     return {
       data: response.data.data || [],
-      total: response.data.meta?.total_count || 0,
+      total: totalCount,
       page: filters.page || 1,
       pageSize: limit,
     };

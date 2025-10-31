@@ -29,13 +29,19 @@ export interface CampaignStep2Data {
   post_notes: string;
   ai_create_post_list_notes: string;
   need_create_post_amount: number | undefined;
+  current_step: string;
 }
 
 // Type for Step 3 campaign update
 export interface CampaignStep3Data {
-  status: 'in_progress';
+  current_step?: string;
+  status?: string;
+  is_generated_by_AI?: boolean;
   ai_content_suggestions: {
-    create: never[];
+    create: Array<{
+      campaign: string;
+      id: number;
+    }> |never[];
     update: Array<{
       campaign: string;
       id: number;
@@ -46,6 +52,7 @@ export interface CampaignStep3Data {
 
 // Type for Step 1 campaign creation
 export interface CampaignStep1Data {
+  current_step: string;
   name: string;
   status: string;
   target_post_count: number;

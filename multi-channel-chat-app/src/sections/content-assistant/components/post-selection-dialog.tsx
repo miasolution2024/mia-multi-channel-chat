@@ -12,7 +12,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { Content } from "@/sections/content-assistant/view/content-assistant-list-view";
-import { POST_TYPE_OPTIONS } from "@/constants/auto-post";
+import { POST_STATUS, POST_STEP, POST_TYPE_OPTIONS } from "@/constants/auto-post";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Iconify } from "@/components/iconify";
 import { CustomTable } from "@/components/custom-table";
@@ -20,7 +20,7 @@ import type {
   TableConfig,
   DataItem,
 } from "@/components/custom-table/custom-table";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
 import { useGetContentAssistantList } from "@/hooks/apis/use-get-content-assistant-list";
 
 // Utility functions from content-assistant-list-view
@@ -52,31 +52,28 @@ const getAIContentStatusLabelAndColor = (
 };
 
 const mappingCurrentStep: Record<string, string> = {
-  research_analysis: "Phân tích nghiên cứu",
-  make_outline: "Tạo dàn ý",
-  write_article: "Viết bài",
-  html_coding: "Mã hóa HTML",
-  publish: "Xuất bản",
+  [POST_STEP.RESEARCH_ANALYSIS]: "Tìm hiểu",
+  [POST_STEP.MAKE_OUTLINE]: "Lên dàn ý",
+  [POST_STEP.WRITE_ARTICLE]: "Viết bài",
+  [POST_STEP.GENERATE_IMAGE]: "Tạo sinh hình ảnh",
+  [POST_STEP.HTML_CODING]: "Tạo định dạng HTML",
+  [POST_STEP.PUBLISHED]: "Xuất bản",
 };
 
 interface PostSelectionDialogProps {
   open: boolean;
   onClose: () => void;
   onConfirm: (selectedItems: Content[]) => void;
-  defaultSelected?: (string | number)[];
-  postFilters?: {
-    status?: string;
-    post_type?: string;
-    omni_channels?: string[];
-  };
+  postType?: string;
+  omniChannel?: number;
 }
 
-function PostSelectionDialog({
+const PostSelectionDialog = memo(function PostSelectionDialog({
   open,
   onClose,
   onConfirm,
-  defaultSelected = [],
-  postFilters,
+  postType,
+  omniChannel,
 }: PostSelectionDialogProps) {
   const [selectedItems, setSelectedItems] = useState<Content[]>([]);
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
@@ -89,11 +86,14 @@ function PostSelectionDialog({
   const variable = useMemo(
     () => ({
       topic: debouncedSearchTerm,
-      status: postFilters?.status ? [postFilters.status] : ["draft"], // Hard-coded draft status
-      page: page + 1, // API uses 1-based pagination
+      status:  [POST_STATUS.DRAFT],
+      page: page + 1,
       pageSize: rowsPerPage,
+      postType: postType || undefined,
+      omniChannel: omniChannel || undefined,
+      isNotLinkToCampaign: true,
     }),
-    [debouncedSearchTerm, postFilters?.status, page, rowsPerPage]
+    [debouncedSearchTerm, page, rowsPerPage, postType, omniChannel]
   );
   // Use the hook to fetch data with filters
   const { data, total, isLoading } = useGetContentAssistantList(variable);
@@ -164,7 +164,7 @@ function PostSelectionDialog({
     },
     {
       key: "current_step",
-      label: "Bước hiện tại",
+      label: "Giai đoạn hiện tại",
       width: 150,
       render: (item: Content) => (
         <Typography variant="body2">
@@ -224,15 +224,11 @@ function PostSelectionDialog({
 
   useEffect(() => {
     if (open) {
-      // Initialize selectedIds with defaultSelected when dialog opens
-      setSelectedIds(defaultSelected.map((item) => Number(item)));
-      // Find corresponding items for defaultSelected IDs
-      const preSelectedItems = items.filter((item) =>
-        defaultSelected.includes(item.id)
-      );
-      setSelectedItems(preSelectedItems);
+      // Reset selection when dialog opens
+      setSelectedIds([]);
+      setSelectedItems([]);
     }
-  }, [open, defaultSelected, items]);
+  }, [open]);
 
   const handleConfirm = () => {
     onConfirm(selectedItems);
@@ -316,6 +312,6 @@ function PostSelectionDialog({
       </DialogActions>
     </Dialog>
   );
-}
+});
 
 export default PostSelectionDialog;

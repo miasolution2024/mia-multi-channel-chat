@@ -23,14 +23,18 @@ export interface UseGetContentAssistantListReturn {
 }
 
 export function useGetContentAssistantList(
-  params: UseGetContentAssistantListParams = {},
+  params: UseGetContentAssistantListParams & {
+    postType?: string;
+    omniChannel?: number;
+    isNotLinkToCampaign?: boolean;
+  } = {},
 ): UseGetContentAssistantListReturn {
   const [data, setData] = useState<ContentAssistantApiResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { topic = '', status = [], page = 0, pageSize = 10 } = params;
+  const { topic = '', status = [], page = 0, pageSize = 10, postType, omniChannel, isNotLinkToCampaign = false } = params;
 
   const fetchData = useCallback(async () => {
     try {
@@ -40,8 +44,11 @@ export function useGetContentAssistantList(
       const filters: ContentAssistantFilters = {
         topic,
         status,
-        page: page,
+        page,
         pageSize,
+        postType: postType || undefined,
+        omniChannel: omniChannel || undefined,
+        isNotLinkToCampaign,
       };
 
       const response = await getContentAssistantList(filters);
@@ -51,11 +58,11 @@ export function useGetContentAssistantList(
       const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách trợ lý nội dung';
       setError(errorMessage);
       toast.error(errorMessage);
-      console.error('Error fetching content assistant:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [topic, status, page, pageSize]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topic, status, page, pageSize, postType, omniChannel]);
 
   // Auto-fetch when parameters change
   useEffect(() => {

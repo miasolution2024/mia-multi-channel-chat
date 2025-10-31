@@ -442,7 +442,7 @@ export function ContentAssistantListView() {
           {item.customer_journey.slice(0, 1).map((journey, index) => (
             <Chip
               key={index}
-              label={journey.customer_journey_id.name}
+              label={journey?.customer_journey_id?.name }
               size="small"
               variant="outlined"
               color="info"
@@ -458,7 +458,7 @@ export function ContentAssistantListView() {
                   open: true,
                   title: "Hành trình khách hàng",
                   items: item.customer_journey.map((journey) => ({
-                    label: journey.customer_journey_id.name,
+                    label: journey?.customer_journey_id?.name,
                     color: "info" as const,
                   })),
                 })
@@ -560,7 +560,7 @@ export function ContentAssistantListView() {
           {item.services.slice(0, 1).map((service, index) => (
             <Chip
               key={index}
-              label={service.services_id.name}
+              label={service.services_id?.name}
               size="small"
               variant="outlined"
             />
@@ -575,7 +575,7 @@ export function ContentAssistantListView() {
                   open: true,
                   title: "Dịch vụ",
                   items: item.services.map((service) => ({
-                    label: service.services_id.name,
+                    label: service.services_id?.name,
                     color: "default" as const,
                   })),
                 })

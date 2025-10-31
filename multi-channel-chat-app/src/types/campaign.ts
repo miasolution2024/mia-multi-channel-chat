@@ -99,6 +99,7 @@ export interface Campaign {
   customer_journey: CampaignCustomerJourney[];
   content_tone: CampaignContentTone[];
   ai_rule_based: CampaignAiRuleBased[];
+  current_step: string;
   // Omni channels fields with specific aliases from API
   '704a9f83': {
     page_name: string;

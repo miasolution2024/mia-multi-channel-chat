@@ -115,6 +115,26 @@ export const navData = [
         icon: ICONS.inventory,
       },
       {
+        title: "Hành trình khách hàng",
+        path: paths.dashboard.customerJourney.root,
+        icon: ICONS.suppier,
+      },
+      {
+        title: "Nhóm hành trình khách hàng",
+        path: paths.dashboard.customerJourneyProcess.root,
+        icon: ICONS.category,
+      },
+       {
+        title: "Hành vi khách hàng",
+        path: paths.dashboard.customerInsight.root,
+        icon: ICONS.blog,
+      },
+      {
+        title: "Nhóm khách hàng",
+        path: paths.dashboard.customerGroup.root,
+        icon: ICONS.user,
+      },
+      {
         title: "Lên lịch đăng bài",
         path: paths.dashboard.scheduleCalendar.root,
         icon: ICONS.calendar,
