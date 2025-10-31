@@ -20,7 +20,7 @@ import { paths } from '@/routes/path';
 import { useBoolean } from '@/hooks/use-boolean';
 import { toast } from '@/components/snackbar';
 import { Form, RHFSelect, RHFTextField } from '@/components/hook-form';
-import { CustomerJourneyProcess, CustomerJourneyProcessFormData } from '../types';
+import { CustomerJourneyProcess, CustomerJourneyProcessFormDataInternal } from '../types';
 import { CUSTOMER_JOURNEY_PROCESS_STATUS } from '@/constants/customer-journey-process';
 import { createCustomerJourneyProcess, updateCustomerJourneyProcess } from '@/actions/customer-journey-process';
 import { Iconify } from '@/components/iconify';
@@ -49,21 +49,36 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
 
 
   const defaultValues = useMemo(
-    () => ({
-      name: customerJourneyProcess?.name || '',
-      status: customerJourneyProcess?.status || CUSTOMER_JOURNEY_PROCESS_STATUS.DRAFT,
-      customer_journey: customerJourneyProcess?.customer_journey?.map((item) => item.customer_journey_id.id) || [],
-    }),
+    () => {
+      const customerJourneyIds = customerJourneyProcess?.customer_journey?.map((item) => item.customer_journey_id.id) || [];
+      const relationshipMap: Record<number, number> = {};
+      
+      // Create mapping from customer_journey_id to relationship ID
+      customerJourneyProcess?.customer_journey?.forEach((item) => {
+        relationshipMap[item.customer_journey_id.id] = item.id;
+      });
+
+      return {
+        name: customerJourneyProcess?.name || '',
+        status: customerJourneyProcess?.status || CUSTOMER_JOURNEY_PROCESS_STATUS.DRAFT,
+        customer_journey: customerJourneyIds,
+        customer_journey_relationship_map: relationshipMap,
+      };
+    },
     [customerJourneyProcess]
   );
 
-  const methods = useForm<CustomerJourneyProcessFormData>({
+  const methods = useForm<CustomerJourneyProcessFormDataInternal>({
     resolver: zodResolver(CustomerJourneyProcessSchema),
     defaultValues,
   });
 
   const {watch, setValue} = methods;
-  const customerJourneys = useMemo(() => watch("customer_journey") || [], [watch]);
+  const watchedCustomerJourneys = watch("customer_journey");
+  const customerJourneys = useMemo(() => {
+    const journeys = watchedCustomerJourneys || [];
+    return journeys;
+  }, [watchedCustomerJourneys]);
 
   const {
     reset,
@@ -81,7 +96,12 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
 
     try {
       if (customerJourneyProcess) {
-        await updateCustomerJourneyProcess(customerJourneyProcess.id, data);
+        // Prepare original data for comparison
+        const originalData = {
+          customer_journey: customerJourneyProcess.customer_journey?.map((item) => item.customer_journey_id.id) || [],
+          customer_journey_relationship_map: defaultValues.customer_journey_relationship_map || {}
+        };
+        await updateCustomerJourneyProcess(customerJourneyProcess.id, data, originalData);
       } else {
         await createCustomerJourneyProcess(data);
       }
@@ -102,8 +122,8 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
   }, [router]);
 
   const handleRemoveCustomerJourney = useCallback((id: string) => {
-    const updatedCustomerJourneys = customerJourneys.filter((item: number) => item !== Number(id));
-    setValue("customer_journey", updatedCustomerJourneys);
+    const updatedJourneys = customerJourneys.filter((journeyId: number) => journeyId.toString() !== id);
+    setValue("customer_journey", updatedJourneys);
   }, [customerJourneys, setValue]);
 
   const handleConfirmCustomerJourneys = useCallback((selectedIds: string[]) => {
@@ -116,6 +136,10 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
     {
       value: CUSTOMER_JOURNEY_PROCESS_STATUS.DRAFT,
       label: "Nháp",
+    },
+    {
+      value: CUSTOMER_JOURNEY_PROCESS_STATUS.PUBLISHED,
+      label: "Đang hoạt đông",
     },
   ]
 
@@ -166,9 +190,9 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
         <Divider />
         <Box sx={{ p: 3 }}>
           <SelectedItemsTable
-          selectedIds={customerJourneys.map(id => id.toString())}
-          onRemove={handleRemoveCustomerJourney}  
-        />
+            selectedIds={customerJourneys.map((id: number) => id.toString())}
+            onRemove={handleRemoveCustomerJourney}  
+          />
         </Box>
       </Card>
 
@@ -176,7 +200,7 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
           spacing={2}
           direction="row"
           justifyContent="flex-end"
-          sx={{ p: 3, pt: 0 }}
+          sx={{ p: 3 }}
         >
           <Button
             variant="outlined"
@@ -198,7 +222,7 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
       <CustomerJourneySelectionDialog
         open={createCustomerJourneyDialogOpen.value}
         onClose={() => createCustomerJourneyDialogOpen.onFalse()}
-        selectedIds={customerJourneys.map(id => id.toString())}
+        selectedIds={customerJourneys.map((id: number) => id.toString())}
         onConfirm={handleConfirmCustomerJourneys}
       />
     </Form>

@@ -21,7 +21,6 @@ import {
 } from "@mui/material";
 import { useGetCustomerJourneys } from "@/hooks/apis/use-get-customer-journeys";
 
-
 interface CustomerJourneySelectionDialogProps {
   open: boolean;
   onClose: () => void;
@@ -36,10 +35,10 @@ export function CustomerJourneySelectionDialog({
   onConfirm,
 }: CustomerJourneySelectionDialogProps) {
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>(selectedIds);
-const {data: customerJourneys, isLoading} = useGetCustomerJourneys({
-  limit: 200,
-  isNotInCustomerJourneyProcess: true,
-});
+  const { data: customerJourneys, isLoading } = useGetCustomerJourneys({
+    limit: 200,
+    isNotInCustomerJourneyProcess: true,
+  });
   useEffect(() => {
     if (open) {
       setTempSelectedIds(selectedIds);
@@ -58,9 +57,7 @@ const {data: customerJourneys, isLoading} = useGetCustomerJourneys({
     if (tempSelectedIds.length === customerJourneys.length) {
       setTempSelectedIds([]);
     } else {
-      setTempSelectedIds(
-        customerJourneys.map((item) => String(item.id))
-      );
+      setTempSelectedIds(customerJourneys.map((item) => String(item.id)));
     }
   }, [customerJourneys, tempSelectedIds]);
 
@@ -68,6 +65,10 @@ const {data: customerJourneys, isLoading} = useGetCustomerJourneys({
     onConfirm(tempSelectedIds);
     onClose();
   };
+
+  const actualSelectedCount = customerJourneys?.filter(item => 
+    tempSelectedIds.includes(String(item.id))
+  ).length || 0;
 
   const isAllSelected =
     tempSelectedIds.length === customerJourneys.length && customerJourneys.length > 0;
@@ -95,9 +96,7 @@ const {data: customerJourneys, isLoading} = useGetCustomerJourneys({
                     />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">
-                      Tên hành trình
-                    </Typography>
+                    <Typography variant="subtitle2">Tên hành trình</Typography>
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -111,9 +110,7 @@ const {data: customerJourneys, isLoading} = useGetCustomerJourneys({
                       />
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">
-                        {item.name}
-                      </Typography>
+                      <Typography variant="body2">{item.name}</Typography>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -133,8 +130,12 @@ const {data: customerJourneys, isLoading} = useGetCustomerJourneys({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Hủy</Button>
-        <Button onClick={handleConfirm} variant="contained" disabled={isLoading}>
-          Xác nhận ({tempSelectedIds.length})
+        <Button
+          onClick={handleConfirm}
+          variant="contained"
+          disabled={isLoading}
+        >
+          Xác nhận ({actualSelectedCount})
         </Button>
       </DialogActions>
     </Dialog>

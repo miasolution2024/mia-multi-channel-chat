@@ -61,5 +61,10 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/customer-insight/new`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/customer-insight/${id}/edit`,
     },
+    customerGroup: {
+      root: `${ROOTS.DASHBOARD}/customer-group`,
+      new: `${ROOTS.DASHBOARD}/customer-group/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/customer-group/${id}/edit`,
+    },
   },
 };

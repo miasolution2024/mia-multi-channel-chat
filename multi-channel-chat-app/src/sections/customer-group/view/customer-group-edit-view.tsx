@@ -8,40 +8,47 @@ import { DashboardContent } from '@/layouts/dashboard';
 import { useSettingsContext } from '@/components/settings';
 import { CustomBreadcrumbs } from '@/components/custom-breadcrumbs';
 import { toast } from '@/components/snackbar';
-import { CustomerJourney } from '@/sections/customer-journey/types';
-import { getCustomerJourney } from '@/actions/customer-journey';
-import { CustomerJourneyForm } from '@/sections/customer-journey/components/customer-journey-form';
+import { CustomerGroup } from '@/sections/customer-group/types';
+import {  getCustomerGroups } from '@/actions/customer-group';
+import { CustomerGroupForm } from '@/sections/customer-group/components/customer-group-form';
 
 
 // ----------------------------------------------------------------------
 
 type Props = {
-  customerJourneyId: string;
+  customerGroupId: string;
 };
 
-export function CustomerJourneyEditView({ customerJourneyId }: Props) {
+export function CustomerGroupEditView({ customerGroupId }: Props) {
   const settings = useSettingsContext();
-  const [currentCustomerJourney, setCurrentCustomerJourney] = useState<CustomerJourney | null>(null);
+  const [currentCustomerGroup, setCurrentCustomerGroup] = useState<CustomerGroup | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const fetchCustomerJourney = async () => {
+    const fetchCustomerInsight = async () => {
       try {
         setLoading(true);
-        const response = await getCustomerJourney(customerJourneyId);
-        setCurrentCustomerJourney(response.data);
+        const response = await getCustomerGroups({
+          id: customerGroupId,
+        });
+        
+        if (response.data && response.data.length > 0) {
+          setCurrentCustomerGroup(response.data[0]);
+        } else {
+          setError(true);
+        }
       } catch (error) {
-        console.error('Error fetching customer journey:', error);
-        toast.error('Không thể tải thông tin hành trình khách hàng');
+        console.error('Error fetching nhóm khách hàng:', error);
+        toast.error('Không thể tải thông tin nhóm khách hàng');
         setError(true);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCustomerJourney();
-  }, [customerJourneyId]);
+    fetchCustomerInsight();
+  }, [customerGroupId]);
 
   if (loading) {
     return (
@@ -55,12 +62,12 @@ export function CustomerJourneyEditView({ customerJourneyId }: Props) {
     );
   }
 
-  if (error || !currentCustomerJourney) {
+  if (error || !currentCustomerGroup) {
     return (
       <DashboardContent>
         <Container maxWidth={settings.themeStretch ? false : 'lg'}>
           <Typography variant="h6" sx={{ mb: 3 }}>
-            Hành trình khách hàng không tồn tại
+            Nhóm khách hàng không tồn tại
           </Typography>
         </Container>
       </DashboardContent>
@@ -71,16 +78,15 @@ export function CustomerJourneyEditView({ customerJourneyId }: Props) {
     <DashboardContent>
       <Container maxWidth={settings.themeStretch ? false : 'lg'}>
         <CustomBreadcrumbs
-          heading="Chỉnh sửa hành trình khách hàng"
+          heading="Chỉnh sửa nhóm khách hàng"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Hành trình khách hàng', href: paths.dashboard.customerJourney.root },
-            { name: 'Chỉnh sửa' },
+            { name: 'Nhóm khách hàng', href: paths.dashboard.customerGroup.root },
           ]}
           sx={{ mb: { xs: 3, md: 5 } }}
         />
 
-        <CustomerJourneyForm customerJourney={currentCustomerJourney} />
+        <CustomerGroupForm editData={currentCustomerGroup} />
       </Container>
     </DashboardContent>
   );

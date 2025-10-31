@@ -38,7 +38,7 @@ export async function getCustomerJourneys(page?: number, limit: number = 25, nam
 
     // filter name if provided
     if(name){
-      params.append('filter[_and][0][name][_contains]', name);
+      params.append('filter[_and][0][name][_icontains]', name);
     }
     // filter customer journeys not in any process if provided
     if(isNotInCustomerJourneyProcess){
