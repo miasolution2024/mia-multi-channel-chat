@@ -37,11 +37,13 @@ const DropdownCalendarChoice: React.FC<DropdownCalendarChoiceProps> = ({
   onChange,
   onDateRangeChange,
 }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState(value || "");
+  const [selectedPeriod, setSelectedPeriod] = useState(value || "thisMonth");
   const [customStartDate, setCustomStartDate] = useState(new Date());
   const [customEndDate, setCustomEndDate] = useState(new Date());
 
-  const [tempSelectedPeriod, setTempSelectedPeriod] = useState(value || "");
+  const [tempSelectedPeriod, setTempSelectedPeriod] = useState(
+    value || "thisMonth"
+  );
   const [tempSDate, setTempSDate] = useState(new Date());
   const [tempEDate, setTempEDate] = useState(new Date());
 
@@ -108,12 +110,12 @@ const DropdownCalendarChoice: React.FC<DropdownCalendarChoiceProps> = ({
         end.setDate(today.getDate() - 1);
         break;
       case "thisWeek":
-        start.setDate(today.getDate() - 7);
+        start.setDate(today.getDate() - today.getDay());
         end.setDate(today.getDate());
         break;
       case "thisMonth":
-        start.setMonth(today.getMonth() - 1);
-        end.setDate(today.getDate());
+        start.setDate(1);
+        end.setTime(today.getTime());
         break;
       default:
         return { start, end };
@@ -178,6 +180,19 @@ const DropdownCalendarChoice: React.FC<DropdownCalendarChoiceProps> = ({
     setTempSelectedPeriod(selectedPeriod);
     setOpen(false);
   };
+
+  useEffect(() => {
+    const nextPeriod = value || "thisMonth";
+    setSelectedPeriod(nextPeriod);
+    setTempSelectedPeriod(nextPeriod);
+    if (nextPeriod !== "custom") {
+      const { start, end } = getDateRangeByPeriod(nextPeriod);
+      setCustomStartDate(start);
+      setCustomEndDate(end);
+      setTempSDate(start);
+      setTempEDate(end);
+    }
+  }, [value]);
 
   const navigateMonth = (direction: "prev" | "next") => {
     const newMonth = new Date(currentMonth);
