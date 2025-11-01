@@ -500,5 +500,8 @@ export const transformCampaignToContentAssistant = (data: CampaignFormData) => {
     media: [],
     media_generated_ai: [],
     is_generated_by_AI: false,
+    // HTML Coding step fields
+    ai_notes_html_coding: "",
+    post_html_format: "",
   };
 };
