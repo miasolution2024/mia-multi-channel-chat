@@ -281,7 +281,7 @@ export function StepResearch() {
 
             <RHFSelect
               name="customer_journey"
-              label="Hành trình khách hàng"
+              label="Giai đoạn khách hàng"
               required
               sx={{ width: "100%" }}
             >

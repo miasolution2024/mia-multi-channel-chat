@@ -177,7 +177,7 @@ export function CustomerJourneyProcessListView() {
     {
       key: "customer_journey",
       id: "customer_journey",
-      label: "Hành trình khách hàng",
+      label: "Giai đoạn khách hàng",
       align: "left",
       width: 200,
       render: (item: CustomerJourneyProcess) => (
@@ -200,7 +200,7 @@ export function CustomerJourneyProcessListView() {
               onClick={() =>
                 setPopupState({
                   open: true,
-                  title: "Hành trình khách hàng",
+                  title: "Giai đoạn khách hàng",
                   items: item.customer_journey.map((group) => ({
                     label: group.customer_journey_id.name,
                     color: "primary" as const,

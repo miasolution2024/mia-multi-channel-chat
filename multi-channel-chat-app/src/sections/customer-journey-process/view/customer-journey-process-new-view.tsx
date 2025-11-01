@@ -14,10 +14,10 @@ export default function CustomerJourneyProcessNewView() {
     <DashboardContent>
       <Container maxWidth={settings.themeStretch ? false : 'lg'}>
         <CustomBreadcrumbs
-          heading="Tạo nhóm hành trình khách hàng mới"
+          heading="Tạo hành trình khách hàng mới"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Nhóm hành trình khách hàng', href: paths.dashboard.customerJourneyProcess.root },
+            { name: 'Hành trình khách hàng', href: paths.dashboard.customerJourneyProcess.root },
             { name: 'Tạo mới' },
           ]}
           sx={{ mb: { xs: 3, md: 5 } }}

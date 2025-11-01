@@ -34,7 +34,7 @@ function colorVars(theme: any, variant: any) {
     "--nav-item-sub-open-bg": palette.action.hover,
     ...(variant === "vertical" && {
       "--nav-item-sub-active-bg": palette.action.hover,
-      "--nav-subheader-color": palette.text.disabled,
+      "--nav-subheader-color": palette.grey[700],
       "--nav-subheader-hover-color": palette.text.primary,
     }),
   };

@@ -54,8 +54,8 @@ const CustomerGroupSchema = zod.object({
   descriptions: zod.string().optional(),
   services: zod.array(zod.number()).min(1, "Dịch vụ là bắt buộc"),
   customer_journey_process: zod
-    .number({ required_error: "Nhóm hành trình khách hàng là bắt buộc" })
-    .min(1, "Nhóm hành trình khách hàng là bắt buộc"),
+    .number({ required_error: "Hành trình khách hàng là bắt buộc" })
+    .min(1, "Hành trình khách hàng là bắt buộc"),
   action: zod.string().optional(),
   ai_note_analysis_context: zod.string().optional(),
 

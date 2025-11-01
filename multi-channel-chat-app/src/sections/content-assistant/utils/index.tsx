@@ -35,7 +35,7 @@ const ContentSchema = zod.object({
   customer_group: zod.number().array().min(1, "Nhóm khách hàng là bắt buộc"),
   services: zod.number().array().min(1, "Dịch vụ là bắt buộc"),
   customer_journey: zod.number({
-    required_error: "Hành trình khách hàng là bắt buộc",
+    required_error: "Giai đoạn khách hàng là bắt buộc",
   }),
   ai_rule_based: zod.number().array().default([]),
   content_tone: zod.number().array().default([]),

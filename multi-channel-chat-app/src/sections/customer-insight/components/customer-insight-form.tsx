@@ -37,7 +37,7 @@ type Props = {
 
 const CustomerInsightSchema = zod.object({
   content: zod.string().min(1, 'Nội dung là bắt buộc'),
-  customer_journey_id: zod.string().min(1, 'Hành trình khách hàng là bắt buộc'),
+  customer_journey_id: zod.string().min(1, 'Giai đoạn khách hàng là bắt buộc'),
   customer_group_id: zod.string().min(1, 'Nhóm khách hàng là bắt buộc'),
 });
 
@@ -146,8 +146,8 @@ export function CustomerInsightForm({ customerInsight }: Props) {
 
           <RHFAutocomplete
             name="customer_journey_id"
-            label="Hành trình khách hàng"
-            placeholder="Chọn hành trình khách hàng"
+            label="Giai đoạn khách hàng"
+            placeholder="Chọn giai đoạn khách hàng"
             disableClearable
             options={customerJourneys.map((journey) => ({
               label: journey.name,
