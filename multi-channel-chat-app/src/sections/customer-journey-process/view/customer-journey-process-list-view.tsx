@@ -185,13 +185,13 @@ export function CustomerJourneyProcessListView() {
           {item.customer_journey.slice(0, 1).map((group, index) => (
             <Chip
               key={index}
-              label={group.customer_journey_id.name}
+              label={group?.customer_journey_id?.name || "N/A"}
               size="small"
               variant="outlined"
               color="primary"
             />
           ))}
-          {item.customer_journey.length > 1 && (
+          {item.customer_journey.length > 1 && item.customer_journey.some((group) => group?.customer_journey_id?.name) && (
             <Chip
               label={`+${item.customer_journey.length - 1}`}  
               size="small"
