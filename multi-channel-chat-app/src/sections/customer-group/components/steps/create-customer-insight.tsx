@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { CustomTable } from "@/components/custom-table";
 import { Iconify } from "@/components/iconify";
-import { useGetCustomerGroupCustomerJourneys } from "@/hooks/apis/use-get-customer-group-customer-journey";
 import { 
   Button,
   Dialog,
@@ -14,70 +13,34 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import type { TableConfig, DataItem } from "@/components/custom-table/custom-table";
+import { useGetCustomerInsights } from "@/hooks/apis/use-get-customer-insight";
+import { CustomerInsight } from "@/sections/customer-insight/types";
+import { TableConfig } from "@/components/custom-table/custom-table";
 
-// Define the customer group customer journey item interface
-interface CustomerGroupCustomerJourneyItem extends DataItem {
-  id: string;
-  customer_journey_id: {
-    id: string;
-    name: string;
-  };
-  customer_journey_name?: string; // Add optional field for table rendering
-  insight_content: string;
-}
-
-// Define interface for the complex API response structure
-interface CustomerJourneyApiResponse {
-  id: number;
-  "61557062"?: { name: string };
-  "2f787ce3"?: { name: string };
-  "1cc0c1c2"?: Array<{ content: string }>;
-  "53c5bc9"?: number[];
-  "5b61221c"?: number;
-  "ac97705"?: number;
-}
-
-export function CreateCustomerInsight({customerGroupId, customerJourneyProcess}: {customerGroupId?: number, customerJourneyProcess?: number}) {
+export function CreateCustomerInsight({customerGroupId}: {customerGroupId?: number}) {
   const { setValue } = useFormContext();
-  const [customerGroupCustomerJourneys, setCustomerGroupCustomerJourneys] = useState<CustomerGroupCustomerJourneyItem[]>([]);  
+  const [customerInsights, setCustomerInsights] = useState<CustomerInsight[]>([]);  
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [contentDialogOpen, setContentDialogOpen] = useState(false);
-  const [selectedContent, setSelectedContent] = useState<{id: string, title: string, content: string}>({id: '', title: '', content: ''});
+  const [selectedContent, setSelectedContent] = useState<{id: string | number, title: string, content: string}>({id: '', title: '', content: ''});
 
-  // Fetch customer journeys using the hook
-  const { data: journeysData = [], isLoading } = useGetCustomerGroupCustomerJourneys({
-    customer_group_id: customerGroupId,
-    customer_journey_process: customerJourneyProcess
+  // Fetch customer insights using the hook
+  const { data: insightsData = [], isLoading } = useGetCustomerInsights({
+    page: 1,
+    limit: 100,
+    customerGroupId
   });
 
-  // Transform journeys data to customer insights format
+  // Transform insights data to customer insights format
   useEffect(() => {
-    if (journeysData && journeysData.length > 0) {
-      const transformedInsights: CustomerGroupCustomerJourneyItem[] = journeysData.map((journey) => { 
-        // Parse the complex API response structure with proper typing
-        const typedJourney = journey as CustomerJourneyApiResponse;
-        const journeyStage = typedJourney["61557062"]?.name || "Unknown Stage";
-        const insightContent = typedJourney["1cc0c1c2"]?.[0]?.content || "No insight content available";
-        
-        return {
-          id: String(journey.id),
-          customer_journey_id: {
-            id: String(journey.id),
-            name: journeyStage
-          },
-          customer_journey_name: journeyStage, // Add this field for table rendering
-          insight_content: insightContent
-        };
-      });
-      
-      setCustomerGroupCustomerJourneys(transformedInsights);
+    if (insightsData && insightsData.length > 0) {
+      setCustomerInsights(insightsData);
     } else {
-      setCustomerGroupCustomerJourneys([]);
+      setCustomerInsights([]);
     }
-  }, [journeysData]);
+  }, [insightsData]);
 
   // Handle delete item from list
   const handleDeleteItem = (id: string) => {
@@ -88,8 +51,9 @@ export function CreateCustomerInsight({customerGroupId, customerJourneyProcess}:
   // Handle confirm delete
   const handleConfirmDelete = () => {
     if (itemToDelete) {
+      console.log('itemToDelete',itemToDelete)
       // Remove item from the table
-      setCustomerGroupCustomerJourneys(prev => prev.filter(item => item.id !== itemToDelete));
+      setCustomerInsights(prev => prev.filter(item => item.id.toString() !== itemToDelete.toString()));
       
       // Track deleted ID
       setDeletedIds(prev => [...prev, itemToDelete]);
@@ -105,7 +69,7 @@ export function CreateCustomerInsight({customerGroupId, customerJourneyProcess}:
   };
 
   // Handle show content dialog
-  const handleShowContent = (id: string, title: string, content: string) => {
+  const handleShowContent = (id: string | number, title: string, content: string) => {
     setSelectedContent({ id, title, content });
     setContentDialogOpen(true);
   };
@@ -118,47 +82,37 @@ export function CreateCustomerInsight({customerGroupId, customerJourneyProcess}:
 
   // Expose deleted IDs through form context
   useEffect(() => {
-    setValue("deleted_customer_group_customer_journey_ids", deletedIds);
+    setValue("deleted_customer_insight_ids", deletedIds);
   }, [deletedIds, setValue]);
 
   // Table configuration
-  const TABLE_CONFIG: TableConfig[] = [
+  const TABLE_CONFIG= [
     {
       key: "id",
       label: "ID",
       align: "left",
       width: 100,
     },
-    { 
-      key: "customer_journey_name", 
-      label: "Tên hành trình", 
-      align: "left", 
-      width: 250,
-      render: (item) => {
-        const insight = item as CustomerGroupCustomerJourneyItem;
+    {
+      key: "customer_journey_id",
+      id: "customer_journey_id",
+      label: "Giai đoạn khách hàng",
+      align: "left",
+      width: 200,
+      render: (item: CustomerInsight) => {
         return (
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              fontWeight: 500,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              maxWidth: 240
-            }}
-          >
-            {insight.customer_journey_id.name}
+          <Typography variant="body2">
+            {item["10769dd4"]?.customer_journey_id?.name || "-"}
           </Typography>
         );
-      }
+      },
     },
     { 
       key: "insight_content", 
       label: "Hành vi khách hàng", 
       align: "left", 
       width: 300,
-      render: (item) => {
-        const insight = item as CustomerGroupCustomerJourneyItem;
+      render: (item: CustomerInsight) => {
         return (
           <Typography 
             variant="body2" 
@@ -173,9 +127,9 @@ export function CreateCustomerInsight({customerGroupId, customerJourneyProcess}:
                 borderRadius: 1
               }
             }}
-            onClick={() => handleShowContent(insight.id, insight.customer_journey_id.name, insight.insight_content)}
+            onClick={() => handleShowContent(item.id,"", item.content)}
           >
-            {insight.insight_content}
+            {item.content}
           </Typography>
         );
       }
@@ -186,14 +140,13 @@ export function CreateCustomerInsight({customerGroupId, customerJourneyProcess}:
       align: "center",
       width: 80,
       sticky: "right",
-      render: (item) => {
-        const insight = item as CustomerGroupCustomerJourneyItem;
+      render: (item: CustomerInsight) => {
         return (
           <Stack direction="row" spacing={1} justifyContent="center">
             <IconButton
               size="small"
               color="error"
-              onClick={() => handleDeleteItem(insight.id)}
+              onClick={() => handleDeleteItem(item.id.toString())}
               sx={{ 
                 '&:hover': { 
                   backgroundColor: 'error.lighter' 
@@ -222,8 +175,8 @@ export function CreateCustomerInsight({customerGroupId, customerJourneyProcess}:
           </Typography>
         </Stack>
         <CustomTable
-          data={customerGroupCustomerJourneys}
-          tableConfig={TABLE_CONFIG}
+          data={customerInsights}
+          tableConfig={TABLE_CONFIG as TableConfig[]}
           loading={isLoading}
         />
       </Stack>

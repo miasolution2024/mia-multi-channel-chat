@@ -39,7 +39,7 @@ import { AnalysisContext } from "./steps/analysis-context";
 import { AnalysisNeed } from "./steps/analysis-need";
 import { ProposeSolution } from "./steps/propose-solution";
 import {CreateCustomerInsight} from "./steps/create-customer-insight";
-import { deleteCustomerGroupCustomerJourney } from "@/actions/customer-insight";
+import { deleteCustomerInsight } from "@/actions/customer-insight";
 import { paths } from "@/routes/path";
 
 // ----------------------------------------------------------------------
@@ -151,7 +151,7 @@ export function CustomerGroupForm({ editData }: Props) {
     [CUSTOMER_GROUP_ACTION.ANALYSIS_CONTEXT]: <AnalysisContext />,
     [CUSTOMER_GROUP_ACTION.ANALYSIS_NEED]: <AnalysisNeed />,
     [CUSTOMER_GROUP_ACTION.PROPOSE_SOLUTION]: <ProposeSolution />,
-    [CUSTOMER_GROUP_ACTION.CREATE_INSIGHT]: <CreateCustomerInsight customerGroupId={Number(methods.getValues("id"))} customerJourneyProcess={Number(methods.getValues("customer_journey_process"))} />,
+    [CUSTOMER_GROUP_ACTION.CREATE_INSIGHT]: <CreateCustomerInsight customerGroupId={Number(methods.getValues("id"))} />,
   };
 
   const processN8NCreateCustomerInsight = async (
@@ -477,14 +477,14 @@ export function CustomerGroupForm({ editData }: Props) {
         return;
       }
 
-      // Get deleted customer group customer journey IDs from form values
-      const deletedIds = methods.getValues("deleted_customer_group_customer_journey_ids") || [];
+      // Get deleted customer insights IDs from form values
+      const deletedIds = methods.getValues("deleted_customer_insight_ids") || [];
       
       // Process deleted IDs if any
       if (deletedIds.length > 0) {
-        // Delete customer group customer journeys
+        // Delete customer insights
         await Promise.all(
-          deletedIds.map((id) => deleteCustomerGroupCustomerJourney(id))
+          deletedIds.map((id) => deleteCustomerInsight(id))
         );
 
       }

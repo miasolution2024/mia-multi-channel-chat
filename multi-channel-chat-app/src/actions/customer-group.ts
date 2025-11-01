@@ -59,7 +59,7 @@ export async function getCustomerGroups(params: GetCustomerGroupsParams = {}) {
      urlParams.append('fields[]', 'solution_idea');
 
     // Add sorting
-    urlParams.append('sort[]', 'id');
+    urlParams.append('sort[]', '-id');
 
     // Add filters
     let filterIndex = 0;
