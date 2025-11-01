@@ -58,6 +58,10 @@ const ContentSchema = zod.object({
   video: zod.array(zod.any()).default([]),
   media_generated_ai: zod.array(zod.any()).default([]),
   is_generated_by_AI: zod.boolean().default(false),
+
+  // step HTML Coding
+  ai_notes_html_coding: zod.string().default(""),
+  post_html_format: zod.string().default(""),
 });
 
 export type FormData = zod.infer<typeof ContentSchema>;
@@ -85,6 +89,8 @@ export const getFieldsForStep = (step: string): (keyof FormData)[] => {
       ];
     case POST_STEP.WRITE_ARTICLE:
       return ["post_content", "ai_notes_create_image", "media"];
+    case POST_STEP.HTML_CODING:
+      return ["post_html_format", "ai_notes_html_coding"];
     default:
       return [];
   }
@@ -209,6 +215,9 @@ export const getDefaultValues = (
       media: getArray(editData.media),
       video: apiData.video ? [apiData.video] : [],
       media_generated_ai: getArray(editData.media_generated_ai),
+      // Step 4 - HTML Coding
+      ai_notes_html_coding: getString(apiData.ai_notes_html_coding),
+      post_html_format: getString(apiData.post_html_format),
     };
   }
 
@@ -235,12 +244,6 @@ export const getDefaultValues = (
     post_content: "",
   };
 };
-
-export const getSteps = () => [
-  POST_STEP.RESEARCH_ANALYSIS,
-  POST_STEP.MAKE_OUTLINE,
-  POST_STEP.WRITE_ARTICLE,
-];
 
 export const getStep1FormData = (formData: FormData) => {
   return {
@@ -564,6 +567,11 @@ export const hasFormDataChanged = (
       "media_generated_ai",
       "is_generated_by_AI",
     ];
+  } else if (step === POST_STEP.HTML_CODING) {
+    fieldsToCompare = [
+      "ai_notes_html_coding",
+      "post_html_format",
+    ];
   } else {
     // Default to RESEARCH_ANALYSIS fields
     fieldsToCompare = [
@@ -737,4 +745,12 @@ export const transformMediaItems = (mediaItems: MediaGeneratedAiItem[]): File[] 
     });
     return file;
   });
+};
+
+export const buildStepHtmlCodingData = (formData: FormData) => {
+  return {
+    ai_notes_html_coding: formData.ai_notes_html_coding,
+    post_html_format: formData.post_html_format,
+    current_step: POST_STEP.HTML_CODING,
+  };
 };
