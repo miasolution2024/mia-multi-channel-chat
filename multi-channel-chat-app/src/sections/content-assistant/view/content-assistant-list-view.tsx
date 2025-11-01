@@ -405,7 +405,7 @@ export function ContentAssistantListView() {
           {item.customer_group.slice(0, 1).map((group, index) => (
             <Chip
               key={index}
-              label={group.customer_group_id.name}
+              label={group?.customer_group_id?.name || "N/A"}
               size="small"
               variant="outlined"
             />
@@ -420,7 +420,7 @@ export function ContentAssistantListView() {
                   open: true,
                   title: "Nhóm khách hàng",
                   items: item.customer_group.map((group) => ({
-                    label: group.customer_group_id.name,
+                    label: group.customer_group_id?.name,
                     color: "default" as const,
                   })),
                 })
