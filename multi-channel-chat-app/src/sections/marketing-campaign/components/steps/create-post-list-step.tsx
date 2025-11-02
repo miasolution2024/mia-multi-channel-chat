@@ -463,7 +463,7 @@ export function CreatePostListStep() {
     },
     { 
       key: "customer_journey", 
-      label: "Hành trình khách hàng", 
+      label: "Giai đoạn khách hàng", 
       width: 200,
       render: (item) => {
         const suggestion = item as ContentSuggestionItem;

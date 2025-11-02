@@ -39,7 +39,7 @@ import { AnalysisContext } from "./steps/analysis-context";
 import { AnalysisNeed } from "./steps/analysis-need";
 import { ProposeSolution } from "./steps/propose-solution";
 import {CreateCustomerInsight} from "./steps/create-customer-insight";
-import { deleteCustomerGroupCustomerJourney } from "@/actions/customer-insight";
+import { deleteCustomerInsight } from "@/actions/customer-insight";
 import { paths } from "@/routes/path";
 
 // ----------------------------------------------------------------------
@@ -54,8 +54,8 @@ const CustomerGroupSchema = zod.object({
   descriptions: zod.string().optional(),
   services: zod.array(zod.number()).min(1, "Dịch vụ là bắt buộc"),
   customer_journey_process: zod
-    .number({ required_error: "Nhóm hành trình khách hàng là bắt buộc" })
-    .min(1, "Nhóm hành trình khách hàng là bắt buộc"),
+    .number({ required_error: "Hành trình khách hàng là bắt buộc" })
+    .min(1, "Hành trình khách hàng là bắt buộc"),
   action: zod.string().optional(),
   ai_note_analysis_context: zod.string().optional(),
 
@@ -151,7 +151,7 @@ export function CustomerGroupForm({ editData }: Props) {
     [CUSTOMER_GROUP_ACTION.ANALYSIS_CONTEXT]: <AnalysisContext />,
     [CUSTOMER_GROUP_ACTION.ANALYSIS_NEED]: <AnalysisNeed />,
     [CUSTOMER_GROUP_ACTION.PROPOSE_SOLUTION]: <ProposeSolution />,
-    [CUSTOMER_GROUP_ACTION.CREATE_INSIGHT]: <CreateCustomerInsight customerGroupId={Number(methods.getValues("id"))} customerJourneyProcess={Number(methods.getValues("customer_journey_process"))} />,
+    [CUSTOMER_GROUP_ACTION.CREATE_INSIGHT]: <CreateCustomerInsight customerGroupId={Number(methods.getValues("id"))} />,
   };
 
   const processN8NCreateCustomerInsight = async (
@@ -177,9 +177,24 @@ export function CustomerGroupForm({ editData }: Props) {
   const handleStepCustomerResearch = async (data: CustomerGroupFormData) => {
     try {
       setIsNextLoading(true);
-      if (editData?.id) {
-        methods.setValue("id", editData.id);
+      
+      // Build previous data for comparison: use cached step data if available; otherwise null for new customer group
+      const cachedData = cachedStepData[CUSTOMER_GROUP_ACTION.RESEARCH_CUSTOMER];
+      const formValues = methods.getValues();
+      const previousCustomerResearchData: CustomerGroupFormData | null = cachedData
+        ? { ...formValues, ...cachedData } as CustomerGroupFormData
+        : null;
+      
+      const hasChanged = hasStepDataChanged(
+        data,
+        previousCustomerResearchData,
+        CUSTOMER_GROUP_ACTION.RESEARCH_CUSTOMER
+      );
 
+      // If in edit mode and no changes, just move to next step
+      if (editData?.id && !hasChanged) {
+        methods.setValue("id", editData.id);
+        
         // Cache the step data for edit mode
         setCachedStepData(prev => ({
           ...prev,
@@ -190,24 +205,22 @@ export function CustomerGroupForm({ editData }: Props) {
         return;
       }
       
-      // Build previous data for comparison: use cached step data if available; otherwise null for new customer group
-      const cachedData = cachedStepData[CUSTOMER_GROUP_ACTION.RESEARCH_CUSTOMER];
-      const formValues = methods.getValues();
-      const previousCustomerResearchData: CustomerGroupFormData | null = cachedData
-        ? { ...formValues, ...cachedData } as CustomerGroupFormData
-        : null;
-
-      if (!hasStepDataChanged(
-        data,
-        previousCustomerResearchData,
-        CUSTOMER_GROUP_ACTION.RESEARCH_CUSTOMER
-      )) {
+      // If in create mode and no changes, just move to next step
+      if (!editData?.id && !hasChanged) {
         setActiveStep(CUSTOMER_GROUP_ACTION.ANALYSIS_CONTEXT);
         return;
       }
       
+      // Set ID for edit mode before API call
+      if (editData?.id) {
+        methods.setValue("id", editData.id);
+      }
+      
       const apiData = buildCustomerResearchData(data);
-      const response = await createCustomerGroup(apiData);
+
+      // check if id is exist in form -> update data to db, if not, create new customer group
+      const idFromForm = methods.getValues("id") || editData?.id;
+      const response = idFromForm ? await updateCustomerGroup(Number(idFromForm), apiData) : await createCustomerGroup(apiData);
       if (response?.data?.id) {
         methods.setValue("id", response.data.id);
 
@@ -249,26 +262,6 @@ export function CustomerGroupForm({ editData }: Props) {
     }
   };
 
-  // Helper function to check if we should skip API call
-  const shouldSkipApiCall = (
-    currentStep: string,
-    hasChanged: boolean,
-    hasNextStepData: boolean
-  ): boolean => {
-    if (!editData) return false; // Create mode: never skip
-    
-    const currentStepNumber = CUSTOMER_GROUP_STEPS.find(step => step.value === currentStep)?.stepNumber || 0;
-    const nextStepNumber = currentStepNumber + 1;
-    const editDataStepNumber = editData?.action ? 
-      CUSTOMER_GROUP_STEPS.find(step => step.value === editData.action)?.stepNumber || 0 : 0;
-    const isNextStepBeyondEditDataAction = nextStepNumber > editDataStepNumber;
-    
-    // Skip API only if no changes AND we have next step data AND next step not beyond edit data action
-    const shouldSkip = !hasChanged && hasNextStepData && !isNextStepBeyondEditDataAction;
-    
-    return shouldSkip;
-  };
-
   const handleStepAnalysisContext = async (data: CustomerGroupFormData) => {
     try {
       setIsNextLoading(true);
@@ -285,21 +278,14 @@ export function CustomerGroupForm({ editData }: Props) {
         ? { ...formValues, ...cachedData } as CustomerGroupFormData
         : null;
 
-      // Check if next step data exists (indicates we've been here before)
-      const nextStepFields = ['context', 'main_job', 'related_job', 'emotional_job'];
-      const hasNextStepData = nextStepFields.some(field => {
-        const value = data[field as keyof CustomerGroupFormData];
-        return value && value.toString().trim() !== '';
-      });
-      
       const hasChanged = hasStepDataChanged(
         data,
         previousAnalysisContextData,
         CUSTOMER_GROUP_ACTION.ANALYSIS_CONTEXT
       );
 
-      // Check if we should skip API call using helper function
-      if (shouldSkipApiCall(CUSTOMER_GROUP_ACTION.ANALYSIS_CONTEXT, hasChanged, hasNextStepData)) {
+      // Check if we should skip API call - only skip if current step data hasn't changed
+      if (!hasChanged) {
         const nextStep = CUSTOMER_GROUP_STEPS.find(step => step.stepNumber === (CUSTOMER_GROUP_STEPS.find(s => s.value === CUSTOMER_GROUP_ACTION.ANALYSIS_CONTEXT)?.stepNumber || 0) + 1)?.value;
         if (nextStep) {
           setActiveStep(nextStep);
@@ -370,15 +356,8 @@ export function CustomerGroupForm({ editData }: Props) {
         CUSTOMER_GROUP_ACTION.ANALYSIS_NEED
       );
 
-      // Check for next step data
-      const nextStepFields = getFieldsForStep(CUSTOMER_GROUP_ACTION.PROPOSE_SOLUTION);
-      const hasNextStepData = nextStepFields.some(field => {
-        const value = data[field as keyof CustomerGroupFormData];
-        return value !== undefined && value !== null && value !== "";
-      });
-
-      // Check if we should skip API call using helper function
-      if (shouldSkipApiCall(CUSTOMER_GROUP_ACTION.ANALYSIS_NEED, hasChanged, hasNextStepData)) {
+      // Check if we should skip API call - only skip if current step data hasn't changed
+      if (!hasChanged) {
         const nextStep = CUSTOMER_GROUP_STEPS.find(step => step.stepNumber === (CUSTOMER_GROUP_STEPS.find(s => s.value === CUSTOMER_GROUP_ACTION.ANALYSIS_NEED)?.stepNumber || 0) + 1)?.value;
         if (nextStep) {
           setActiveStep(nextStep);
@@ -450,15 +429,8 @@ export function CustomerGroupForm({ editData }: Props) {
         CUSTOMER_GROUP_ACTION.PROPOSE_SOLUTION
       );
 
-      // Check for next step data
-      const nextStepFields = getFieldsForStep(CUSTOMER_GROUP_ACTION.CREATE_INSIGHT);
-      const hasNextStepData = nextStepFields.some(field => {
-        const value = data[field as keyof CustomerGroupFormData];
-        return value !== undefined && value !== null && value !== "";
-      });
-
-      // Check if we should skip API call using helper function
-      if (shouldSkipApiCall(CUSTOMER_GROUP_ACTION.PROPOSE_SOLUTION, hasChanged, hasNextStepData)) {
+      // Check if we should skip API call - only skip if current step data hasn't changed
+      if (!hasChanged) {
         const nextStep = CUSTOMER_GROUP_STEPS.find(step => step.stepNumber === (CUSTOMER_GROUP_STEPS.find(s => s.value === CUSTOMER_GROUP_ACTION.PROPOSE_SOLUTION)?.stepNumber || 0) + 1)?.value;
         if (nextStep) {
           setActiveStep(nextStep);
@@ -505,14 +477,14 @@ export function CustomerGroupForm({ editData }: Props) {
         return;
       }
 
-      // Get deleted customer group customer journey IDs from form values
-      const deletedIds = methods.getValues("deleted_customer_group_customer_journey_ids") || [];
+      // Get deleted customer insights IDs from form values
+      const deletedIds = methods.getValues("deleted_customer_insight_ids") || [];
       
       // Process deleted IDs if any
       if (deletedIds.length > 0) {
-        // Delete customer group customer journeys
+        // Delete customer insights
         await Promise.all(
-          deletedIds.map((id) => deleteCustomerGroupCustomerJourney(id))
+          deletedIds.map((id) => deleteCustomerInsight(id))
         );
 
       }

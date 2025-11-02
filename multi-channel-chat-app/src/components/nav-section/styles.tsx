@@ -82,8 +82,8 @@ export function Subheader({ sx, open, children, ...other }: any) {
         display: "inline-flex",
         alignSelf: "flex-start",
         color: "var(--nav-subheader-color)",
-        padding: (theme) => theme.spacing(2, 1, 1, 1.5),
-        fontSize: (theme) => theme.typography.pxToRem(11),
+        padding: (theme) => theme.spacing(1, 1, 1, 1.5),
+        fontSize: (theme) => theme.typography.pxToRem(12),
         transition: (theme) =>
           theme.transitions.create(["color", "padding-left"], {
             duration: theme.transitions.duration.standard,
@@ -104,7 +104,7 @@ export function Subheader({ sx, open, children, ...other }: any) {
         }
         sx={{
           left: -4,
-          opacity: 0,
+          opacity: 0.8,
           position: "absolute",
           transition: (theme: any) =>
             theme.transitions.create(["opacity"], {

@@ -54,7 +54,7 @@ export interface CustomerGroupFormData {
   solution_idea?: string;
 
   // step create insight
-  deleted_customer_group_customer_journey_ids?: string[];
+  deleted_customer_insight_ids?: string[];
 }
 
 export interface CustomerGroupCreateData {

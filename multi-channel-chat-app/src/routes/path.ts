@@ -19,7 +19,7 @@ export const paths = {
     seamlessAuth: `${ROOTS.AUTH}/seamless-auth`,
   },
   dashboard: {
-    root: `${ROOTS.DASHBOARD}/content-assistant`,
+    root: `${ROOTS.DASHBOARD}`,
     chat: `${ROOTS.DASHBOARD}/chat`,
     contentAssistant: {
       root: `${ROOTS.DASHBOARD}/content-assistant`,
@@ -66,6 +66,11 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/customer-group`,
       new: `${ROOTS.DASHBOARD}/customer-group/new`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/customer-group/${id}/edit`,
+    },
+     service: {
+      root: `${ROOTS.DASHBOARD}/service`,
+      new: `${ROOTS.DASHBOARD}/service/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/service/${id}/edit`,
     },
   },
 };

@@ -68,7 +68,7 @@ export function ResearchCustomer() {
           />
         </Stack>
         
-          <RHFSelect required name="customer_journey_process" label="Nhóm hành trình khách hàng">
+          <RHFSelect required name="customer_journey_process" label="Hành trình khách hàng">
             {customerJourneyProcessData?.map((item) => (
               <MenuItem key={item.id} value={item.id}>
                 {item.name}

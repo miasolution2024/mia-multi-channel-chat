@@ -19,17 +19,18 @@ import {
   StepOutline,
   StepContent,
   PublishModal,
+  StepFormatHtml,
 } from "./components";
-import { POST_STEP } from "@/constants/auto-post";
+import { POST_STEP, POST_TYPE } from "@/constants/auto-post";
 import {
   ContentSchema,
   FormData,
   getFieldsForStep,
   getDefaultValues,
-  getSteps,
   buildStepResearchData,
   buildStepOutlineData,
   buildStepWriteArticleData,
+  buildStepHtmlCodingData,
   hasFormDataChanged,
   FileWithApiProperties,
   MediaGeneratedAiItem,
@@ -81,6 +82,13 @@ export function ContentAssistantMultiStepForm({
     useUpdateContentAssistant();
   const { getContentAssistant } = useGetContentAssistantById();
 
+  useEffect(() => {
+    if(editData?.current_step) {
+      setActiveStep(editData?.current_step);
+    }
+  }, [editData])
+  
+
 
   const isProcessing = isCreating || isUpdating || isNextLoading;
   const initialDataRef = useRef<FormData | null>(null);
@@ -93,6 +101,7 @@ export function ContentAssistantMultiStepForm({
     mode: "onChange",
     shouldFocusError: true,
   });
+  const { watch } = methods;
 
   // Store initial data when form is loaded with existing data
   useEffect(() => {
@@ -148,6 +157,10 @@ export function ContentAssistantMultiStepForm({
       return "Đang tạo mới và tạo dàn ý...";
     } else if (activeStep === POST_STEP.MAKE_OUTLINE) {
       return "Đang cập nhật và tạo nội dung...";
+    } else if (activeStep === POST_STEP.WRITE_ARTICLE) {
+      return "Đang xử lý...";
+    } else if (activeStep === POST_STEP.HTML_CODING) {
+      return "Đang lưu thông tin HTML...";
     }
 
     return "Đang xử lý...";
@@ -173,6 +186,24 @@ export function ContentAssistantMultiStepForm({
           nextStep = POST_STEP.WRITE_ARTICLE;
           n8nStartStep = 2;
           n8nEndStep = 3;
+        } else if (currentStep === POST_STEP.WRITE_ARTICLE) {
+          // Check if HTML coding step should be shown
+          const postType = data.post_type;
+          if (postType === POST_TYPE.SEO_POST) {
+            nextStep = POST_STEP.HTML_CODING;
+            n8nStartStep = 4;
+            n8nEndStep = 5;
+          } else {
+            // For other post types, show publish modal
+            setShowPublishModal(true);
+            return;
+          }
+        } else if (currentStep === POST_STEP.HTML_CODING) {
+          // HTML coding is the last step, only update data without calling N8N
+          shouldCallN8N = false;
+          nextStep = POST_STEP.HTML_CODING; // Stay on the same step
+          n8nStartStep = 0; // Not used
+          n8nEndStep = 0; // Not used
         } else {
           return;
         }
@@ -180,9 +211,11 @@ export function ContentAssistantMultiStepForm({
         if (isUpdate) {
           // Check if data has changed before calling update API
           if (!hasFormDataChanged(data, initialDataRef.current, currentStep)) {
-            // Data hasn't changed, skip API call but still proceed to next step
             shouldCallN8N = false;
             setActiveStep(nextStep);
+            if(postType === POST_TYPE.SEO_POST) {
+              toast.success("Cập nhật thông tin HTML thành công 222");
+            }
             return;
           }
 
@@ -193,10 +226,30 @@ export function ContentAssistantMultiStepForm({
               data,
               false
             ) as UpdateContentAssistantRequest;
-          } else {
+          } else if (currentStep === POST_STEP.MAKE_OUTLINE) {
             updateData = buildStepOutlineData(
               data
             ) as UpdateContentAssistantRequest;
+          } else if (currentStep === POST_STEP.WRITE_ARTICLE) {
+            const dataMediaEdit = {
+              media: (editData?.media as FileWithApiProperties[]) || [],
+              media_generated_ai:
+                (editData?.media_generated_ai as MediaGeneratedAiItem[]) || [],
+              id: editData?.id?.toString(),
+            };
+            updateData = (await buildStepWriteArticleData(
+              data,
+              dataMediaEdit,
+            )) as UpdateContentAssistantRequest;
+          } else if (currentStep === POST_STEP.HTML_CODING) {
+            updateData = buildStepHtmlCodingData(
+              data
+            ) as UpdateContentAssistantRequest;
+          }
+
+          if (!updateData) {
+            toast.error("Không thể xây dựng dữ liệu cho step này");
+            return;
           }
           response = await updateContentAssistant(data.id!, updateData);
 
@@ -247,10 +300,14 @@ export function ContentAssistantMultiStepForm({
           const n8nResponse = await createPost(inputN8NData);
 
           if (!n8nResponse?.success) {
-            const errorMessage =
-              currentStep === POST_STEP.RESEARCH_ANALYSIS
-                ? "Có lỗi xảy ra khi tạo dàn ý"
-                : "Có lỗi xảy ra khi tạo nội dung";
+            let errorMessage = "Có lỗi xảy ra trong quá trình xử lý";
+            if (currentStep === POST_STEP.RESEARCH_ANALYSIS) {
+              errorMessage = "Có lỗi xảy ra khi tạo dàn ý";
+            } else if (currentStep === POST_STEP.MAKE_OUTLINE) {
+              errorMessage = "Có lỗi xảy ra khi tạo nội dung";
+            } else if (currentStep === POST_STEP.WRITE_ARTICLE) {
+              errorMessage = "Có lỗi xảy ra khi tạo HTML";
+            }
             toast.error(n8nResponse?.message || errorMessage);
             return;
           }
@@ -270,13 +327,37 @@ export function ContentAssistantMultiStepForm({
                 "post_content",
                 detailResponse.post_content || ""
               );
+            } else if (currentStep === POST_STEP.WRITE_ARTICLE) {
+              // Update form with HTML format data if available
+              if (detailResponse.post_html_format) {
+                methods.setValue(
+                  "post_html_format",
+                  detailResponse.post_html_format || ""
+                );
+              }
+            } else if (currentStep === POST_STEP.HTML_CODING) {
+              // Update form with AI notes for HTML coding if available
+              if (detailResponse.ai_notes_html_coding) {
+                methods.setValue(
+                  "ai_notes_html_coding",
+                  detailResponse.ai_notes_html_coding || ""
+                );
+              }
             }
           }
         }
 
         // Update initialDataRef only when successfully moving to next step
         initialDataRef.current = { ...data };
-        setActiveStep(nextStep);
+        
+        // For HTML_CODING step, not after saving data
+        if (currentStep === POST_STEP.HTML_CODING) {
+          // show message success and redirect to list
+          toast.success("Cập nhật HTML thành công");
+          router.push('/dashboard/content-assistant');
+        } else {
+          setActiveStep(nextStep);
+        }
       } catch (error) {
         console.error("Error in handleStepProcess:", error);
         toast.error("Có lỗi xảy ra trong quá trình xử lý");
@@ -284,6 +365,7 @@ export function ContentAssistantMultiStepForm({
         setIsNextLoading(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       updateContentAssistant,
       createContentAssistant,
@@ -298,10 +380,10 @@ export function ContentAssistantMultiStepForm({
     const isStepValid = await methods.trigger(fieldsToValidate);
     if (!isStepValid) {
       return;
+
     }
 
     const formData = methods.getValues();
-
     switch (activeStep) {
       case POST_STEP.RESEARCH_ANALYSIS:
         await handleStepProcess(formData, POST_STEP.RESEARCH_ANALYSIS);
@@ -310,8 +392,17 @@ export function ContentAssistantMultiStepForm({
         await handleStepProcess(formData, POST_STEP.MAKE_OUTLINE);
         return;
       case POST_STEP.WRITE_ARTICLE:
-        setShowPublishModal(true);
-        break;
+        // Check if HTML coding step should be shown
+        const postType = formData.post_type;
+        if (postType === POST_TYPE.SEO_POST) {
+          await handleStepProcess(formData, POST_STEP.WRITE_ARTICLE);
+        } else {
+          setShowPublishModal(true);
+        }
+        return;
+      case POST_STEP.HTML_CODING:
+        await handleStepProcess(formData, POST_STEP.HTML_CODING);
+        return;
       default:
         break;
     }
@@ -383,6 +474,11 @@ export function ContentAssistantMultiStepForm({
               formData,
               dataMediaEdit,
             )) as UpdateContentAssistantRequest;
+            break;
+          case POST_STEP.HTML_CODING:
+            stepData = buildStepHtmlCodingData(
+              formData
+            ) as UpdateContentAssistantRequest;
             break;
           default:
             toast.error("Step không hợp lệ để lưu nháp");
@@ -477,6 +573,67 @@ export function ContentAssistantMultiStepForm({
     }
   };
 
+  const handleRegenData = useCallback(async () => {
+    try {
+      setIsNextLoading(true);
+      const formData = methods.getValues();
+
+      if (!formData?.id) {
+        toast.error("Không thể tái tạo dữ liệu khi chưa có ID");
+        return;
+      }
+
+      // Step 1: Update data to Directus (update ai_notes_html_coding, post_html_format)
+      const updateData = buildStepHtmlCodingData(formData) as UpdateContentAssistantRequest;
+      const response = await updateContentAssistant(formData.id, updateData);
+
+      if (!response?.data?.id) {
+        toast.error("Có lỗi xảy ra khi cập nhật dữ liệu");
+        return;
+      }
+
+      // Step 2: Call N8N flow for HTML coding step
+      const inputN8NData: PostRequest = [
+        {
+          id: response.data.id,
+          startStep: 4,
+          endStep: 5,
+        },
+      ];
+
+      const n8nResponse = await createPost(inputN8NData);
+
+      if (!n8nResponse?.success) {
+        toast.error(n8nResponse?.message || "Có lỗi xảy ra khi tái tạo HTML");
+        return;
+      }
+
+      // Step 3: Get latest data after N8N processing
+      const detailResponse = await getContentAssistant(response.data.id);
+
+      if (detailResponse) {
+        // Step 4: Update form with refreshed data
+        if (detailResponse.post_html_format) {
+          methods.setValue("post_html_format", detailResponse.post_html_format || "");
+        }
+        if (detailResponse.ai_notes_html_coding) {
+          methods.setValue("ai_notes_html_coding", detailResponse.ai_notes_html_coding || "");
+        }
+
+        // Update initial data reference
+        initialDataRef.current = { ...formData };
+        setHasDataChanged(false);
+
+        toast.success("Đã tái tạo dữ liệu HTML thành công!");
+      }
+    } catch (error) {
+      console.error("Error regenerating data:", error);
+      toast.error("Có lỗi xảy ra khi tái tạo dữ liệu");
+    } finally {
+      setIsNextLoading(false);
+    }
+  }, [methods, updateContentAssistant, getContentAssistant]);
+
   const renderStepContent = () => {
     const formData = methods.getValues();
     const contentAssistantId = formData.id?.toString();
@@ -488,21 +645,28 @@ export function ContentAssistantMultiStepForm({
         return <StepOutline />;
       case POST_STEP.WRITE_ARTICLE:
         return <StepContent setAiImagesToCheckDelete={setAiImagesToCheckDelete} contentAssistantId={contentAssistantId} hasDataChanged={hasDataChanged} />;
+      case POST_STEP.HTML_CODING:
+        return <StepFormatHtml />;
       default:
         return null;
     }
   };
 
+  const postType = watch('post_type');
+
   const handleBack = () => {
     if (!activeStep) return;
-    const steps = getSteps();
+     const steps = [POST_STEP.RESEARCH_ANALYSIS, POST_STEP.MAKE_OUTLINE, POST_STEP.WRITE_ARTICLE];
+    if (postType === POST_TYPE.SEO_POST) {
+      steps.push(POST_STEP.HTML_CODING);
+    }
     const currentIndex = steps.indexOf(activeStep);
     if (currentIndex > 0) {
       setActiveStep(steps[currentIndex - 1]);
     }
   };
 
-  const isLastStep = activeStep === POST_STEP.WRITE_ARTICLE;
+  const isLastStep = postType === POST_TYPE.FACEBOOK_POST ? activeStep === POST_STEP.WRITE_ARTICLE : activeStep === POST_STEP.HTML_CODING;
   const isFirstStep = activeStep === POST_STEP.RESEARCH_ANALYSIS;
 
   if (!activeStep) return null;
@@ -516,7 +680,7 @@ export function ContentAssistantMultiStepForm({
       />
       <Form methods={methods} onSubmit={onSubmit}>
         <Stack>
-          <ContentStepper currentStep={activeStep} />
+          <ContentStepper currentStep={activeStep} postType={postType} />
 
           <Box
             sx={{
@@ -552,8 +716,21 @@ export function ContentAssistantMultiStepForm({
               Quay lại
             </Button>
 
+            {/* Show Re gen data button only in HTML CODING step */}
+            {activeStep === POST_STEP.HTML_CODING && (
+              <Button
+                size="large"
+                variant="outlined"
+                onClick={handleRegenData}
+                disabled={isProcessing}
+                sx={{ minWidth: 150, borderRadius: 2 }}
+              >
+                {isProcessing ? "Đang tạo..." : "Tạo lại HTML"}
+              </Button>
+            )}
+
             {/* Show Save Draft button when data has changed */}
-            {hasDataChanged && (
+            {hasDataChanged && postType !== POST_TYPE.SEO_POST && (
               <Button
                 size="large"
                 variant="outlined"

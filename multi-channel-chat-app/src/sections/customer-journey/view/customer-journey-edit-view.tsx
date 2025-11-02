@@ -33,7 +33,7 @@ export function CustomerJourneyEditView({ customerJourneyId }: Props) {
         setCurrentCustomerJourney(response.data);
       } catch (error) {
         console.error('Error fetching customer journey:', error);
-        toast.error('Không thể tải thông tin hành trình khách hàng');
+        toast.error('Không thể tải thông tin giai đoạn khách hàng');
         setError(true);
       } finally {
         setLoading(false);
@@ -60,7 +60,7 @@ export function CustomerJourneyEditView({ customerJourneyId }: Props) {
       <DashboardContent>
         <Container maxWidth={settings.themeStretch ? false : 'lg'}>
           <Typography variant="h6" sx={{ mb: 3 }}>
-            Hành trình khách hàng không tồn tại
+            Giai đoạn khách hàng không tồn tại
           </Typography>
         </Container>
       </DashboardContent>
@@ -71,10 +71,10 @@ export function CustomerJourneyEditView({ customerJourneyId }: Props) {
     <DashboardContent>
       <Container maxWidth={settings.themeStretch ? false : 'lg'}>
         <CustomBreadcrumbs
-          heading="Chỉnh sửa hành trình khách hàng"
+          heading="Chỉnh sửa giai đoạn khách hàng"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Hành trình khách hàng', href: paths.dashboard.customerJourney.root },
+            { name: 'Giai đoạn khách hàng', href: paths.dashboard.customerJourney.root },
             { name: 'Chỉnh sửa' },
           ]}
           sx={{ mb: { xs: 3, md: 5 } }}

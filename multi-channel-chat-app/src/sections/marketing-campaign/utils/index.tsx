@@ -46,7 +46,7 @@ const CampaignSchema = zod.object({
     .min(1, { message: "Từ khoá SEO chính là bắt buộc!" }),
   secondary_seo_keywords: zod.string().array().default([]),
   customer_journey: zod.number({
-    required_error: "Hành trình khách hàng là bắt buộc",
+    required_error: "Giai đoạn khách hàng là bắt buộc",
   }),
   content_tone: zod.number().array().default([]),
   ai_rule_based: zod.number().array().default([]),
@@ -500,5 +500,8 @@ export const transformCampaignToContentAssistant = (data: CampaignFormData) => {
     media: [],
     media_generated_ai: [],
     is_generated_by_AI: false,
+    // HTML Coding step fields
+    ai_notes_html_coding: "",
+    post_html_format: "",
   };
 };

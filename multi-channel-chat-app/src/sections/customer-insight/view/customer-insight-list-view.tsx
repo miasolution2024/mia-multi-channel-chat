@@ -134,7 +134,7 @@ export function CustomerInsightListView() {
     {
       key: "customer_journey_id",
       id: "customer_journey_id",
-      label: "Hành trình khách hàng",
+      label: "Giai đoạn khách hàng",
       align: "left",
       width: 200,
       render: (item: CustomerInsight) => {

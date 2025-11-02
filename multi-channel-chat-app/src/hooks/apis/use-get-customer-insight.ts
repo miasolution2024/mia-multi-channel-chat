@@ -8,6 +8,7 @@ export interface UseGetCustomerInsightsParams {
   limit?: number;
   content?: string;
   id?: string | number;
+  customerGroupId?: string | number;
 }
 
 export interface UseGetCustomerInsightsReturn {
@@ -28,14 +29,14 @@ export function useGetCustomerInsights(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { page = 1, limit = 25, content = '', id } = params;
+  const { page = 1, limit = 25, content = '', id , customerGroupId} = params;
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await getCustomerInsights({ page, limit, content, id });
+      const response = await getCustomerInsights({ page, limit, content, id, customerGroupId });
       setData(response.data || []);
       setTotal(response.total || 0);
     } catch (err) {
@@ -45,7 +46,7 @@ export function useGetCustomerInsights(
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, content, id]);
+  }, [page, limit, content, id, customerGroupId]);
 
   // Auto-fetch when parameters change
   useEffect(() => {

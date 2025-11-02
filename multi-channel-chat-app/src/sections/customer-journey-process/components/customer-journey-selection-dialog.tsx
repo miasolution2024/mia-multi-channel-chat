@@ -77,7 +77,7 @@ export function CustomerJourneySelectionDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Chọn hành trình khách hàng</DialogTitle>
+      <DialogTitle>Chọn giai đoạn khách hàng</DialogTitle>
       <DialogContent>
         {isLoading ? (
           <Box display="flex" justifyContent="center" p={3}>

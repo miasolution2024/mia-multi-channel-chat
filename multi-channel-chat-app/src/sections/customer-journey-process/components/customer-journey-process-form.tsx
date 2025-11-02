@@ -147,14 +147,14 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
     <Form methods={methods} onSubmit={onSubmit}>
       <Card>
         <CardHeader
-          title={customerJourneyProcess ? 'Chỉnh sửa nhóm hành trình' : 'Tạo nhóm hành trình mới'}
+          title={customerJourneyProcess ? 'Chỉnh sửa hành trình' : 'Tạo hành trình mới'}
         />
 
         <Stack direction={{ xs: "column", md: "row" }} spacing={3} sx={{ p: 3 }}>
           <RHFTextField
             name="name"
-            label="Tên nhóm hành trình"
-            placeholder="Nhập tên nhóm hành trình..."
+            label="Tên hành trình"
+            placeholder="Nhập tên hành trình..."
             sx={{width: "70%"}}
           />
 

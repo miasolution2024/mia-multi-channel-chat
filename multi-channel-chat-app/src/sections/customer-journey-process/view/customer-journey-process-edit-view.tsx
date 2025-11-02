@@ -44,7 +44,7 @@ export function CustomerJourneyProcessEditView({ customerJourneyProcessId }: Pro
       <DashboardContent>
         <Container maxWidth={settings.themeStretch ? false : 'lg'}>
           <Typography variant="h6" sx={{ mb: 3 }}>
-            Nhóm hành trình khách hàng không tồn tại
+            Hành trình khách hàng không tồn tại
           </Typography>
         </Container>
       </DashboardContent>
@@ -55,10 +55,10 @@ export function CustomerJourneyProcessEditView({ customerJourneyProcessId }: Pro
     <DashboardContent>
       <Container maxWidth={settings.themeStretch ? false : 'lg'}>
         <CustomBreadcrumbs
-          heading="Chỉnh sửa nhóm hành trình khách hàng"
+          heading="Chỉnh sửa hành trình khách hàng"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Nhóm hành trình khách hàng', href: paths.dashboard.customerJourneyProcess.root },
+            { name: 'Hành trình khách hàng', href: paths.dashboard.customerJourneyProcess.root },
             { name: 'Chỉnh sửa' },
           ]}
           sx={{ mb: { xs: 3, md: 5 } }}

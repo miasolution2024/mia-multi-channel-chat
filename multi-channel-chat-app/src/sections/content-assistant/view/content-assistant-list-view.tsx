@@ -168,7 +168,7 @@ export interface Content {
   main_seo_keyword: string; // Từ khoá SEO chính
   secondary_seo_keywords?: string[]; // Từ khoá SEO phụ
   customer_group: CustomerGroupItem[]; // Nhóm khách hàng
-  customer_journey: CustomerJourneyItem[]; // Hành trình khách hàng
+  customer_journey: CustomerJourneyItem[]; // Giai đoạn khách hàng
   services: ServicesItem[]; // Dịch vụ
   ai_rule_based: AiRuleBasedItem[]; // Quy tắc AI
   content_tone: ContentToneItem[]; // Tonal
@@ -405,7 +405,7 @@ export function ContentAssistantListView() {
           {item.customer_group.slice(0, 1).map((group, index) => (
             <Chip
               key={index}
-              label={group.customer_group_id.name}
+              label={group?.customer_group_id?.name || "N/A"}
               size="small"
               variant="outlined"
             />
@@ -420,7 +420,7 @@ export function ContentAssistantListView() {
                   open: true,
                   title: "Nhóm khách hàng",
                   items: item.customer_group.map((group) => ({
-                    label: group.customer_group_id.name,
+                    label: group.customer_group_id?.name,
                     color: "default" as const,
                   })),
                 })
@@ -434,7 +434,7 @@ export function ContentAssistantListView() {
     {
       key: "customer_journey",
       id: "customer_journey",
-      label: "Hành trình khách hàng",
+      label: "Giai đoạn khách hàng",
       width: 250,
       align: "left",
       render: (item: Content) => (
@@ -456,7 +456,7 @@ export function ContentAssistantListView() {
               onClick={() =>
                 setPopupState({
                   open: true,
-                  title: "Hành trình khách hàng",
+                  title: "Giai đoạn khách hàng",
                   items: item.customer_journey.map((journey) => ({
                     label: journey?.customer_journey_id?.name,
                     color: "info" as const,

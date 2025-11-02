@@ -1,20 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/snackbar';
-import { getServices } from '@/actions/services';
+import { getServices } from '@/actions/service';
+import { Service } from '@/sections/service/types';
 
 export interface UseGetServicesParams {
   page?: number;
   limit?: number;
-}
-
-export interface ServiceData {
-  id: string;
-  name: string;
-  description: string;
+  name?: string;
 }
 
 export interface UseGetServicesReturn {
-  data: ServiceData[];
+  data: Service[];
   total: number;
   isLoading: boolean;
   error: string | null;
@@ -26,19 +22,19 @@ export interface UseGetServicesReturn {
 export function useGetServices(
   params: UseGetServicesParams = {}
 ): UseGetServicesReturn {
-  const [data, setData] = useState<ServiceData[]>([]);
+  const [data, setData] = useState<Service[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { page = 1, limit = 25 } = params;
+  const { page = 1, limit = 25, name = '' } = params;
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await getServices(page, limit);
+      const response = await getServices(page, limit, name);
       setData(response.data || []);
       setTotal(response.total || 0);
     } catch (err) {
@@ -49,7 +45,7 @@ export function useGetServices(
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit]);
+  }, [page, limit, name]);
 
   // Auto-fetch when parameters change
   useEffect(() => {
@@ -64,7 +60,7 @@ export function useGetServices(
     data,
     total,
     options: data.map((item) => ({
-      value: item.id,
+      value: item.id.toString(),
       label: item.name,
     })),
     isLoading,
