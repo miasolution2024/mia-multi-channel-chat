@@ -66,7 +66,7 @@ export function ContentAssistantMultiStepForm({
     if ([POST_STEP.GENERATE_IMAGE, POST_STEP.WRITE_ARTICLE].includes(initStep))
       return POST_STEP.WRITE_ARTICLE;
     if (
-      [POST_STEP.RESEARCH_ANALYSIS, POST_STEP.MAKE_OUTLINE].includes(initStep)
+      [POST_STEP.RESEARCH_ANALYSIS, POST_STEP.MAKE_OUTLINE, POST_STEP.HTML_CODING].includes(initStep)
     )
       return initStep;
   };
