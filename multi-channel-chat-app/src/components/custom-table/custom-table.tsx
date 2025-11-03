@@ -262,7 +262,7 @@ export default function CustomTable({
                           })
                         }}
                       >
-                        <Skeleton width="80%" />
+                        <Skeleton height={25} width="80%" />
                       </TableCell>
                     ))}
                     {moreOptions && (

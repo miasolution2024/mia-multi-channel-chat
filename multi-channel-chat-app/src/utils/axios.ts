@@ -263,6 +263,9 @@ export const endpoints = {
   },
   omniChannels: {
     list: "/items/omni_channels",
+    create: "/items/omni_channels",
+    update: "/items/omni_channels",
+    delete: "/items/omni_channels",
   },
   services: {
     list: "/items/services",

@@ -72,5 +72,10 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/service/new`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/service/${id}/edit`,
     },
+    omniChannel: {
+      root: `${ROOTS.DASHBOARD}/omni-channel`,
+      new: `${ROOTS.DASHBOARD}/omni-channel/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/omni-channel/${id}/edit`,
+    }
   },
 };

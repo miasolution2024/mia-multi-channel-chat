@@ -6,7 +6,6 @@ import {
   Card,
   Container,
   TextField,
-  Tooltip,
   Typography,
   Chip,
   Dialog,
@@ -17,6 +16,7 @@ import {
   Popover,
   MenuList,
   MenuItem,
+  Tooltip,
 } from "@mui/material";
 
 import { useDebounce } from "@/hooks/use-debounce";
@@ -35,26 +35,29 @@ import type {
   DataItem,
 } from "@/components/custom-table/custom-table";
 
-import { useGetServices } from "@/hooks/apis/use-get-services";
-import { Service } from "../types";
-import { deleteService, deleteServices } from "@/actions/service";
+import { useGetOmniChannels } from "@/hooks/apis/use-get-omni-channels";
+import { deleteOmniChannel } from "@/actions/omni-channels";
 import { paths } from "@/routes/path";
 import { useRouter } from "next/navigation";
 import { fDate } from "@/utils/format-time";
+import { OmniChannel } from "../types";
+import { SwitchOmniChannelStatus } from "./components/switch-omni-channel-status";
+import { SwitchOmniChannelReplyComment } from "./components/switch-omni-channel-reply-comment";
+import { CopyToClipboard } from "@/components/copy-to-clipboard";
 
 // ----------------------------------------------------------------------
 
-interface ServiceActionMenuProps {
-  service: Service;
+interface OmniChannelActionMenuProps {
+  omniChannel: OmniChannel;   
   onEdit: (id: string | number) => void;
   onDelete: (id: string | number) => void;
 }
 
-function ServiceActionMenu({
-  service,
+function OmniChannelActionMenu({
+  omniChannel,
   onEdit,
   onDelete,
-}: ServiceActionMenuProps) {
+}: OmniChannelActionMenuProps) {
   const popover = usePopover();
 
   return (
@@ -72,7 +75,7 @@ function ServiceActionMenu({
         <MenuList>
           <MenuItem
             onClick={() => {
-              onEdit(service.id);
+              onEdit(omniChannel.id || "");
               popover.onClose();
             }}
           >
@@ -81,7 +84,7 @@ function ServiceActionMenu({
           </MenuItem>
           <MenuItem
             onClick={() => {
-              onDelete(service.id);
+              onDelete(omniChannel.id || "");
               popover.onClose();
             }}
           >
@@ -96,7 +99,7 @@ function ServiceActionMenu({
 
 // ----------------------------------------------------------------------
 
-export function ServiceListView() {
+export function OmniChannelListView() {
   const router = useRouter();
 
   const [page, setPage] = useState(1);
@@ -120,10 +123,10 @@ export function ServiceListView() {
     items: [],
   });
 
-  const { data, total, isLoading, refetch } = useGetServices({
+  const { data, total, isLoading, refetch } = useGetOmniChannels({
     page,
     limit: pageSize,
-    name: debouncedName,
+    pageName: debouncedName,
   });
 
   const TABLE_CONFIG: TableConfig<DataItem>[] = [
@@ -131,126 +134,122 @@ export function ServiceListView() {
       key: "id",
       label: "ID",
       width: 80,
-      render: (row: DataItem) => (row as Service).id,
+      render: (row: DataItem) => row.id,
     },
     {
-      key: "name",
-      label: "Tên dịch vụ",
+      key: "page_name",
+      label: "Tên trang",
       width: 200,
       render: (row: DataItem) => {
-        const service = row as Service;
+        const omniChannel = row as OmniChannel;
         return (
-          <Tooltip title={service.name} placement="top">
+          <Tooltip title={omniChannel.page_name} placement="top">
             <Typography variant="body2" noWrap sx={{ maxWidth: 180 }}>
-              {service.name}
+              {omniChannel.page_name}
             </Typography>
           </Tooltip>
         );
       },
     },
     {
-      key: "price",
-      label: "Giá",
+      key: "page_id",
+      label: "Mã trang",
+      width: 200,
+      render: (row: DataItem) => {
+        const omniChannel = row as OmniChannel;
+        if(!omniChannel?.page_id) {
+          return null;
+        }
+        return (
+          <CopyToClipboard value={omniChannel?.page_id || ''}>
+            <Typography
+            variant="body2"
+            sx={{
+              maxWidth: 180,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {omniChannel.page_id}
+          </Typography>
+          </CopyToClipboard>
+        );
+      },
+    },
+    {
+      key: "source",
+      label: "Nguồn",
       width: 120,
       render: (row: DataItem) => {
-        const service = row as Service;
-        return (
-          <Typography variant="body2">
-            {new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND",
-            }).format(Number(service.price))}
-          </Typography>
-        );
+        const omniChannel = row as OmniChannel;
+        return <Typography variant="body2">{omniChannel.source}</Typography>;
       },
     },
     {
-      key: "description",
-      label: "Mô tả",
-      width: 250,
+      key: "token",
+      label: "Mã xác thực",
+      width: 200,
       render: (row: DataItem) => {
-        const service = row as Service;
-        return (
-          <Tooltip
-            title={service.description || "Không có mô tả"}
-            placement="top"
-          >
-            <Typography variant="body2" noWrap sx={{ maxWidth: 230 }}>
-              {service.description || "Không có mô tả"}
-            </Typography>
-          </Tooltip>
-        );
-      },
-    },
-    {
-      key: "omni_channels",
-      label: "Kênh",
-      width: 300,
-      render: (row: DataItem) => {
-        const service = row as Service;
-        const channels = service.omni_channels || [];
-
-        if (channels.length === 0) {
-          return (
-            <Typography variant="body2" color="text.secondary">
-              N/A
-            </Typography>
-          );
+        const omniChannel = row as OmniChannel;
+        if(!omniChannel?.token) {
+          return null;
         }
-
-        const firstChannel = channels[0];
-        const firstChannelName =
-          firstChannel?.omni_channels_id?.page_name || "Không có tên";
-
         return (
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Chip
-              label={<Typography sx={{
-                maxWidth: 200,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                fontSize: 12
-              }}>{firstChannelName}</Typography>}
-              size="small"
-              variant="outlined"
-              color="info"
-            />
-            {channels.length > 1 && (
-              <Chip
-                label={`+${channels.length - 1}`}
-                size="small"
-                variant="outlined"
-                color="info"
-                onClick={() =>
-                  setPopupState({
-                    open: true,
-                    title: "Danh sách kênh",
-                    items: channels.map((channel) => ({
-                      label:
-                        channel.omni_channels_id?.page_name || "Không có tên",
-                      color: "info",
-                    })),
-                  })
-                }
-                sx={{ cursor: "pointer" }}
-              />
-            )}
-          </Stack>
+          <CopyToClipboard value={omniChannel?.token || ''}>
+            <Typography
+            variant="body2"
+            sx={{
+              maxWidth: 180,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {omniChannel.token}
+          </Typography>
+          </CopyToClipboard>
         );
       },
     },
     {
-      key: "created_at",
+      key: "phone_number",
+      label: "Số điện thoại",
+      width: 120,
+      render: (row: DataItem) => {
+        const omniChannel = row as OmniChannel;
+        return <Typography variant="body2">{omniChannel.phone_number}</Typography>;
+      },
+    },
+    {
+      key: "date_created",
       label: "Ngày tạo",
       width: 180,
       render: (row: DataItem) => {
-        const service = row as Service;
+        const omniChannel = row as unknown as OmniChannel;
         return (
           <Typography variant="body2">
-            {fDate(service.created_at, "HH:mm DD/MM/YYYY")}
+            {fDate(omniChannel.date_created, "HH:mm DD/MM/YYYY")}
           </Typography>
         );
+      },
+    },
+    {
+      key: "is_enabled",
+      label: "Trạng thái",
+      width: 120,
+      render: (row: DataItem) => {
+        const omniChannel = row as unknown as OmniChannel;
+        return <SwitchOmniChannelStatus item={omniChannel} />;
+      },
+    },
+    {
+      key: "is_enabled_reply_comment",
+      label: "Tự động trả lời bình luận",
+      width: 200,
+      render: (row: DataItem) => {
+        const omniChannel = row as OmniChannel;
+        return <SwitchOmniChannelReplyComment item={omniChannel} />;
       },
     },
     {
@@ -260,12 +259,12 @@ export function ServiceListView() {
       sticky: "right",
       width: 80,
       render: (row: DataItem) => {
-        const service = row as Service;
+        const omniChannel = row as OmniChannel;
         return (
-          <ServiceActionMenu
-            service={service}
-            onEdit={() => handleEditRow(service.id.toString())}
-            onDelete={() => handleDeleteRow(service.id.toString())}
+          <OmniChannelActionMenu
+            omniChannel={omniChannel}
+            onEdit={() => handleEditRow(omniChannel.id?.toString() || "")}
+            onDelete={() => handleDeleteRow(omniChannel.id?.toString() || "")}
           />
         );
       },
@@ -282,7 +281,7 @@ export function ServiceListView() {
 
   const handleEditRow = useCallback(
     (id: string) => {
-      router.push(paths.dashboard.service.edit(id));
+      router.push(paths.dashboard.omniChannel.edit(id));
     },
     [router]
   );
@@ -292,18 +291,15 @@ export function ServiceListView() {
       deleteLoading.onTrue();
 
       if (selected.length === 1) {
-        await deleteService(selected[0]);
-        toast.success("Xóa dịch vụ thành công!");
-      } else {
-        await deleteServices(selected);
-        toast.success(`Xóa ${selected.length} dịch vụ thành công!`);
+        await deleteOmniChannel(selected[0]);
+        toast.success("Xóa trang thành công!");
       }
 
       setSelected([]);
       await refetch();
     } catch (error) {
-      console.error("Error deleting service(s):", error);
-      toast.error("Có lỗi xảy ra khi xóa dịch vụ!");
+      console.error("Error deleting omni channel(s):", error);
+      toast.error("Có lỗi xảy ra khi xóa trang!");
     } finally {
       deleteLoading.onFalse();
       confirm.onFalse();
@@ -315,18 +311,18 @@ export function ServiceListView() {
       <DashboardContent>
         <Container maxWidth="xl">
           <CustomBreadcrumbs
-            heading="Danh sách dịch vụ"
+            heading="Danh sách trang"
             links={[
               { name: "Dashboard", href: paths.dashboard.root },
-              { name: "Dịch vụ" },
+              { name: "Trang" },
             ]}
             action={
               <Button
                 variant="contained"
                 startIcon={<Iconify icon="mingcute:add-line" />}
-                onClick={() => router.push(paths.dashboard.service.new)}
+                onClick={() => router.push(paths.dashboard.omniChannel.new)}
               >
-                Thêm dịch vụ
+                Thêm trang  
               </Button>
             }
             sx={{ mb: { xs: 3, md: 5 } }}
@@ -338,7 +334,7 @@ export function ServiceListView() {
                 fullWidth
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Tìm kiếm theo tên..."
+                placeholder="Tìm kiếm theo tên trang..."
                 InputProps={{
                   startAdornment: (
                     <Iconify
@@ -353,7 +349,7 @@ export function ServiceListView() {
             </div>
 
             <CustomTable
-              data={data}
+              data={data as DataItem[]}
               tableConfig={TABLE_CONFIG}
               loading={isLoading}
               count={total}
@@ -375,8 +371,8 @@ export function ServiceListView() {
         title="Xác nhận xóa"
         content={
           selected.length === 1
-            ? "Bạn có chắc chắn muốn xóa dịch vụ này?"
-            : `Bạn có chắc chắn muốn xóa ${selected.length} dịch vụ đã chọn?`
+            ? "Bạn có chắc chắn muốn xóa trang này?"
+            : `Bạn có chắc chắn muốn xóa ${selected.length} trang đã chọn?`
         }
         action={
           <Button

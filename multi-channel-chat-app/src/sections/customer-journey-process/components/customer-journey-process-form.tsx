@@ -139,7 +139,7 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
     },
     {
       value: CUSTOMER_JOURNEY_PROCESS_STATUS.PUBLISHED,
-      label: "Đang hoạt đông",
+      label: "Đang hoạt động",
     },
   ]
 
