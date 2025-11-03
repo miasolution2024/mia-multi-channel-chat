@@ -60,7 +60,6 @@ export function ContentAssistantMultiStepForm({
   const [aiImagesToCheckDelete, setAiImagesToCheckDelete] = useState<MediaGeneratedAiItem[]>([]);
 
   const router = useRouter();
-
   const getInitStep = (initStep: string | undefined) => {
     if (!initStep) return POST_STEP.RESEARCH_ANALYSIS;
     if ([POST_STEP.GENERATE_IMAGE, POST_STEP.WRITE_ARTICLE].includes(initStep))
@@ -84,7 +83,8 @@ export function ContentAssistantMultiStepForm({
 
   useEffect(() => {
     if(editData?.current_step) {
-      setActiveStep(editData?.current_step);
+      const initStep = getInitStep(editData?.current_step);
+      setActiveStep(initStep);
     }
   }, [editData])
   
