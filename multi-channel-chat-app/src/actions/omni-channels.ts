@@ -1,31 +1,18 @@
-import { OmniChannelsResponse } from '@/sections/omni-channel/types';
 import axiosInstance, { endpoints } from '@/utils/axios';
+import { OmniChannelUpdateData, OmniChannelCreateData } from '@/sections/omni-channel/types';
 
-/**
- * Interface for omni channel data
- */
+// ----------------------------------------------------------------------
 
-
-/**
- * Interface for omni channels API response
- */
-
-
-/**
- * Get all omni channels with pagination and filtering
- * @param page Page number (1-based)
- * @param limit Number of items per page
- * @param status Filter status (optional)
- */
-export async function getOmniChannels(
-  page?: number,
-  limit: number = 25,
-  status?: string,
-  source?: string
-): Promise<OmniChannelsResponse> {
+export async function getOmniChannels(options: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  source?: string;
+  pageName?: string;
+  id?: string;
+}) {
+  const { page, limit = 50, status, source, pageName, id } = options; 
   try {
-    let url = endpoints.omniChannels?.list || '/items/omni_channels';
-    
     // Add pagination and field parameters
     const params = new URLSearchParams();
     params.append('limit', limit.toString());
@@ -36,13 +23,11 @@ export async function getOmniChannels(
     
     // Add specific fields
     params.append('fields[]', 'is_enabled');
-    params.append('fields[]', 'is_enabled_reply_comment');
-    params.append('fields[]', 'demo_account');
+    params.append('fields[]', 'hasPostsocial');
     params.append('fields[]', 'id');
-    params.append('fields[]', 'sub_domain_id');
     params.append('fields[]', 'note');
-    params.append('fields[]', 'page_id');
     params.append('fields[]', 'page_name');
+    params.append('fields[]', 'page_id');
     params.append('fields[]', 'source');
     params.append('fields[]', 'date_created');
     params.append('fields[]', 'date_updated');
@@ -50,10 +35,14 @@ export async function getOmniChannels(
     params.append('fields[]', 'domain_directus.version_release.version_number');
     params.append('fields[]', 'domain_directus.id');
     params.append('fields[]', 'token');
-    
+    params.append('fields[]', 'phone_number');
+    params.append('fields[]', 'is_enabled_reply_comment');
+
+    params.append('meta', '*');
+
     // Add sorting
-    params.append('sort[]', '-date_created');
-    
+    params.append('sort[]', '-id');
+
     // Add status filter if provided
     if (status) {
       params.append('filter[status][_neq]', status);
@@ -61,15 +50,55 @@ export async function getOmniChannels(
       // Default filter to exclude archived items
       params.append('filter[status][_neq]', 'archived');
     }
-
-    if (source) params.append("filter[source][_eq]", source);
-
-    url = `${url}?${params.toString()}`;
     
-    const response = await axiosInstance.get(url);
-    return response.data;
+    // Add id filter if provided
+    if (id) params.append('filter[_and][0][_and][0][id][_eq]', id);
+
+    if (source) params.append('filter[source][_eq]', source);
+    if (pageName) params.append('filter[_and][0][_and][0][page_name][_icontains]', pageName);
+
+    const response = await axiosInstance.get(endpoints.omniChannels.list, { params });
+    return {
+      data: response.data.data || [],
+      total: response.data.meta?.filter_count || 0,
+    };
   } catch (error) {
     console.error('Error fetching omni channels:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function deleteOmniChannel(id: string) {
+  try {
+    await axiosInstance.delete(`${endpoints.omniChannels.delete}/${id}`);
+  } catch (error) {
+    console.error('Error deleting omni channel:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function updateOmniChannel(id: string | number, data: Partial<OmniChannelUpdateData>) {
+  try {
+    const response = await axiosInstance.patch(`${endpoints.omniChannels.update}/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating omni channel with ID ${id}:`, error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function createOmniChannel(data: OmniChannelCreateData) {
+  try {
+    const response = await axiosInstance.post(endpoints.omniChannels.create, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating omni channel:', error);
     throw error;
   }
 }

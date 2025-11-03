@@ -108,4 +108,14 @@ export const navData = [
       },
     ],
   },
+  {
+    subheader: "Quản lý trang",
+    items: [
+      {
+        title: "Danh sách trang",
+        path: paths.dashboard.omniChannel.root,
+        icon: ICONS.menuItem,
+      }
+    ],
+  },
 ];

@@ -7,6 +7,8 @@ export interface UseGetOmniChannelsParams {
   page?: number;
   limit?: number;
   status?: string;
+  pageName?: string;
+  id?: string;
 }
 
 export interface UseGetOmniChannelsReturn {
@@ -27,16 +29,16 @@ export function useGetOmniChannels(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { page = 1, limit = 25, status } = params;
+  const { page = 1, limit = 25, status , pageName, id } = params;
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await getOmniChannels(page, limit, status);
+      const response = await getOmniChannels({page, limit, status, pageName, id});
       setData(response.data || []);
-      setTotal(response.data?.length || 0);
+      setTotal(response.total || 0);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách kênh omni';
       setError(errorMessage);
@@ -45,7 +47,7 @@ export function useGetOmniChannels(
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, status]);
+  }, [page, limit, status, pageName, id]);
 
   // Auto-fetch when parameters change
   useEffect(() => {
@@ -60,8 +62,8 @@ export function useGetOmniChannels(
     data,
     total,
     options: data.map((item) => ({
-      value: item.id.toString(),
-      label: item.page_name || item.source,
+      value: item?.id?.toString() || '',
+      label: item?.page_name || item?.source || '',
     })),
     isLoading,
     error,

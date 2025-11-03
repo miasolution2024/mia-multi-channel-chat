@@ -1,10 +1,16 @@
 // ----------------------------------------------------------------------
 
 export interface OmniChannel {
+  id: number; // ID của record trong junction table
   omni_channels_id: {
     id: number;
     page_name: string | null;
   } | null;
+}
+
+export interface FileTraining {
+  id: number; // ID của record trong junction table
+  directus_files_id: string;
 }
 
 export interface Service {
@@ -17,16 +23,17 @@ export interface Service {
   note: string | null;
   created_at: string;
   omni_channels: OmniChannel[];
-  file_training: unknown[];
+  file_training: FileTraining[];
   [key: string]: unknown; // Index signature for compatibility with DataItem
 }
 
 export interface ServiceFormData {
   name: string;
-  price: string;
+  price: number;
   duration: number;
   tags?: string;
   description?: string;
   note?: string;
   omni_channels?: number[];
+  file_training: (string | File)[];
 }
