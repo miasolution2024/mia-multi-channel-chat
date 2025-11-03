@@ -108,7 +108,7 @@ export function CustomerJourneyListView() {
     {
       key: "name",
       id: "name",
-      label: "Tên hành trình",
+      label: "Tên giai đoạn",
       align: "left",
       width: 200,
       render: (item: CustomerJourney) => (
@@ -227,10 +227,10 @@ export function CustomerJourneyListView() {
         await deleteCustomerJourney(String(id));
         // Refresh data
         await refetch();
-        toast.success("Xóa hành trình thành công!");
+        toast.success("Xóa giai đoạn thành công!");
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Lỗi khi xóa hành trình!";
+          error instanceof Error ? error.message : "Lỗi khi xóa giai đoạn!";
         toast.error(errorMessage);
       } finally {
         setIsDeleting(false);
@@ -252,11 +252,11 @@ export function CustomerJourneyListView() {
       await deleteCustomerJourneys(selected);
       // Refresh data
       await refetch();
-      toast.success(`Xóa ${selected.length} hành trình thành công!`);
+      toast.success(`Xóa ${selected.length} giai đoạn thành công!`);
       setSelected([]);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Lỗi khi xóa hành trình!";
+        error instanceof Error ? error.message : "Lỗi khi xóa giai đoạn!";
       toast.error(errorMessage);
     } finally {
       setIsDeleting(false);
@@ -266,11 +266,11 @@ export function CustomerJourneyListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Danh sách hành trình"
+        heading="Danh sách giai đoạn"
         links={[
           { name: "Dashboard", href: paths.dashboard.root },
           {
-            name: "Hành trình",
+            name: "Giai đoạn",
             href: paths.dashboard.customerJourney,
           },
           { name: "Danh sách" },
@@ -281,7 +281,7 @@ export function CustomerJourneyListView() {
             startIcon={<Iconify icon="mingcute:add-line" />}
             onClick={() => router.push(paths.dashboard.customerJourney.new)}
           >
-            Thêm hành trình mới
+            Thêm giai đoạn mới
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}
@@ -299,7 +299,7 @@ export function CustomerJourneyListView() {
             fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Tìm kiếm theo tên hành trình"
+            placeholder="Tìm kiếm theo tên giai đoạn"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -344,8 +344,8 @@ export function CustomerJourneyListView() {
         title="Xóa chiến dịch"
         content={
           selected.length > 1
-            ? `Bạn có chắc chắn muốn xóa ${selected.length} hành trình đã chọn?`
-            : "Bạn có chắc chắn muốn xóa hành trình này?"
+            ? `Bạn có chắc chắn muốn xóa ${selected.length} giai đoạn đã chọn?`
+            : "Bạn có chắc chắn muốn xóa giai đoạn này?"
         }
         action={
           <Button

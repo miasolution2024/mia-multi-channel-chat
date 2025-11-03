@@ -154,7 +154,7 @@ export function CustomerJourneyProcessListView() {
     {
       key: "name",
       id: "name",
-      label: "Tên nhóm hành trình",
+      label: "Tên hành trình",
       align: "left",
       width: 200,
       render: (item: CustomerJourneyProcess) => (
@@ -177,7 +177,7 @@ export function CustomerJourneyProcessListView() {
     {
       key: "customer_journey",
       id: "customer_journey",
-      label: "Hành trình khách hàng",
+      label: "Giai đoạn khách hàng",
       align: "left",
       width: 200,
       render: (item: CustomerJourneyProcess) => (
@@ -185,13 +185,13 @@ export function CustomerJourneyProcessListView() {
           {item.customer_journey.slice(0, 1).map((group, index) => (
             <Chip
               key={index}
-              label={group.customer_journey_id.name}
+              label={group?.customer_journey_id?.name || "N/A"}
               size="small"
               variant="outlined"
               color="primary"
             />
           ))}
-          {item.customer_journey.length > 1 && (
+          {item.customer_journey.length > 1 && item.customer_journey.some((group) => group?.customer_journey_id?.name) && (
             <Chip
               label={`+${item.customer_journey.length - 1}`}  
               size="small"
@@ -200,7 +200,7 @@ export function CustomerJourneyProcessListView() {
               onClick={() =>
                 setPopupState({
                   open: true,
-                  title: "Hành trình khách hàng",
+                  title: "Giai đoạn khách hàng",
                   items: item.customer_journey.map((group) => ({
                     label: group.customer_journey_id.name,
                     color: "primary" as const,
@@ -305,10 +305,10 @@ export function CustomerJourneyProcessListView() {
         await deleteCustomerJourneyProcess(String(id));
         // Refresh data
         await refetch();
-        toast.success("Xóa nhóm hành trình thành công!");
+        toast.success("Xóa hành trình thành công!");
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Lỗi khi xóa nhóm hành trình!";
+          error instanceof Error ? error.message : "Lỗi khi xóa hành trình!";
         toast.error(errorMessage);
       } finally {
         setIsDeleting(false);
@@ -327,11 +327,11 @@ export function CustomerJourneyProcessListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Danh sách nhóm hành trình"
+        heading="Danh sách hành trình"
         links={[
           { name: "Dashboard", href: paths.dashboard.root },
           {
-            name: "Nhóm hành trình",
+            name: "Hành trình",
             href: paths.dashboard.customerJourneyProcess,
           },
           { name: "Danh sách" },
@@ -344,7 +344,7 @@ export function CustomerJourneyProcessListView() {
               router.push(paths.dashboard.customerJourneyProcess.new)
             }
           >
-            Thêm nhóm hành trình mới
+            Thêm hành trình mới
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}
@@ -407,8 +407,8 @@ export function CustomerJourneyProcessListView() {
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Xóa nhóm hành trình"
-        content={"Bạn có chắc chắn muốn xóa nhóm hành trình này?"}
+        title="Xóa hành trình"
+        content={"Bạn có chắc chắn muốn xóa hành trình này?"}
         action={
           <Button
             variant="contained"

@@ -54,7 +54,8 @@ export const paths = {
     customerJourneyProcess: {
       root: `${ROOTS.DASHBOARD}/customer-journey-process`,
       new: `${ROOTS.DASHBOARD}/customer-journey-process/new`,
-      edit: (id: string) => `${ROOTS.DASHBOARD}/customer-journey-process/${id}/edit`,
+      edit: (id: string) =>
+        `${ROOTS.DASHBOARD}/customer-journey-process/${id}/edit`,
     },
     customerInsight: {
       root: `${ROOTS.DASHBOARD}/customer-insight`,
@@ -65,6 +66,11 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/customer-group`,
       new: `${ROOTS.DASHBOARD}/customer-group/new`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/customer-group/${id}/edit`,
+    },
+     service: {
+      root: `${ROOTS.DASHBOARD}/service`,
+      new: `${ROOTS.DASHBOARD}/service/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/service/${id}/edit`,
     },
   },
 };

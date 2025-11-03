@@ -71,8 +71,8 @@ export function useGetWorkingSchedule(
       const userInfoToFullName = new Map<string, string>();
       for (const item of userInfoList) {
         if (item) {
-          const fullName = `${item.first_name || ""} ${
-            item.last_name || ""
+          const fullName = `${item.first_name || null} ${
+            item.last_name || null
           }`.trim();
           userInfoToFullName.set(item.id, fullName);
         }
@@ -103,10 +103,10 @@ export function useGetWorkingSchedule(
         if (item.user_created && typeof item.user_created === "object") {
           const userCreated = item.user_created as {
             id: string;
-            first_name: string;
-            last_name: string;
+            first_name: string | null;
+            last_name: string | null;
           };
-          if (userCreated.first_name && userCreated.last_name) {
+          if (userCreated.first_name || userCreated.last_name) {
             user_created_name = `${userCreated.first_name || ""} ${
               userCreated.last_name || ""
             }`.trim();
@@ -177,7 +177,7 @@ export function useGetWorkingScheduleStatus() {
 }
 
 export function useGetWorkingScheduleUsernames() {
-  const userInfoUrl = `/items/ai_content_suggestions?fields=user_created.id,user_created.first_name,user_created.last_name`;
+  const userInfoUrl = `/items/ai_content_suggestions?fields=user_created.id,user_created.first_name,user_created.last_name&limit=1000`;
 
   try {
     const { data, isLoading, error } = useSWR(userInfoUrl, fetcher);
@@ -191,15 +191,13 @@ export function useGetWorkingScheduleUsernames() {
       for (const item of userInfoList) {
         if (item && item.user_created) {
           const userCreated = item.user_created;
-          const fullName = `${userCreated.first_name || ""} ${
-            userCreated.last_name || ""
+          const fullName = `${userCreated.first_name || null} ${
+            userCreated.last_name || null
           }`.trim();
 
-          // Only add if we haven't seen this user before
           if (!uniqueUsers.has(userCreated.id)) {
             uniqueUsers.set(userCreated.id, userCreated);
             userInfoToFullName.set(userCreated.id, fullName);
-            console.log(fullName);
           }
         }
       }

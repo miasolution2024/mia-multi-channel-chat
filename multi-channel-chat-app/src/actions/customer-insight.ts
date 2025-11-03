@@ -11,6 +11,7 @@ interface GetCustomerInsightsParams {
   limit?: number;
   content?: string;
   id?: string | number;
+  customerGroupId?: string | number;
 }
 
 /**
@@ -21,7 +22,7 @@ export async function getCustomerInsights(
   params: GetCustomerInsightsParams = {}
 ) {
   try {
-    const { page, limit = 25, content, id } = params;
+    const { page, limit = 25, content, id, customerGroupId } = params;
 
     let url = endpoints.customerInsights.list;
 
@@ -68,6 +69,15 @@ export async function getCustomerInsights(
     // Filter by ID if provided
     if (id) {
       urlParams.append(`filter[_and][${filterIndex}][id][_eq]`, id.toString());
+      filterIndex++;
+    }
+
+    // Filter by customer group ID if provided
+    if (customerGroupId) {
+      urlParams.append(
+        `filter[_and][${filterIndex}][customer_group_customer_journey][customer_group_id][id][_eq]`,
+        customerGroupId.toString()
+      );
       filterIndex++;
     }
 

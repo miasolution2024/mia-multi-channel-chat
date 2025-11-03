@@ -1,11 +1,10 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import "../styles/custom-drawer.css";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Box, Button, Drawer, Typography } from "@mui/material";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import "../styles/custom-drawer.css";
 import { Iconify } from "@/components/iconify";
 import { useCalendarNavigations } from "../hooks/use-calendar-navigations";
 import DrawerDropdownOmni from "./drawer-dropdown-omni";
@@ -90,7 +89,14 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
     if (onSelectedDateChange) onSelectedDateChange(selectedDate);
     if (onChannelsChange) onChannelsChange(channelsChoices);
     if (onCreatorChange) onCreatorChange(creatorsChoices);
-  }, [selectedDate, channelsChoices]);
+  }, [
+    selectedDate,
+    channelsChoices,
+    creatorsChoices,
+    onSelectedDateChange,
+    onChannelsChange,
+    onCreatorChange,
+  ]);
 
   useEffect(() => {
     if (isOpened && calendarRef.current) {

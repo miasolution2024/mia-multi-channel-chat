@@ -103,3 +103,15 @@
   background-color: #bcd5f4;
   color: #2373d3;
 }
+
+.drawer-calendar {
+  opacity: 0;
+  animation: fadeIn 0.2s ease-in forwards;
+  animation-delay: 0.1s;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
