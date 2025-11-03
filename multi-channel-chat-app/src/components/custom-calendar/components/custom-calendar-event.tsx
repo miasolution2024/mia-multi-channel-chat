@@ -151,18 +151,26 @@ const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
                     width: "100%",
                   }}
                 >
-                  <Iconify
-                    icon={
-                      extended.postType === "facebook_post"
-                        ? "logos:facebook"
-                        : extended.postType === "instagram_post"
-                        ? "logos:facebook"
-                        : "logos:zalo"
-                    }
-                    width="16"
-                    height="16"
-                    style={{ flexShrink: 0 }}
-                  />
+                  {(extended.postType === "facebook_post" ||
+                    extended.postType === "instagram_post" ||
+                    extended.postType === "zalo_post" ||
+                    extended.postType === "zalo_oa_post") && (
+                    <Iconify
+                      icon={
+                        extended.postType === "facebook_post"
+                          ? "logos:facebook"
+                          : extended.postType === "instagram_post"
+                          ? "logos:facebook"
+                          : extended.postType === "zalo_post" ||
+                            extended.postType === "zalo_oa_post"
+                          ? "arcticons:zalo"
+                          : ""
+                      }
+                      width="16"
+                      height="16"
+                      style={{ flexShrink: 0 }}
+                    />
+                  )}
                   <Typography
                     sx={{
                       color: "#323743",
