@@ -93,8 +93,8 @@ export function useGetWorkingSchedule(
       const userInfoToFullName = new Map<string, string>();
       for (const item of userInfoList) {
         if (item) {
-          const fullName = `${item.first_name || ""} ${
-            item.last_name || ""
+          const fullName = `${item.first_name || null} ${
+            item.last_name || null
           }`.trim();
           userInfoToFullName.set(item.id, fullName);
         }
@@ -240,6 +240,47 @@ export function useGetWorkingScheduleStatus() {
       }),
       [data, error, isLoading]
     );
+    return memoizedValue;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+}
+
+export function useGetWorkingScheduleUsernames() {
+  const userInfoUrl = `/items/ai_content_suggestions?fields=user_created.id,user_created.first_name,user_created.last_name&limit=1000`;
+
+  try {
+    const { data, isLoading, error } = useSWR(userInfoUrl, fetcher);
+
+    const memoizedValue = useMemo(() => {
+      const userInfoList = (data?.data as { user_created: UserInfo }[]) || [];
+
+      const userInfoToFullName = new Map<string, string>();
+      const uniqueUsers = new Map<string, UserInfo>();
+
+      for (const item of userInfoList) {
+        if (item && item.user_created) {
+          const userCreated = item.user_created;
+          const fullName = `${userCreated.first_name || null} ${
+            userCreated.last_name || null
+          }`.trim();
+
+          if (!uniqueUsers.has(userCreated.id)) {
+            uniqueUsers.set(userCreated.id, userCreated);
+            userInfoToFullName.set(userCreated.id, fullName);
+          }
+        }
+      }
+
+      return {
+        userInfoData: Array.from(uniqueUsers.values()),
+        userInfoToFullName,
+        isLoading: isLoading,
+        error: error,
+      };
+    }, [data, error, isLoading]);
+
     return memoizedValue;
   } catch (error) {
     console.error("Error fetching data:", error);

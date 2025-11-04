@@ -58,16 +58,16 @@ export const navData = [
       },
     ],
   },
-  {
-    subheader: "Danh mục dịch vụ",
-    items: [
-      {
-        title: "Dịch vụ",
-        path: paths.dashboard.service.root,
-        icon: ICONS.ecommerce,
-      },
-    ],
-  },
+  // {
+  //   subheader: "Danh mục dịch vụ",
+  //   items: [
+  //     {
+  //       title: "Dịch vụ",
+  //       path: paths.dashboard.service.root,
+  //       icon: ICONS.ecommerce,
+  //     },
+  //   ],
+  // },
   {
     subheader: "Chiến dịch Marketing",
     items: [

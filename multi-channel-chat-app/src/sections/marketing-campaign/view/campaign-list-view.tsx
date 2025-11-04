@@ -402,7 +402,7 @@ export function CampaignListView() {
           {item.services.slice(0, 1).map((service, index) => (
             <Chip
               key={index}
-              label={service.services_id.name}
+              label={service?.services_id?.name || ""}
               size="small"
               variant="outlined"
               color="info"
@@ -418,7 +418,7 @@ export function CampaignListView() {
                   open: true,
                   title: "Dịch vụ",
                   items: item.services.map((service) => ({
-                    label: service.services_id.name,
+                    label: service?.services_id?.name || "",
                     color: "info" as const,
                   })),
                 })

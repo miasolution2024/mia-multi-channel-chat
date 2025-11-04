@@ -9,28 +9,28 @@ export interface CampaignCustomerGroup {
 }
 
 export interface CampaignService {
-  services_id: {
+  services_id?: {
     id: number;
     name: string;
   };
 }
 
 export interface CampaignCustomerJourney {
-  customer_journey_id: {
+  customer_journey_id?: {
     id: number;
     name: string;
   };
 }
 
 export interface CampaignContentTone {
-  content_tone_id: {
+  content_tone_id?: {
     id: number;
     tone_name: string | null;
   };
 }
 
 export interface CampaignAiRuleBased {
-  ai_rule_based_id: {
+  ai_rule_based_id?: {
     id: number;
     content: string;
   };
