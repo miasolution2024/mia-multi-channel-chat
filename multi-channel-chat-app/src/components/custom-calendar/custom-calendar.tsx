@@ -51,6 +51,13 @@ const CustomCalendar = () => {
     drawerCreators
   );
 
+  const { uniqueUsers = [] } = useGetWorkingSchedule(
+    searchData,
+    statusChoice,
+    drawerChannels,
+    ["0"]
+  );
+
   useEffect(() => {
     if (workingSchedules) {
       setSchedules(workingSchedules);
@@ -589,6 +596,7 @@ const CustomCalendar = () => {
                 onSelectedDateChange={setDrawerSelectedDate}
                 onChannelsChange={(ids) => setDrawerChannels(ids)}
                 onCreatorChange={(ids) => setDrawerCreators(ids)}
+                uniqueUsers={uniqueUsers}
               />
             </Box>
           </Paper>

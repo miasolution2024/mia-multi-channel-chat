@@ -10,6 +10,7 @@ import { useCalendarNavigations } from "../hooks/use-calendar-navigations";
 import DrawerDropdownOmni from "./drawer-dropdown-omni";
 import DrawerDropdownCreator from "./drawer-dropdown-creator";
 import { useOmniCreatorSetup } from "../hooks/use-omni-creator-setup";
+import { UserInfo } from "../type";
 
 interface CustomCalendarDrawerProps {
   isOpened: boolean;
@@ -17,6 +18,7 @@ interface CustomCalendarDrawerProps {
   onSelectedDateChange?: (date: Date | null) => void;
   onChannelsChange?: (choices: number[]) => void;
   onCreatorChange?: (choices: string[]) => void;
+  uniqueUsers?: UserInfo[];
 }
 
 const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
@@ -25,6 +27,7 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
   onSelectedDateChange,
   onChannelsChange,
   onCreatorChange,
+  uniqueUsers = [],
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -36,7 +39,7 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
     createToggleHandleCreator,
     omniChannels,
     creators,
-  } = useOmniCreatorSetup();
+  } = useOmniCreatorSetup({ uniqueUsers });
 
   const handleChannelToggle = createToggleHandlerOmni(setChannelsChoices);
   const handleCreatorToggle = createToggleHandleCreator(setCreatorsChoices);

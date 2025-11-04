@@ -1,12 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  useGetWorkingScheduleOmniChannels,
-  useGetWorkingScheduleUsernames,
-} from "@/actions/schedule-post-calendar";
+import { useGetWorkingScheduleOmniChannels } from "@/actions/schedule-post-calendar";
 import { useState, useEffect } from "react";
-import { OmniChoices, CreatorsChoices } from "../type";
+import { OmniChoices, CreatorsChoices, UserInfo } from "../type";
 
-export function useOmniCreatorSetup() {
+interface UseOmniCreatorSetupProps {
+  uniqueUsers?: UserInfo[];
+}
+
+export function useOmniCreatorSetup({
+  uniqueUsers = [],
+}: UseOmniCreatorSetupProps = {}) {
   const [omniChannels, setOmniChannels] = useState<OmniChoices[]>([
     { id: 0, page_name: "Tất cả" },
   ]);
@@ -14,12 +16,11 @@ export function useOmniCreatorSetup() {
     { id: "0", user_name: "Tất cả" },
   ]);
   const { omniChannelsData } = useGetWorkingScheduleOmniChannels();
-  const { userInfoData, userInfoToFullName } = useGetWorkingScheduleUsernames();
   const omniChannelsLength = Array.isArray(omniChannelsData)
     ? omniChannelsData.length
     : 0;
 
-  const userInfoLength = Array.isArray(userInfoData) ? userInfoData.length : 0;
+  const userInfoLength = Array.isArray(uniqueUsers) ? uniqueUsers.length : 0;
 
   useEffect(() => {
     if (omniChannelsData) {
@@ -61,12 +62,14 @@ export function useOmniCreatorSetup() {
   };
 
   useEffect(() => {
-    if (userInfoData && userInfoToFullName && Array.isArray(userInfoData)) {
-      const apiUserInfo: CreatorsChoices[] = userInfoData
-        .filter((item: any) => item && item.id != null)
-        .map((item: any) => ({
+    if (uniqueUsers && Array.isArray(uniqueUsers) && uniqueUsers.length > 0) {
+      const apiUserInfo: CreatorsChoices[] = uniqueUsers
+        .filter((item) => item && item.id != null)
+        .map((item) => ({
           id: item.id,
-          user_name: userInfoToFullName.get(item.id) || "",
+          user_name:
+            item.full_name ||
+            `${item.first_name || ""} ${item.last_name || ""}`.trim(),
         }));
 
       const allUserInfoChannels: CreatorsChoices[] = [
@@ -75,7 +78,7 @@ export function useOmniCreatorSetup() {
       ];
       setCreators(allUserInfoChannels);
     }
-  }, [userInfoData, userInfoLength, userInfoToFullName]);
+  }, [uniqueUsers, userInfoLength]);
 
   const createToggleHandleCreator = (
     setChoices: React.Dispatch<React.SetStateAction<string[]>>
