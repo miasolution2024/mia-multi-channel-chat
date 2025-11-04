@@ -8,15 +8,19 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Iconify } from "@/components/iconify";
 import { useCalendarNavigations } from "../hooks/use-calendar-navigations";
 import DrawerDropdownOmni from "./drawer-dropdown-omni";
-import DrawerDropdownCreator from "./drawer-dropdown-creator";
+//import DrawerDropdownCreator from "./drawer-dropdown-creator";
 import { useOmniCreatorSetup } from "../hooks/use-omni-creator-setup";
+import { OmniChoices } from "../type";
+// import { UserInfo } from "../type";
 
 interface CustomCalendarDrawerProps {
   isOpened: boolean;
   handleCloseDrawer: () => void;
   onSelectedDateChange?: (date: Date | null) => void;
   onChannelsChange?: (choices: number[]) => void;
-  onCreatorChange?: (choices: string[]) => void;
+  uniqueOmnis?: OmniChoices[];
+  // onCreatorChange?: (choices: string[]) => void;
+  // uniqueUsers?: UserInfo[];
 }
 
 const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
@@ -24,22 +28,68 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
   handleCloseDrawer,
   onSelectedDateChange,
   onChannelsChange,
-  onCreatorChange,
+  uniqueOmnis,
+  // onCreatorChange,
+  // uniqueUsers = [],
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [channelsChoices, setChannelsChoices] = useState<number[]>([0]);
-  const [creatorsChoices, setCreatorsChoices] = useState<string[]>(["0"]);
-  const {
-    createToggleHandlerOmni,
-    createToggleHandleCreator,
-    omniChannels,
-    creators,
-  } = useOmniCreatorSetup();
+  // Used for API (suggestion ids)
+  const [channelsChoices, setChannelsChoices] = useState<number[]>([]);
+  // Used for UI checkbox selection (omni ids)
+  const [selectedOmniIds, setSelectedOmniIds] = useState<number[]>([0]);
+  // const [creatorsChoices, setCreatorsChoices] = useState<string[]>(["0"]);
+  // const {
+  //   createToggleHandlerOmni,
+  //   createToggleHandleCreator,
+  //   omniChannels,
+  //   creators,
+  // } = useOmniCreatorSetup({ uniqueUsers });
+  // const { createToggleHandlerOmni, omniChannels } = useOmniCreatorSetup({
+  //   uniqueUsers,
+  // });
 
-  const handleChannelToggle = createToggleHandlerOmni(setChannelsChoices);
-  const handleCreatorToggle = createToggleHandleCreator(setCreatorsChoices);
+  // const { createToggleHandlerOmni, omniChannels } = useOmniCreatorSetup();
+  const { omniChannels } = useOmniCreatorSetup({
+    omniChoices: uniqueOmnis,
+  });
+
+  const handleChannelToggle = (omni: OmniChoices) => {
+    const id = omni.id;
+    setSelectedOmniIds((prev) => {
+      if (id === 0) return [0];
+      if (prev.includes(id)) {
+        const next = prev.filter((v) => v !== id && v !== 0);
+        return next.length ? next : [0];
+      }
+      const withoutAll = prev.filter((v) => v !== 0);
+      return [...withoutAll, id];
+    });
+
+    setChannelsChoices(() => {
+      const effectiveSelected = (() => {
+        if (id === 0) return [0];
+        if (selectedOmniIds.includes(id)) {
+          const next = selectedOmniIds.filter((v) => v !== id && v !== 0);
+          return next.length ? next : [0];
+        }
+        const withoutAll = selectedOmniIds.filter((v) => v !== 0);
+        return [...withoutAll, id];
+      })();
+
+      if (effectiveSelected.includes(0)) return [];
+      const union = new Set<number>();
+      for (const selId of effectiveSelected) {
+        const found = omniChannels.find((o) => o.id === selId);
+        if (found && Array.isArray(found.ai_content_suggestions)) {
+          for (const s of found.ai_content_suggestions) union.add(s);
+        }
+      }
+      return Array.from(union);
+    });
+  };
+  //const handleCreatorToggle = createToggleHandleCreator(setCreatorsChoices);
 
   const { handlePrevious, handleNext, formatDateForDisplay } =
     useCalendarNavigations(calendarRef, setCurrentDate);
@@ -88,14 +138,14 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
   useEffect(() => {
     if (onSelectedDateChange) onSelectedDateChange(selectedDate);
     if (onChannelsChange) onChannelsChange(channelsChoices);
-    if (onCreatorChange) onCreatorChange(creatorsChoices);
+    //if (onCreatorChange) onCreatorChange(creatorsChoices);
   }, [
     selectedDate,
     channelsChoices,
-    creatorsChoices,
+    // creatorsChoices,
     onSelectedDateChange,
     onChannelsChange,
-    onCreatorChange,
+    // onCreatorChange,
   ]);
 
   useEffect(() => {
@@ -236,18 +286,18 @@ const CustomCalendarDrawer: React.FC<CustomCalendarDrawerProps> = ({
               title="Trang đặt lịch hẹn"
               handleDataToggle={handleChannelToggle}
               data={omniChannels}
-              dataChoices={channelsChoices}
+              dataChoices={selectedOmniIds}
             />
           </Box>
 
-          <Box>
+          {/* <Box>
             <DrawerDropdownCreator
               title="Người thực hiện"
               handleDataToggle={handleCreatorToggle}
               data={creators}
               dataChoices={creatorsChoices}
             />
-          </Box>
+          </Box> */}
         </Box>
       </Drawer>
     </>

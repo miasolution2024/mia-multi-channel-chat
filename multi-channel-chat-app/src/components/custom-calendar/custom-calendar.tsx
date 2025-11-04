@@ -38,7 +38,7 @@ const CustomCalendar = () => {
   );
   const [schedules, setSchedules] = useState<WorkingSchedule[]>([]);
   const [drawerChannels, setDrawerChannels] = useState<number[]>([0]);
-  const [drawerCreators, setDrawerCreators] = useState<string[]>(["0"]);
+  // const [drawerCreators, setDrawerCreators] = useState<string[]>(["0"]);
   const [, setSelectedDate] = useState<Date | null>(null);
   const [searchData, setSearchData] = useState("");
   const [inputData, setInputData] = useState("");
@@ -47,9 +47,18 @@ const CustomCalendar = () => {
   const { workingSchedules } = useGetWorkingSchedule(
     searchData,
     statusChoice,
-    drawerChannels,
-    drawerCreators
+    drawerChannels
+    // drawerCreators
   );
+
+  // const { uniqueUsers = [] } = useGetWorkingSchedule(
+  //   searchData,
+  //   statusChoice,
+  //   drawerChannels,
+  //   ["0"]
+  // );
+
+  const { uniqueOmnis } = useGetWorkingSchedule(searchData, statusChoice, [0]);
 
   useEffect(() => {
     if (workingSchedules) {
@@ -588,7 +597,9 @@ const CustomCalendar = () => {
                 handleCloseDrawer={handleCloseDrawer}
                 onSelectedDateChange={setDrawerSelectedDate}
                 onChannelsChange={(ids) => setDrawerChannels(ids)}
-                onCreatorChange={(ids) => setDrawerCreators(ids)}
+                uniqueOmnis={uniqueOmnis}
+                // onCreatorChange={(ids) => setDrawerCreators(ids)}
+                // uniqueUsers={uniqueUsers}
               />
             </Box>
           </Paper>

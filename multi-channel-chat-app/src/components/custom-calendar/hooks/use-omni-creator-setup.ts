@@ -1,40 +1,48 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  useGetWorkingScheduleOmniChannels,
-  useGetWorkingScheduleUsernames,
-} from "@/actions/schedule-post-calendar";
 import { useState, useEffect } from "react";
-import { OmniChoices, CreatorsChoices } from "../type";
+import { OmniChoices, CreatorsChoices, UserInfo } from "../type";
 
-export function useOmniCreatorSetup() {
+interface UseOmniCreatorSetupProps {
+  uniqueUsers?: UserInfo[];
+  omniChoices?: OmniChoices[];
+}
+
+export function useOmniCreatorSetup({
+  uniqueUsers = [],
+  omniChoices = [],
+}: UseOmniCreatorSetupProps = {}) {
   const [omniChannels, setOmniChannels] = useState<OmniChoices[]>([
-    { id: 0, page_name: "Tất cả" },
+    { id: 0, page_name: "Tất cả", ai_content_suggestions: [] },
   ]);
   const [creators, setCreators] = useState<CreatorsChoices[]>([
-    { id: "0", user_name: "Tất cả" },
+    { id: "0", user_name: "Tất cả", ai_content_suggestions: [] },
   ]);
-  const { omniChannelsData } = useGetWorkingScheduleOmniChannels();
-  const { userInfoData, userInfoToFullName } = useGetWorkingScheduleUsernames();
-  const omniChannelsLength = Array.isArray(omniChannelsData)
-    ? omniChannelsData.length
+  // const { omniChannelsData } = useGetWorkingScheduleOmniChannels();
+  // const omniChannelsLength = Array.isArray(omniChannelsData)
+  //   ? omniChannelsData.length
+  const omniChannelsLength = Array.isArray(omniChoices)
+    ? omniChoices.length
     : 0;
 
-  const userInfoLength = Array.isArray(userInfoData) ? userInfoData.length : 0;
+  const userInfoLength = Array.isArray(uniqueUsers) ? uniqueUsers.length : 0;
 
   useEffect(() => {
-    if (omniChannelsData) {
-      const apiOmni: OmniChoices[] = omniChannelsData.map((item) => ({
+    // if (omniChannelsData) {
+    //   const apiOmni: OmniChoices[] = omniChannelsData.map((item) => ({
+    if (omniChoices && Array.isArray(omniChoices)) {
+      const apiOmni: OmniChoices[] = omniChoices.map((item) => ({
         id: item.id,
         page_name: item.page_name,
+        ai_content_suggestions: item.ai_content_suggestions,
       }));
 
       const allOmniChannels: OmniChoices[] = [
-        { id: 0, page_name: "Tất cả" },
+        { id: 0, page_name: "Tất cả", ai_content_suggestions: [] },
         ...apiOmni,
       ];
       setOmniChannels(allOmniChannels);
     }
-  }, [omniChannelsData, omniChannelsLength]);
+    // }, [omniChannelsData, omniChannelsLength]);
+  }, [omniChoices, omniChannelsLength]);
 
   const createToggleHandlerOmni = (
     setChoices: React.Dispatch<React.SetStateAction<number[]>>
@@ -61,21 +69,24 @@ export function useOmniCreatorSetup() {
   };
 
   useEffect(() => {
-    if (userInfoData && userInfoToFullName && Array.isArray(userInfoData)) {
-      const apiUserInfo: CreatorsChoices[] = userInfoData
-        .filter((item: any) => item && item.id != null)
-        .map((item: any) => ({
+    if (uniqueUsers && Array.isArray(uniqueUsers) && uniqueUsers.length > 0) {
+      const apiUserInfo: CreatorsChoices[] = uniqueUsers
+        .filter((item) => item && item.id != null)
+        .map((item) => ({
           id: item.id,
-          user_name: userInfoToFullName.get(item.id) || "",
+          user_name:
+            item.full_name ||
+            `${item.first_name || ""} ${item.last_name || ""}`.trim(),
+          ai_content_suggestions: [],
         }));
 
       const allUserInfoChannels: CreatorsChoices[] = [
-        { id: "0", user_name: "Tất cả" },
+        { id: "0", user_name: "Tất cả", ai_content_suggestions: [] },
         ...apiUserInfo,
       ];
       setCreators(allUserInfoChannels);
     }
-  }, [userInfoData, userInfoLength, userInfoToFullName]);
+  }, [uniqueUsers, userInfoLength]);
 
   const createToggleHandleCreator = (
     setChoices: React.Dispatch<React.SetStateAction<string[]>>
