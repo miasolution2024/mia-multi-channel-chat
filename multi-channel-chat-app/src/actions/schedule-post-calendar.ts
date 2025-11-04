@@ -191,8 +191,8 @@ export function useGetWorkingScheduleUsernames() {
       for (const item of userInfoList) {
         if (item && item.user_created) {
           const userCreated = item.user_created;
-          const fullName = `${userCreated.first_name || null} ${
-            userCreated.last_name || null
+          const fullName = `${userCreated.first_name || ""} ${
+            userCreated.last_name || ""
           }`.trim();
 
           if (!uniqueUsers.has(userCreated.id)) {
@@ -218,8 +218,8 @@ export function useGetWorkingScheduleUsernames() {
 }
 
 export function useGetWorkingScheduleOmniChannels() {
-  const omniUrl = `${endpoints.omniChannels.list}?fields=id,page_name`;
-  const scheduleOmniUrl = `/items/ai_content_suggestions?fields=omni_channels`;
+  const omniUrl = `${endpoints.omniChannels.list}?fields=id,page_name&limit=1000`;
+  const scheduleOmniUrl = `/items/ai_content_suggestions?fields=omni_channels&limit=1000`;
 
   try {
     const { data, isLoading, error, isValidating } = useSWR(
