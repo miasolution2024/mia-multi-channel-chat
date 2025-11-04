@@ -13,7 +13,7 @@ import { OmniChoices } from "../type";
 
 interface DrawerDropdownOmniProps {
   title: string;
-  handleDataToggle: (id: number) => void;
+  handleDataToggle: (omni: OmniChoices) => void;
   data: OmniChoices[];
   dataChoices: number[];
 }
@@ -115,7 +115,7 @@ const DrawerDropdownOmni: React.FC<DrawerDropdownOmniProps> = ({
                     edge="start"
                     tabIndex={-1}
                     disableRipple
-                    onClick={() => handleDataToggle(data.id)}
+                    onClick={() => handleDataToggle(data)}
                     checked={dataChoices.includes(data.id)}
                     sx={{
                       "& .MuiSvgIcon-root": {
