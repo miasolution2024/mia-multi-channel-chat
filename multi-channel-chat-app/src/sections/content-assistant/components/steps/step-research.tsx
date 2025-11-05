@@ -120,9 +120,13 @@ export function StepResearch() {
 
     const fetchOmniChannels = async () => {
       try {
-        const response = await getOmniChannels(1, 100, undefined, source);
+        const response = await getOmniChannels({
+          page: 1,
+          limit: 100,
+          source,
+        });
         const filteredData = (response.data || []).filter(
-          (item) => item.page_name !== null
+          (item: OmniChannel) => item.page_name !== null
         );
         setOmniChannelsData(filteredData);
       } catch (error) {

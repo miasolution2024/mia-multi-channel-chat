@@ -6,10 +6,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Chỉnh sửa dịch vụ',
 };
-type Props = {
-  params: { id: string };
+interface ServiceEditPageProps {
+  params: Promise<{ id: string }>;
 };
 
-export default function Page({ params }: Props) {
-  return <ServiceEditView serviceId={params.id} />;
+export default async function Page({ params }: ServiceEditPageProps) {
+  const { id } = await params;
+  return <ServiceEditView serviceId={id} />;
 }

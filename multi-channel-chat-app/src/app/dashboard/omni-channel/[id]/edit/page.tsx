@@ -6,10 +6,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Chỉnh sửa trang',
 };
-type Props = {
-  params: { id: string };
+interface OmniChannelEditPageProps {
+  params: Promise<{ id: string }>;
 };
 
-export default function Page({ params }: Props) {
-  return <OmniChannelEditView omniChannelId={params.id} />;
+export default async function Page({ params }: OmniChannelEditPageProps) {
+  const { id } = await params;
+  return <OmniChannelEditView omniChannelId={id} />;
 }

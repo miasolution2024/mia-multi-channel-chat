@@ -228,14 +228,14 @@ export function ServiceForm({ service }: Props) {
 
   const handleOmniChannelsChange = useCallback(
     (event: React.SyntheticEvent, newValue: typeof omniChannels) => {
-      const channelIds = newValue.map((channel) => channel.id);
+      const channelIds = newValue.map((channel) => Number(channel.id));
       setValue("omni_channels", channelIds);
     },
     [setValue]
   );
 
   const selectedOmniChannels = omniChannels.filter((channel) =>
-    watchedOmniChannels.includes(channel.id)
+    watchedOmniChannels.includes(Number(channel.id))
   );
 
   const fileTrainingValue = watch("file_training");
