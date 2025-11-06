@@ -515,19 +515,24 @@ export function ContentAssistantListView() {
       align: "left",
       render: (item: Content) => (
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-          {item.ai_rule_based.slice(0, 1).map((rule, index) => (
+          {item.ai_rule_based.slice(0, 1).map((rule, index) => {
+            if (!rule.ai_rule_based_id?.content) {
+              return null;
+            }
+            return (
             <Chip
               key={index}
               label={
-                rule.ai_rule_based_id.content.length > 20
+                rule.ai_rule_based_id?.content?.length > 20
                   ? `${rule.ai_rule_based_id.content.substring(0, 20)}...`
-                  : rule.ai_rule_based_id.content
+                  : rule.ai_rule_based_id?.content
               }
               size="small"
               variant="outlined"
               color="primary"
             />
-          ))}
+          )
+          })}
           {item.ai_rule_based.length > 1 && (
             <Chip
               label={`+${item.ai_rule_based.length - 1}`}

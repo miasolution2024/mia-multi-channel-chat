@@ -6,8 +6,9 @@ import { ServiceFormData } from '@/sections/service/types';
  * @param page Page number (1-based)
  * @param limit Number of items per page
  * @param name Optional name filter
+ * @param id Optional ID filter
  */
-export async function getServices(page?: number, limit: number = 25, name?: string) {
+export async function getServices(page?: number, limit: number = 25, name?: string, id?: string) {  
   try {
     let url = endpoints.services.list;
     
@@ -21,20 +22,32 @@ export async function getServices(page?: number, limit: number = 25, name?: stri
     
     // Add specific fields based on API response
     params.append('fields[]', 'id');
-    params.append('fields[]', 'omni_channels.omni_channels_id.page_name');
     params.append('fields[]', 'name');
     params.append('fields[]', 'price');
     params.append('fields[]', 'tags');
     params.append('fields[]', 'description');
-    params.append('fields[]', 'file_training');
+    params.append('fields[]', 'file_training.id');
+    params.append('fields[]', 'file_training.directus_files_id');
     params.append('fields[]', 'note');
     params.append('fields[]', 'created_at');
+    params.append('fields[]', 'updated_at');
+    params.append('fields[]', 'duration');
+    params.append('fields[]', 'omni_channels.id');
+    params.append('fields[]', 'omni_channels.omni_channels_id.page_name');
+    params.append('fields[]', 'omni_channels.omni_channels_id.id');
 
     params.append('meta', '*');
     
     // Add sorting
-    params.append('sort[]', 'omni_channels.omni_channels_id.page_name');
+    // params.append('sort[]', 'omni_channels.omni_channels_id.page_name');
+        params.append('sort[]', '-created_at');
 
+
+    // filter id if provided
+    if(id){
+      params.append('filter[_and][0][id][_eq]', id);
+    }
+    
     // filter name if provided
     if(name){
       params.append('filter[_and][0][name][_icontains]', name);

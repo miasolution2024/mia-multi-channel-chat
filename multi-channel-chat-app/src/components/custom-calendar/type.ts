@@ -36,9 +36,11 @@ export interface StatusChoices {
 export interface OmniChoices {
   id: number;
   page_name: string;
+  ai_content_suggestions: number[];
 }
 
 export interface CreatorsChoices {
   id: string;
   user_name: string;
+  ai_content_suggestions: number[];
 }

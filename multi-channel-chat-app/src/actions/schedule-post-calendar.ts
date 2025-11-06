@@ -5,25 +5,28 @@ import {
   CampaignInfo,
   UserInfo,
   WorkingSchedule,
+  OmniChoices,
 } from "@/components/custom-calendar/type";
-import { CampaignOmniChannel } from "@/types/campaign";
+import { useAuthContext } from "@/auth/hooks/use-auth-context";
 
-const baseUrl = `/items/ai_content_suggestions?fields=id,status,user_created,user_created.id,user_created.first_name,user_created.last_name,post_type,topic,scheduled_post_time,omni_channels,campaign,date_created,is_schedule&limit=1000`;
+// const baseUrl = `/items/ai_content_suggestions?fields=id,status,user_created,user_created.id,user_created.first_name,user_created.last_name,post_type,topic,scheduled_post_time,omni_channels,campaign,date_created,is_schedule&limit=1000`;
+const baseUrl = `/items/ai_content_suggestions?fields=id,status,user_created,user_created,post_type,topic,scheduled_post_time,omni_channels,campaign,date_created,is_schedule&limit=1000`;
 
 //-----------------------------------------------------------------
 
 export function useGetWorkingSchedule(
   searchData: string,
   statusData: string,
-  channelData: number[],
-  creatorData: string[]
+  channelData: number[]
+  // creatorData: string[]
   //   creatorData: string
 ) {
-  const omniUrl = `${endpoints.omniChannels.list}?fields=id,page_name&limit=1000`;
-  const userInfoUrl = `/items/ai_content_suggestions?fields=user_created.id,user_created.first_name,user_created.last_name&limit=1000`;
+  const { user } = useAuthContext();
+
+  const omniUrl = `${endpoints.omniChannels.list}?fields=id,page_name,ai_content_suggestions&limit=1000`;
+  const userInfoUrl = `/users?field=id,first_name,last_name&limit=1000`;
   const campaignUrl = `items/campaign?fields=id,name&limit=1000`;
 
-  // if one of the below contain data, add it to the url
   let url = baseUrl;
   if (searchData)
     url += `&filter[topic][_contains]=${encodeURIComponent(searchData)}`;
@@ -31,8 +34,11 @@ export function useGetWorkingSchedule(
     url += `&filter[status][_in]=${encodeURIComponent(statusData)}`;
   if (channelData && channelData.length > 0 && !channelData.includes(0))
     url += `&filter[omni_channels][_in]=${channelData}`;
-  if (creatorData && creatorData.length > 0 && !creatorData.includes("0"))
-    url += `&filter[user_created][_in]=${creatorData}`;
+  if (user && user.id !== undefined && user.id !== null) {
+    url += `&filter[user_created][_eq]=${user.id}`;
+  }
+  // if (creatorData && creatorData.length > 0 && !creatorData.includes("0"))
+  //   url += `&filter[user_created][_in]=${creatorData}`;
 
   try {
     const { data, isLoading, error, isValidating } = useSWR(url, fetcher);
@@ -57,7 +63,7 @@ export function useGetWorkingSchedule(
 
     const memoizedValue = useMemo(() => {
       const schedules = (data?.data as WorkingSchedule[]) || [];
-      const omniList = (omniData?.data as CampaignOmniChannel[]) || [];
+      const omniList = (omniData?.data as OmniChoices[]) || [];
       const userInfoList = (userInfoData?.data as UserInfo[]) || [];
       const campaignList = (campaignData?.data as CampaignInfo[]) || [];
 
@@ -67,6 +73,22 @@ export function useGetWorkingSchedule(
           omniIdToName.set(item.id, item.page_name || "");
         }
       }
+
+      // const aiNamesCache = new Map<number, string[]>();
+      // const getAiNamesForSuggestion = (suggestionId: number): string[] => {
+      //   const cached = aiNamesCache.get(suggestionId);
+      //   if (cached) return cached;
+      //   const names = omniList
+      //     .filter((omni) =>
+      //       Array.isArray(omni.ai_content_suggestions)
+      //         ? omni.ai_content_suggestions.includes(suggestionId)
+      //         : false
+      //     )
+      //     .map((omni) => omni.page_name)
+      //     .filter(Boolean);
+      //   aiNamesCache.set(suggestionId, names);
+      //   return names;
+      // };
 
       const userInfoToFullName = new Map<string, string>();
       for (const item of userInfoList) {
@@ -85,6 +107,53 @@ export function useGetWorkingSchedule(
         }
       }
 
+      // const uniqueUsers = new Map<string, UserInfo>();
+
+      // for (const item of schedules) {
+      //   if (item.user_created && typeof item.user_created === "string") {
+      //     const userId = item.user_created;
+      //     const fullName = userInfoToFullName.get(userId) || "";
+      //     const nameParts = fullName.trim().split(" ");
+      //     const firstName = nameParts[0] || "";
+      //     const lastName = nameParts.slice(1).join(" ") || "";
+
+      //     if (userId && !uniqueUsers.has(userId)) {
+      //       const fullNameFormatted = `${firstName} ${lastName}`.trim();
+      //       uniqueUsers.set(userId, {
+      //         id: userId,
+      //         first_name: firstName,
+      //         last_name: lastName,
+      //         full_name: fullNameFormatted,
+      //       });
+      //     }
+      //   }
+      // }
+
+      const uniqueOmnis = new Map<number, OmniChoices>();
+
+      for (const item of schedules) {
+        const omniIdsForItem: number[] = Array.isArray(item?.omni_channels)
+          ? (item.omni_channels as number[])
+          : [
+              typeof item?.omni_channels === "number"
+                ? (item.omni_channels as number)
+                : item?.omni_channels,
+            ].filter((v): v is number => typeof v === "number");
+
+        for (const ref of omniIdsForItem) {
+          if (!ref && ref !== 0) continue;
+          for (const omni of omniList) {
+            if (
+              omni &&
+              Array.isArray(omni.ai_content_suggestions) &&
+              omni.ai_content_suggestions.includes(ref)
+            ) {
+              if (typeof omni.id === "number") uniqueOmnis.set(omni.id, omni);
+            }
+          }
+        }
+      }
+
       const workingData = schedules.map((item) => {
         const omniIds: number[] = Array.isArray(item?.omni_channels)
           ? (item.omni_channels as number[])
@@ -94,24 +163,24 @@ export function useGetWorkingSchedule(
                 : item?.omni_channels,
             ].filter((v): v is number => typeof v === "number");
 
-        const omni_channel_names = omniIds.map(
-          (id) => omniIdToName.get(id) || ""
-        );
-        const omni_channel_name = omni_channel_names.filter(Boolean).join(", ");
+        const namesSet = new Set<string>();
+        for (const ref of omniIds) {
+          for (const omni of omniList) {
+            if (
+              omni &&
+              Array.isArray(omni.ai_content_suggestions) &&
+              omni.ai_content_suggestions.includes(ref) &&
+              omni.page_name
+            ) {
+              namesSet.add(omni.page_name);
+            }
+          }
+        }
+
+        const omni_channel_name = Array.from(namesSet).join(", ");
 
         let user_created_name = "";
-        if (item.user_created && typeof item.user_created === "object") {
-          const userCreated = item.user_created as {
-            id: string;
-            first_name: string | null;
-            last_name: string | null;
-          };
-          if (userCreated.first_name || userCreated.last_name) {
-            user_created_name = `${userCreated.first_name || ""} ${
-              userCreated.last_name || ""
-            }`.trim();
-          }
-        } else if (typeof item.user_created === "string") {
+        if (item.user_created && typeof item.user_created === "string") {
           user_created_name = userInfoToFullName.get(item.user_created) || "";
         }
 
@@ -125,6 +194,8 @@ export function useGetWorkingSchedule(
 
       return {
         workingSchedules: workingData,
+        uniqueOmnis: Array.from(uniqueOmnis.values()),
+        // uniqueUsers: Array.from(uniqueUsers.values()),
         workingSchedulesLoading:
           isLoading || !!omniLoading || !!userInfoLoading || campaignLoading,
         workingSchedulesError:
@@ -218,8 +289,8 @@ export function useGetWorkingScheduleUsernames() {
 }
 
 export function useGetWorkingScheduleOmniChannels() {
-  const omniUrl = `${endpoints.omniChannels.list}?fields=id,page_name`;
-  const scheduleOmniUrl = `/items/ai_content_suggestions?fields=omni_channels`;
+  const omniUrl = `${endpoints.omniChannels.list}?fields=id,page_name&limit=1000`;
+  const scheduleOmniUrl = `/items/ai_content_suggestions?fields=omni_channels&limit=1000`;
 
   try {
     const { data, isLoading, error, isValidating } = useSWR(
@@ -236,7 +307,7 @@ export function useGetWorkingScheduleOmniChannels() {
     const memoizedValue = useMemo(() => {
       const schedules =
         (data?.data as { omni_channels: number | number[] }[]) || [];
-      const omniList = (omniData?.data as CampaignOmniChannel[]) || [];
+      const omniList = (omniData?.data as OmniChoices[]) || [];
 
       const usedOmniIds = new Set<number>();
       for (const item of schedules) {

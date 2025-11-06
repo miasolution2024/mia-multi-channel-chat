@@ -58,16 +58,16 @@ export const navData = [
       },
     ],
   },
-  {
-    subheader: "Danh mục dịch vụ",
-    items: [
-      {
-        title: "Dịch vụ",
-        path: paths.dashboard.service.root,
-        icon: ICONS.ecommerce,
-      },
-    ],
-  },
+  // {
+  //   subheader: "Danh mục dịch vụ",
+  //   items: [
+  //     {
+  //       title: "Dịch vụ",
+  //       path: paths.dashboard.service.root,
+  //       icon: ICONS.ecommerce,
+  //     },
+  //   ],
+  // },
   {
     subheader: "Chiến dịch Marketing",
     items: [
@@ -106,6 +106,16 @@ export const navData = [
         path: paths.dashboard.scheduleCalendar.root,
         icon: ICONS.calendar,
       },
+    ],
+  },
+  {
+    subheader: "Quản lý trang",
+    items: [
+      {
+        title: "Danh sách trang",
+        path: paths.dashboard.omniChannel.root,
+        icon: ICONS.menuItem,
+      }
     ],
   },
 ];

@@ -7,6 +7,7 @@ export interface UseGetServicesParams {
   page?: number;
   limit?: number;
   name?: string;
+  id?: string;
 }
 
 export interface UseGetServicesReturn {
@@ -27,14 +28,14 @@ export function useGetServices(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { page = 1, limit = 25, name = '' } = params;
+  const { page = 1, limit = 25, name = '', id = '' } = params;
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await getServices(page, limit, name);
+      const response = await getServices(page, limit, name, id);
       setData(response.data || []);
       setTotal(response.total || 0);
     } catch (err) {
@@ -45,7 +46,7 @@ export function useGetServices(
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, name]);
+  }, [page, limit, name, id]);
 
   // Auto-fetch when parameters change
   useEffect(() => {

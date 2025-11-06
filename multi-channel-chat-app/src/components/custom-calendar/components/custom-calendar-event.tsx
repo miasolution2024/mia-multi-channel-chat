@@ -310,9 +310,31 @@ const CustomCalendarEvent: React.FC<CustomCalendarEventProps> = (arg) => {
                   mt: 0.2,
                 }}
               >
-                <Tooltip title={extended.channelName || "No Channel"}>
+                {/* <Tooltip title={extended.channelName || "No Channel"}>
                   <Iconify icon="logos:facebook" width="16" height="16" />
-                </Tooltip>
+                </Tooltip> */}
+                {extended.postType === "facebook_post" ||
+                extended.postType === "instagram_post" ||
+                extended.postType === "zalo_post" ||
+                extended.postType === "zalo_oa_post" ? (
+                  <Tooltip title={extended.channelName || "No Channel"}>
+                    <Iconify
+                      icon={
+                        extended.postType === "facebook_post"
+                          ? "logos:facebook"
+                          : extended.postType === "instagram_post"
+                          ? "logos:facebook"
+                          : extended.postType === "zalo_post" ||
+                            extended.postType === "zalo_oa_post"
+                          ? "arcticons:zalo"
+                          : ""
+                      }
+                      width="16"
+                      height="16"
+                      style={{ flexShrink: 0 }}
+                    />
+                  </Tooltip>
+                ) : null}
               </Box>
             </Box>
           </>

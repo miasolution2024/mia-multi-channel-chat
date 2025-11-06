@@ -26,19 +26,19 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     // Handle 403 Forbidden - Auto logout
-    if (error.response?.status === 403) {
-      try {
-        signOut();
-        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+    // if (error.response?.status === 403) {
+    //   try {
+    //     signOut();
+    //     toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
         
-        // Redirect to login page
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth/sign-in';
-        }
-      } catch (logoutError) {
-        console.error("Error during auto logout:", logoutError);
-      }
-    }
+    //     // Redirect to login page
+    //     if (typeof window !== 'undefined') {
+    //       window.location.href = '/auth/sign-in';
+    //     }
+    //   } catch (logoutError) {
+    //     console.error("Error during auto logout:", logoutError);
+    //   }
+    // }
 
     return Promise.reject(
       (error.response &&
@@ -263,6 +263,9 @@ export const endpoints = {
   },
   omniChannels: {
     list: "/items/omni_channels",
+    create: "/items/omni_channels",
+    update: "/items/omni_channels",
+    delete: "/items/omni_channels",
   },
   services: {
     list: "/items/services",
