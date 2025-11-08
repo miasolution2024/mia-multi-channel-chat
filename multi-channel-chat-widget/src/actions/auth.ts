@@ -4,11 +4,10 @@ import axiosInstance from "./axios";
 
 export const startChatSessionAsync = async (request: {
   name: string;
-  email: string;
   phone: string;
 }): Promise<UserInfo> => {
   try {
-    const response = await axiosInstance.post(CONFIG.startChatSessionWebhookUrl, request);
+    const response = await axiosInstance.post(CONFIG.startChatSessionWebhookUrl, {...request, email: ""});
 
     if (response.status !== 200) {
       throw new Error("Failed to start chat session");

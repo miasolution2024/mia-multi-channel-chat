@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ChatBubbleLeftIcon, XMarkIcon } from "./icons";
 import SimpleInput from "./SimpleInput";
 import type { UserInfo } from "../model";
@@ -6,13 +6,11 @@ import { startChatSessionAsync } from "../actions/auth";
 
 interface FormData {
   name: string;
-  email: string;
   phone: string;
 }
 
 interface FormErrors {
   name?: string;
-  email?: string;
   phone?: string;
 }
 
@@ -29,11 +27,18 @@ const PreChatForm: React.FC<PreChatFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: "",
-    email: "",
     phone: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsFormOpen(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -43,16 +48,6 @@ const PreChatForm: React.FC<PreChatFormProps> = ({
       newErrors.name = "Please enter your name";
     } else if (formData.name.trim().length < 2) {
       newErrors.name = "Name must be at least 2 characters";
-    }
-
-    // Validate email
-    if (!formData.email.trim()) {
-      newErrors.email = "Please enter your email";
-    } else {
-      const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-      if (!emailRegex.test(formData.email)) {
-        newErrors.email = "Email is not valid";
-      }
     }
 
     // Validate phone
@@ -91,7 +86,7 @@ const PreChatForm: React.FC<PreChatFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      setFormData({ name: "", email: "", phone: "" });
+      setFormData({ name: "", phone: "" });
       setErrors({});
       setIsFormOpen(false);
 
@@ -161,17 +156,6 @@ const PreChatForm: React.FC<PreChatFormProps> = ({
                 value={formData.name}
                 onChange={handleInputChange}
                 error={errors.name}
-                required
-              />
-
-              {/* Email */}
-              <SimpleInput
-                name="email"
-                type="email"
-                placeholder="example@email.com"
-                value={formData.email}
-                onChange={handleInputChange}
-                error={errors.email}
                 required
               />
 
