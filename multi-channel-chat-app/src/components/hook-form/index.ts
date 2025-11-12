@@ -23,3 +23,5 @@ export * from "./rhf-autocomplete";
 export * from "./rhf-switch";
 
 export * from "./rhf-date-picker";
+
+export * from "./rhf-checkbox";

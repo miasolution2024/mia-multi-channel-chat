@@ -386,6 +386,11 @@ export function ContentAssistantMultiStepForm({
     const formData = methods.getValues();
     switch (activeStep) {
       case POST_STEP.RESEARCH_ANALYSIS:
+        // handle case is_post_video and is_post_reels: at least 1 is true
+        if (formData.video.length > 0 && !formData.is_post_video && !formData.is_post_reels) {
+          toast.error("Vui lòng chọn loại bài đăng");
+          return;
+        }
         await handleStepProcess(formData, POST_STEP.RESEARCH_ANALYSIS);
         return;
       case POST_STEP.MAKE_OUTLINE:
@@ -411,11 +416,18 @@ export function ContentAssistantMultiStepForm({
   const handleSaveDraft = useCallback(
     async ({hideToast = false} : {hideToast?: boolean}) => {
       try {
-        setIsNextLoading(true);
         const formData = methods.getValues();
         const stepToSave = activeStep;
         const isUpdate = !!formData?.id;
         let response;
+
+         // handle case is_post_video and is_post_reels: at least 1 is true
+        if (formData.video.length > 0 && !formData.is_post_video && !formData.is_post_reels) {
+          toast.error("Vui lòng chọn loại bài đăng");
+          return;
+        }
+
+        setIsNextLoading(true);
 
         if (!isUpdate) {
           // Create new content assistant if no ID exists
