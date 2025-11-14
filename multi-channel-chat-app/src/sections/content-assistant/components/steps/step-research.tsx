@@ -157,6 +157,8 @@ export function StepResearch() {
     setIsShowVideo(e.target.checked);
   };
 
+  const isPostReels = watch("is_post_reels");
+
   return (
     <Stack spacing={3}>
       {/* AI Notes Input - Prominent at top */}
@@ -415,8 +417,19 @@ export function StepResearch() {
             <Stack direction={"row"} alignItems={"center"}>
               <RHFCheckbox
                 name="is_post_reels"
-                label="Bài đăng Reels"
+                label="Bài đăng reel"
               />
+              {isPostReels && (
+            <Stack
+              direction="row"
+              alignItems="center"
+              sx={{ color: "error.main" }}
+            >
+              <Typography variant="body2" fontWeight={600}>
+                Lưu ý: Video đăng dưới dạng tin (reel) phải dưới 60 giây.
+              </Typography>
+            </Stack>
+          )}
             </Stack>
           </Stack>
           <Card>

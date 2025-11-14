@@ -53,6 +53,21 @@ interface ContentAssistantMultiStepFormProps {
   editData?: Content | ContentAssistantApiResponse | null;
 }
 
+const getVideoDuration = (file: File): Promise<number> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const media = new Audio(reader.result as string);
+      media.onloadedmetadata = () => {
+        resolve(media.duration);
+      };
+    };
+    reader.readAsDataURL(file);
+    reader.onerror = (error) => {
+      reject(error);
+    };
+  });
+
 export function ContentAssistantMultiStepForm({
   editData,
 }: ContentAssistantMultiStepFormProps) {
@@ -388,9 +403,21 @@ export function ContentAssistantMultiStepForm({
       case POST_STEP.RESEARCH_ANALYSIS:
         // handle case is_post_video and is_post_reels: at least 1 is true
         if (formData.video.length > 0 && !formData.is_post_video && !formData.is_post_reels) {
-          toast.error("Vui lòng chọn loại bài đăng");
+          toast.error("Vui lòng chọn ít nhất 1 loại bài đăng");
           return;
         }
+
+        if (formData.is_post_reels && formData.video.length > 0) {
+          const videoFile = formData.video[0];
+          if (videoFile instanceof File) {
+            const duration = await getVideoDuration(videoFile);
+            if (duration > 60) {
+              toast.error("Video dài hơn 60 giây không thể đăng ở dạng reel.");
+              return;
+            }
+          }
+        }
+
         await handleStepProcess(formData, POST_STEP.RESEARCH_ANALYSIS);
         return;
       case POST_STEP.MAKE_OUTLINE:
@@ -423,8 +450,19 @@ export function ContentAssistantMultiStepForm({
 
          // handle case is_post_video and is_post_reels: at least 1 is true
         if (formData.video.length > 0 && !formData.is_post_video && !formData.is_post_reels) {
-          toast.error("Vui lòng chọn loại bài đăng");
+          toast.error("Vui lòng chọn ít nhất 1 loại bài đăng");
           return;
+        }
+
+        if (formData.is_post_reels && formData.video.length > 0) {
+          const videoFile = formData.video[0];
+          if (videoFile instanceof File) {
+            const duration = await getVideoDuration(videoFile);
+            if (duration > 60) {
+              toast.error("Video dài hơn 60 giây không thể đăng ở dạng reel.");
+              return;
+            }
+          }
         }
 
         setIsNextLoading(true);
