@@ -5,6 +5,11 @@ export interface OmniChoices {
   token: string;
 }
 
+export interface DashboardData {
+  id: number;
+  omni_channels: number;
+}
+
 export interface FacebookView {
   data: Array<{
     values: Array<{
@@ -26,4 +31,33 @@ export interface FacebookReaction {
       };
     }>;
   }>;
+}
+
+export interface DashboardTotalData {
+  id: number;
+  presentData: number;
+  previosData: number;
+}
+
+export interface ChartDataPoint {
+  x: string;
+  y: number;
+}
+
+export interface ProcessedPageData {
+  pageName: string;
+  pageId: string;
+  data: ChartDataPoint[];
+  color: string;
+}
+
+export interface PagePostsData {
+  id: number;
+  post_title: string;
+  omni_name: string;
+  dashboard_data: number;
+  reactions_count: string;
+  shares_count: string;
+  views_count: string;
+  comments_count: string;
 }

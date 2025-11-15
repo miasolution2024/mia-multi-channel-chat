@@ -27,14 +27,12 @@ const DropdownPageChoice: React.FC<DropdownPageChoiceProps> = ({
 
   useEffect(() => {
     if (postSocialData?.data) {
-      const apiPages: OmniChoices[] = postSocialData.data.map(
-        (item: any, index: number) => ({
-          id: index + 1,
-          page_id: item.page_id,
-          page_name: item.page_name,
-          token: item.token,
-        })
-      );
+      const apiPages: OmniChoices[] = postSocialData.data.map((item: any) => ({
+        id: item.id,
+        page_id: item.page_id,
+        page_name: item.page_name,
+        token: item.token,
+      }));
       setPages(apiPages);
     }
   }, [postSocialData]);

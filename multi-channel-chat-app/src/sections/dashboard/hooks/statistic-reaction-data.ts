@@ -1,18 +1,6 @@
 import { useMemo } from "react";
 import { useGetMultipleFacebookPageData } from "@/actions/dashboard-channels";
-import { OmniChoices } from "../type";
-
-export interface ChartDataPoint {
-  x: string;
-  y: number;
-}
-
-export interface ProcessedPageData {
-  pageName: string;
-  pageId: string;
-  data: ChartDataPoint[];
-  color: string;
-}
+import { ChartDataPoint, OmniChoices, ProcessedPageData } from "../type";
 
 export interface UseStatisticReactionDataProps {
   pages: OmniChoices[];
@@ -31,10 +19,10 @@ export function useStatisticReactionData({
 }: UseStatisticReactionDataProps) {
   const { fbPageData, isLoading, error } = useGetMultipleFacebookPageData(
     pages,
-    method,
     startDate,
     endDate,
-    "chart"
+    "reactions",
+    method
   );
 
   const processedData = useMemo(() => {

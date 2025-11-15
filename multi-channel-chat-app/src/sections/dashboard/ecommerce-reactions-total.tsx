@@ -1,122 +1,100 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { DashboardTotalData, OmniChoices } from "./type";
 import { Iconify } from "@/components/iconify";
-import { Box, Card, Typography } from "@mui/material";
-import React, { useState, useEffect } from "react";
-import { FacebookReaction, OmniChoices } from "./type";
-import { useGetMultipleFacebookPageData } from "@/actions/dashboard-channels";
-import {
-  calculateDateDistance,
-  calculatePreviousDates,
-} from "./hooks/use-date-calculation";
-import { sumAllEmotions } from "./hooks/use-sum-emotes";
+import { Card, Box, Typography } from "@mui/material";
+import { useGetTotalDashboardData } from "@/actions/dashboard-channels";
 
-interface EcommerceReactionTotalProps {
+interface EcommerceReactionsTotalProps {
   pages: OmniChoices[];
   startDate: string;
   endDate: string;
-  period: string;
 }
 
-const EcommerceReactionTotal: React.FC<EcommerceReactionTotalProps> = ({
+const EcommerceReactionsTotal: React.FC<EcommerceReactionsTotalProps> = ({
   pages,
   startDate,
   endDate,
-  period,
 }) => {
-  const [totalCurrentData, setTotalCurrentData] = useState(0);
-  const [totalThenData, setTotalThenData] = useState(0);
+  const [reactionsTotal, setReactionsTotal] = useState<DashboardTotalData[]>(
+    []
+  );
+  const [percentage, setPercentage] = useState(0);
   const [arrowDirection, setArrowDirection] = useState("mdi:arrow-up");
   const [arrowColor, setArrowColor] = useState("#1AC052");
-  const [percentage, setPercentage] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const dateDistance =
-    startDate && endDate
-      ? calculateDateDistance(period, startDate, endDate)
-      : 7;
-  const { prevStartDate, prevEndDate } =
-    startDate && endDate
-      ? calculatePreviousDates(startDate, endDate, dateDistance)
-      : { prevStartDate: startDate, prevEndDate: endDate };
-
-  const currentDataResult = useGetMultipleFacebookPageData(
+  const { dashboardData, isLoading } = useGetTotalDashboardData(
     pages,
-    "page_actions_post_reactions_total",
+    "reactions",
     startDate,
-    endDate,
-    "total"
-  );
-
-  const previousDataResult = useGetMultipleFacebookPageData(
-    pages,
-    "page_actions_post_reactions_total",
-    prevStartDate,
-    prevEndDate,
-    "total"
+    endDate
   );
 
   useEffect(() => {
     if (!pages || pages.length === 0 || !startDate || !endDate) {
-      setTotalCurrentData(0);
-      setTotalThenData(0);
-      setPercentage(0);
-      setArrowDirection("mdi:arrow-up");
-      setArrowColor("#1AC052");
+      setReactionsTotal([]);
       return;
     }
 
-    if (currentDataResult.isLoading || previousDataResult.isLoading) {
-      setIsLoading(true);
-      return;
-    }
-
-    setIsLoading(false);
-
-    let totalCurrent = 0;
-    if (
-      currentDataResult.fbPageData &&
-      Array.isArray(currentDataResult.fbPageData)
-    ) {
-      currentDataResult.fbPageData.forEach((result: FacebookReaction) => {
-        totalCurrent += sumAllEmotions(result);
-      });
-    }
-
-    let totalPrevious = 0;
-    if (
-      previousDataResult.fbPageData &&
-      Array.isArray(previousDataResult.fbPageData)
-    ) {
-      previousDataResult.fbPageData.forEach((result: FacebookReaction) => {
-        totalPrevious += sumAllEmotions(result);
-      });
-    }
-
-    setTotalCurrentData(totalCurrent);
-    setTotalThenData(totalPrevious);
-
-    if (totalPrevious === 0) {
-      setPercentage(Math.round(totalCurrent * 100));
-    } else if (totalPrevious > 0) {
-      setPercentage(
-        Math.round(
-          Math.abs((totalCurrent - totalPrevious) / totalPrevious) * 100
-        )
+    if (Array.isArray(dashboardData?.data)) {
+      const dashboardTotalData: DashboardTotalData[] = dashboardData.data.map(
+        (item: {
+          id: number;
+          reactions_count?: number;
+          prev_reactions_count?: number;
+        }) => ({
+          id: item.id,
+          presentData: item.reactions_count ?? 0,
+          previosData: item.prev_reactions_count ?? 0,
+        })
       );
+      setReactionsTotal(dashboardTotalData);
     } else {
-      setPercentage(0);
+      setReactionsTotal([]);
+    }
+  }, [dashboardData, pages, startDate, endDate]);
+
+  const totalCurrentData = useMemo(
+    () =>
+      reactionsTotal.reduce(
+        (sum, item) =>
+          sum + (Number.isFinite(item.presentData) ? item.presentData : 0),
+        0
+      ),
+    [reactionsTotal]
+  );
+
+  const totalPreviousData = useMemo(
+    () =>
+      reactionsTotal.reduce(
+        (sum, item) =>
+          sum + (Number.isFinite(item.previosData) ? item.previosData : 0),
+        0
+      ),
+    [reactionsTotal]
+  );
+
+  useEffect(() => {
+    if (totalPreviousData === 0) {
+      setPercentage(
+        totalCurrentData === 0 ? 0 : Math.round(totalCurrentData * 100)
+      );
+      setArrowDirection(
+        totalCurrentData >= 0 ? "mdi:arrow-up" : "mdi:arrow-down"
+      );
+      setArrowColor(totalCurrentData >= 0 ? "#1AC052" : "#DE3B40");
+      return;
     }
 
-    const isIncreasing = totalCurrent >= totalPrevious;
+    const difference = totalCurrentData - totalPreviousData;
+    const isIncreasing = difference >= 0;
+    const percentChange = Math.round(
+      Math.abs(difference / totalPreviousData) * 100
+    );
+
+    setPercentage(percentChange);
     setArrowDirection(isIncreasing ? "mdi:arrow-up" : "mdi:arrow-down");
     setArrowColor(isIncreasing ? "#1AC052" : "#DE3B40");
-  }, [
-    currentDataResult,
-    previousDataResult,
-    pages,
-    startDate,
-    endDate,
-    totalThenData,
-  ]);
+  }, [totalCurrentData, totalPreviousData]);
 
   return (
     <>
@@ -240,4 +218,4 @@ const EcommerceReactionTotal: React.FC<EcommerceReactionTotalProps> = ({
   );
 };
 
-export default EcommerceReactionTotal;
+export default EcommerceReactionsTotal;

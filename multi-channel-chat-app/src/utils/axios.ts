@@ -291,4 +291,10 @@ export const endpoints = {
     list: "/items/customer_group_customer_journey",
     delete: "/items/customer_group_customer_journey",
   },
+  dashboardData: {
+    list: "/items/dashboard_data",
+  },
+  pagePostsData: {
+    list: "/items/most_notice_post",
+  },
 };
