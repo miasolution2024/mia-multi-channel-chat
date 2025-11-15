@@ -503,5 +503,7 @@ export const transformCampaignToContentAssistant = (data: CampaignFormData) => {
     // HTML Coding step fields
     ai_notes_html_coding: "",
     post_html_format: "",
+    is_post_video: false,
+    is_post_reels: false,
   };
 };
