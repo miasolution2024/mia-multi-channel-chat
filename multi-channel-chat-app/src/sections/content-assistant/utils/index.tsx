@@ -51,6 +51,9 @@ const ContentSchema = zod.object({
   post_notes: zod.string().default(""),
   ai_notes_write_article: zod.string().default(""),
 
+  is_post_video: zod.boolean().default(true),
+  is_post_reels: zod.boolean().default(false),
+
   // step Write Article
   post_content: zod.string().default(""),
   ai_notes_create_image: zod.string().default(""),
@@ -79,6 +82,8 @@ export const getFieldsForStep = (step: string): (keyof FormData)[] => {
         "customer_journey",
         "omni_channels",
         "video",
+        "is_post_video",
+        "is_post_reels",
       ];
     case POST_STEP.MAKE_OUTLINE:
       return [
@@ -204,6 +209,8 @@ export const getDefaultValues = (
         extractIds(editData.omni_channels).length > 0
           ? extractIds(editData.omni_channels)
           : [],
+        is_post_video: editData.is_post_video || true,
+        is_post_reels: editData.is_post_reels || false,
       // Step 2
       outline_post: getString(apiData.outline_post),
       post_goal: getString(apiData.post_goal),
@@ -236,6 +243,8 @@ export const getDefaultValues = (
     ai_notes_make_outline: "",
     status: POST_STATUS.DRAFT as string,
     omni_channels: [],
+    is_post_video: true,
+    is_post_reels: false,
     // Step 3 - Initialize media fields as empty arrays
     media: [],
     video: [],
@@ -259,6 +268,8 @@ export const getStep1FormData = (formData: FormData) => {
     ai_notes_make_outline: formData.ai_notes_make_outline,
     omni_channels: formData.omni_channels,
     video: formData.video,
+    is_post_video: formData.is_post_video,
+    is_post_reels: formData.is_post_reels,
   };
 };
 
@@ -563,7 +574,6 @@ export const hasFormDataChanged = (
       "post_content",
       "ai_notes_create_image",
       "media",
-      "video",
       "media_generated_ai",
       "is_generated_by_AI",
     ];
@@ -585,6 +595,8 @@ export const hasFormDataChanged = (
       "content_tone",
       "ai_notes_make_outline",
       "omni_channels",
+       "is_post_video",
+      "is_post_reels",
       "video",
     ];
   }
@@ -631,6 +643,8 @@ export const buildStepResearchData = async (formData: FormData, isCreate = false
       is_generated_by_AI: false,
       ai_notes_make_outline: formData.ai_notes_make_outline || "",
       video: videoId,
+      is_post_video: formData.is_post_video,
+      is_post_reels: formData.is_post_reels,
       ai_rule_based: {
         create: uniqueAiRuleBased.map((id) => ({
           ai_content_suggestions_id: "+",
@@ -690,6 +704,8 @@ export const buildStepResearchData = async (formData: FormData, isCreate = false
     main_seo_keyword: formData.main_seo_keyword,
     secondary_seo_keywords: formData.secondary_seo_keywords || [],
     video: videoId,
+    is_post_video: formData.is_post_video,
+    is_post_reels: formData.is_post_reels,
     customer_group:
       formData.customer_group?.map((item) => ({
         customer_group_id: item,

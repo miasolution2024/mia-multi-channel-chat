@@ -19,6 +19,8 @@ export interface ContentAssistantApiResponse {
   date_updated: string;
   post_type: string | null;
   topic: string;
+  is_post_video?: boolean;
+  is_post_reels?: boolean;
   main_seo_keyword: string;
   secondary_seo_keywords: string[];
   phase_goal: string | null;
@@ -108,7 +110,9 @@ export async function getContentAssistantList(
       'ai_notes_make_outline',
       'ai_notes_write_article',
       'ai_notes_create_image',
-      'video'
+      'video',
+      'is_post_video',
+      'is_post_reels',
     ];
     
     fields.forEach(field => {

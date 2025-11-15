@@ -16,6 +16,7 @@ import {
   RHFAutocomplete,
   RHFSelect,
   RHFUpload,
+  RHFCheckbox,
 } from "@/components/hook-form";
 import { Iconify } from "@/components/iconify";
 import { ContentSelectionDialog, SelectedItemsTable } from "../index";
@@ -23,7 +24,7 @@ import { getCustomerGroups } from "@/actions/customer-group";
 import { CustomerGroup } from "@/sections/customer-group/types";
 import { getCustomerJourneys } from "@/actions/customer-journey";
 import { CustomerJourney } from "@/sections/customer-journey/types";
-import { MenuItem, SelectChangeEvent, Switch, Tooltip } from "@mui/material";
+import {  MenuItem, SelectChangeEvent, Switch, Tooltip } from "@mui/material";
 import { getOmniChannels } from "@/actions/omni-channels";
 import { getServices } from "@/actions/services";
 import { Services } from "@/sections/services/types";
@@ -155,6 +156,8 @@ export function StepResearch() {
 
     setIsShowVideo(e.target.checked);
   };
+
+  const isPostReels = watch("is_post_reels");
 
   return (
     <Stack spacing={3}>
@@ -403,92 +406,119 @@ export function StepResearch() {
         <Switch checked={isShowVideo} onChange={handleChangeShowVideo} />
       </Stack>
       {isShowVideo ? (
-        <Card>
-          <Stack direction="row" alignItems={"center"}>
-            <CardHeader title="Video" sx={{ mb: 3 }} />
-            <Tooltip
-              title="Bạn có thể tải lên video và bước tiếp theo AI sẽ mô tả phù hợp cho video của bạn"
-              componentsProps={{
-                tooltip: {
-                  sx: {
-                    fontSize: "14px",
-                  },
-                },
-              }}
+        <Stack spacing={2} sx={{marginTop:'-16px'}}>
+          <Stack sx={{ width: "fit-content" }}>
+            <Stack direction={"row"} alignItems={"center"}>
+              <RHFCheckbox
+                name="is_post_video"
+                label="Bài đăng video"
+              />
+            </Stack>
+            <Stack direction={"row"} alignItems={"center"}>
+              <RHFCheckbox
+                name="is_post_reels"
+                label="Bài đăng reel"
+              />
+              {isPostReels && (
+            <Stack
+              direction="row"
+              alignItems="center"
+              sx={{ color: "error.main" }}
             >
-              <Iconify
-                icon="material-symbols:info-outline"
-                width={24}
-                height={24}
-                color="text.secondary"
-                sx={{ marginLeft: "-16px", cursor: "pointer" }}
-              />
-            </Tooltip>
+              <Typography variant="body2" fontWeight={600}>
+                Lưu ý: Video đăng dưới dạng tin (reel) phải dưới 60 giây.
+              </Typography>
+            </Stack>
+          )}
+            </Stack>
           </Stack>
-          <Divider />
-          <Stack spacing={3} sx={{ p: 3 }}>
-            <Box>
-              <RHFUpload
-                name="video"
-                maxFiles={1}
-                maxSize={25 * 1024 * 1024} // 25MB in bytes
-                accept={{
-                  "video/*": [".mp4", ".avi", ".mov"],
+          <Card>
+            <Stack direction="row" alignItems={"center"}>
+              <CardHeader title="Video" sx={{ mb: 3 }} />
+              <Tooltip
+                title="Bạn có thể tải lên video và bước tiếp theo AI sẽ mô tả phù hợp cho video của bạn"
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      fontSize: "14px",
+                    },
+                  },
                 }}
-                helperText="Chỉ được chọn 1 video. Định dạng hỗ trợ: MP4, AVI, MOV. Kích thước tối đa: 25MB"
-                hidePreview
-              />
+              >
+                <Iconify
+                  icon="material-symbols:info-outline"
+                  width={24}
+                  height={24}
+                  color="text.secondary"
+                  sx={{ marginLeft: "-16px", cursor: "pointer" }}
+                />
+              </Tooltip>
+            </Stack>
+            <Divider />
+            <Stack spacing={3} sx={{ p: 3 }}>
+              <Box>
+                <RHFUpload
+                  name="video"
+                  maxFiles={1}
+                  maxSize={25 * 1024 * 1024} // 25MB in bytes
+                  accept={{
+                    "video/*": [".mp4", ".avi", ".mov"],
+                  }}
+                  helperText="Chỉ được chọn 1 video. Định dạng hỗ trợ: MP4, AVI, MOV. Kích thước tối đa: 25MB"
+                  hidePreview
+                />
 
-              {/* Video Preview */}
-              {Array.isArray(watch("video")) && watch("video").length > 0 && (
-                <Paper sx={{ p: 2, mt: 2 }}>
-                  <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                    Video đã chọn
-                  </Typography>
-                  <Box sx={{ position: "relative", display: "inline-block" }}>
-                    <video
-                      src={
-                        typeof watch("video")[0] === "string"
-                          ? `${CONFIG.serverUrl}/assets/${watch("video")[0]}`
-                          : watch("video")[0] instanceof File
-                          ? (watch("video")[0] as FileWithPreview).preview ||
-                            URL.createObjectURL(watch("video")[0])
-                          : ""
-                      }
-                      controls
-                      style={{
-                        width: "100%",
-                        maxWidth: "300px",
-                        height: "auto",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <Button
-                      size="small"
-                      color="error"
-                      onClick={() => setValue("video", [])}
-                      sx={{
-                        position: "absolute",
-                        top: 8,
-                        right: 8,
-                        minWidth: "auto",
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        bgcolor: "rgba(255, 255, 255, 0.9)",
-                        "&:hover": {
-                          bgcolor: "rgba(255, 255, 255, 1)",
-                        },
-                      }}
-                    >
-                      <Iconify icon="mingcute:close-line" width={16} />
-                    </Button>
-                  </Box>
-                </Paper>
-              )}
-            </Box>
-          </Stack>
-        </Card>
+                {/* Video Preview */}
+                {Array.isArray(watch("video")) && watch("video").length > 0 && (
+                  <Paper sx={{ p: 2, mt: 2 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                      Video đã chọn
+                    </Typography>
+                    <Box sx={{ position: "relative", display: "inline-block" }}>
+                      <video
+                        src={
+                          typeof watch("video")[0] === "string"
+                            ? `${CONFIG.serverUrl}/assets/${watch("video")[0]}`
+                            : watch("video")[0] instanceof File
+                            ? (watch("video")[0] as FileWithPreview).preview ||
+                              URL.createObjectURL(watch("video")[0])
+                            : ""
+                        }
+                        controls
+                        style={{
+                          width: "100%",
+                          maxWidth: "300px",
+                          height: "auto",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <Button
+                        size="small"
+                        color="error"
+                        onClick={() => setValue("video", [])}
+                        sx={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          minWidth: "auto",
+                          width: 32,
+                          height: 32,
+                          borderRadius: "50%",
+                          bgcolor: "rgba(255, 255, 255, 0.9)",
+                          "&:hover": {
+                            bgcolor: "rgba(255, 255, 255, 1)",
+                          },
+                        }}
+                      >
+                        <Iconify icon="mingcute:close-line" width={16} />
+                      </Button>
+                    </Box>
+                  </Paper>
+                )}
+              </Box>
+            </Stack>
+          </Card>
+        </Stack>
       ) : (
         ""
       )}

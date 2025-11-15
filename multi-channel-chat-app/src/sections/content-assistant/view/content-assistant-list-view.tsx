@@ -185,6 +185,8 @@ export interface Content {
   media?: File[];
   media_generated_ai?: MediaGeneratedAiItem[];
   video: string;
+  is_post_video?: boolean;
+  is_post_reels?: boolean;
   post_html_format?: string;
   [key: string]: unknown; // Index signature for compatibility
 }
