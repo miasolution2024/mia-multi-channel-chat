@@ -2,98 +2,106 @@
 
 import { DashboardContent } from "@/layouts/dashboard";
 
-import { Box, Grid2 as Grid, Typography } from "@mui/material";
-import { useState } from "react";
+import { Grid2 as Grid } from "@mui/material";
+import { Box, Typography } from "@mui/material";
+import { useState, useEffect, useRef } from "react";
 import DropdownSourceChoice from "../components/dropdown-source-choice";
 import DropdownPageChoice from "../components/dropdown-page-choice";
 import DropdownCalendarChoice from "../components/dropdown-calendar-choice";
-import EcommerceViewTotal from "../ecommerce-view-total";
-import { OmniChoices } from "../type";
-import EcommerceReactionTotal from "../ecommerce-reaction-total";
+import { OmniChoices, DashboardData } from "../type";
+import { callDashboardWebhook } from "@/actions/dashboard-webhook";
+import EcommerceReactionsTotal from "../ecommerce-reactions-total";
+import EcommerceViewsTotal from "../ecommerce-views-total";
+import EcommerceCommentsTotal from "../ecommerce-comments-total";
+import EcommerceSharesTotal from "../ecommerce-shares-total";
 import EcommerceViewChart from "../ecommerce-view-chart";
 import EcommerceReactionChart from "../ecommerce-reaction-chart";
-import EcommercePagesData from "../ecommerce-pages-data";
-import EcommerceTotal from "../ecommerce-total";
-
-// ECOMMERCE
-// ----------------------------------------------------------------------
-
-export const _ecommerceSalesOverview = [
-  "Total profit",
-  "Total income",
-  "Total expenses",
-].map((label) => ({
-  label,
-  totalAmount: 1,
-  value: 10,
-}));
-
-export const _ecommerceBestSalesman = [...Array(5)].map((_, index) => {
-  const category = [
-    "CAP",
-    "Branded shoes",
-    "Headphone",
-    "Cell phone",
-    "Earings",
-  ][index];
-
-  return {
-    id: index,
-    category,
-    rank: `Top ${index + 1}`,
-    email: "email 1",
-    name: "name 1",
-    totalAmount: 12,
-    avatarUrl: "avatar 1",
-    countryCode: ["de", "gb", "fr", "kr", "us"][index],
-  };
-});
-
-export const _ecommerceLatestProducts = [...Array(5)].map((_, index) => {
-  const colors = (index === 0 && [
-    "#2EC4B6",
-    "#E71D36",
-    "#FF9F1C",
-    "#011627",
-  ]) ||
-    (index === 1 && ["#92140C", "#FFCF99"]) ||
-    (index === 2 && [
-      "#0CECDD",
-      "#FFF338",
-      "#FF67E7",
-      "#C400FF",
-      "#52006A",
-      "#046582",
-    ]) ||
-    (index === 3 && ["#845EC2", "#E4007C", "#2A1A5E"]) || ["#090088"];
-
-  return {
-    id: index,
-    colors,
-    name: "product name 1",
-    price: 123,
-    coverUrl: "cover 1",
-    priceSale: 12,
-  };
-});
-
-export const _ecommerceNewProducts = [...Array(4)].map((_, index) => ({
-  id: index,
-  name: "new product 1",
-  coverUrl: "12312",
-}));
+import EcommerceSharesChart from "../ecommerce-shares-chart";
+import EcommerceCommentsChart from "../ecommerce-comments-chart";
+import EcommercePostsData from "../ecommerce-posts-data";
 
 // ----------------------------------------------------------------------
 
 export function OverviewEcommerceView() {
-  // const theme = useTheme() as any;
-
-  // const { user } = useAuthContext();
   const [sourceChoice, setSourceChoice] = useState("Facebook");
   const [pageChoices, setPageChoices] = useState<OmniChoices[]>([]);
   const [startDayChoice, setStartDayChoice] = useState<string>("");
   const [endDayChoice, setEndDayChoice] = useState<string>("");
+  const [prevStartDate, setPrevStartDate] = useState<string>("");
+  const [prevEndDate, setPrevEndDate] = useState<string>("");
   const [periodChoice, setPeriodChoice] = useState("");
+  const [dashboardData, setDashboardData] = useState<DashboardData[]>([]);
+  const previousDatesKeyRef = useRef<string>("");
+  const sentPagesForCurrentDateRangeRef = useRef<Set<string>>(new Set());
+
+  console.log(dashboardData);
+
+  useEffect(() => {
+    const isDataComplete =
+      pageChoices.length > 0 &&
+      startDayChoice !== "" &&
+      endDayChoice !== "" &&
+      prevStartDate !== "" &&
+      prevEndDate !== "";
+
+    if (isDataComplete) {
+      const datesKey = `${startDayChoice}|${endDayChoice}|${prevStartDate}|${prevEndDate}`;
+      const currentPagesSet = new Set(
+        pageChoices.map((p) => `${p.page_id}:${p.token}`)
+      );
+
+      // dates changed (or first run), reset tracking and send all selected pages
+      if (datesKey !== previousDatesKeyRef.current) {
+        const pagesData = pageChoices.map((page) => ({
+          id: page.id,
+          page_id: page.page_id,
+          token: page.token,
+        }));
+
+        callDashboardWebhook({
+          pages: pagesData,
+          start_date: startDayChoice,
+          end_date: endDayChoice,
+          prev_start_date: prevStartDate,
+          prev_end_date: prevEndDate,
+        });
+        previousDatesKeyRef.current = datesKey;
+        // Reset tracking, mark all current pages as sent
+        sentPagesForCurrentDateRangeRef.current = new Set(currentPagesSet);
+      } else {
+        // Dates unchanged -> only send pages that haven't been sent for this date range yet
+        const pagesToSend = pageChoices.filter(
+          (p) =>
+            !sentPagesForCurrentDateRangeRef.current.has(
+              `${p.page_id}:${p.token}`
+            )
+        );
+
+        if (pagesToSend.length > 0) {
+          const pagesData = pagesToSend.map((page) => ({
+            id: page.id,
+            page_id: page.page_id,
+            token: page.token,
+          }));
+
+          callDashboardWebhook({
+            pages: pagesData,
+            start_date: startDayChoice,
+            end_date: endDayChoice,
+            prev_start_date: prevStartDate,
+            prev_end_date: prevEndDate,
+          });
+
+          // tracking even if removed later, to avoid re-sending if re-added
+          pagesToSend.forEach((page) => {
+            sentPagesForCurrentDateRangeRef.current.add(
+              `${page.page_id}:${page.token}`
+            );
+          });
+        }
+      }
+    }
+  }, [pageChoices, startDayChoice, endDayChoice, prevStartDate, prevEndDate]);
 
   return (
     <DashboardContent maxWidth="xl">
@@ -136,46 +144,44 @@ export function OverviewEcommerceView() {
           <DropdownCalendarChoice
             value={periodChoice}
             onChange={setPeriodChoice}
-            onDateRangeChange={(start, end) => {
+            onDateRangeChange={(start, end, prevStart, prevEnd) => {
               setStartDayChoice(start);
               setEndDayChoice(end);
+              setPrevStartDate(prevStart);
+              setPrevEndDate(prevEnd);
             }}
           />
         </Box>
       </Box>
 
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 2.4 }}>
-          <EcommerceReactionTotal
+        <Grid size={{ xs: 12, md: 3 }}>
+          <EcommerceReactionsTotal
             pages={pageChoices}
             startDate={startDayChoice}
             endDate={endDayChoice}
-            period={periodChoice}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 2.4 }}>
-          <EcommerceViewTotal
+        <Grid size={{ xs: 12, md: 3 }}>
+          <EcommerceViewsTotal
             pages={pageChoices}
             startDate={startDayChoice}
             endDate={endDayChoice}
-            period={periodChoice}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 2.4 }}>
-          <EcommerceTotal type={"comments"} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 2.4 }}>
-          <EcommerceTotal type={"shares"} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 2.4 }}>
-          <EcommerceTotal type={"converts"} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 12, lg: 12 }}>
-          <EcommerceViewChart
+        <Grid size={{ xs: 12, md: 3 }}>
+          <EcommerceCommentsTotal
             pages={pageChoices}
             startDate={startDayChoice}
             endDate={endDayChoice}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <EcommerceSharesTotal
+            pages={pageChoices}
+            startDate={startDayChoice}
+            endDate={endDayChoice}
+            onDashboardDataChange={setDashboardData}
           />
         </Grid>
 
@@ -188,11 +194,33 @@ export function OverviewEcommerceView() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 12, lg: 12 }}>
-          <EcommercePagesData
+          <EcommerceViewChart
             pages={pageChoices}
             startDate={startDayChoice}
             endDate={endDayChoice}
-            period={periodChoice}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 12, lg: 12 }}>
+          <EcommerceCommentsChart
+            pages={pageChoices}
+            startDate={startDayChoice}
+            endDate={endDayChoice}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 12, lg: 12 }}>
+          <EcommerceSharesChart
+            pages={pageChoices}
+            startDate={startDayChoice}
+            endDate={endDayChoice}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 12, lg: 12 }}>
+          <EcommercePostsData
+            pages={pageChoices}
+            dashboardData={dashboardData}
           />
         </Grid>
       </Grid>

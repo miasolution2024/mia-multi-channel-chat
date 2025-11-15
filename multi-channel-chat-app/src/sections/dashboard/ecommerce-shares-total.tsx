@@ -1,130 +1,118 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { DashboardData, DashboardTotalData, OmniChoices } from "./type";
+import { useGetTotalDashboardData } from "@/actions/dashboard-channels";
 import { Iconify } from "@/components/iconify";
-import { Box, Card, Typography } from "@mui/material";
-import React, { useState, useEffect } from "react";
-import { FacebookView, OmniChoices } from "./type";
-import { useGetMultipleFacebookPageData } from "@/actions/dashboard-channels";
-import {
-  calculateDateDistance,
-  calculatePreviousDates,
-} from "./hooks/use-date-calculation";
-interface EcommerceViewTotalProps {
+import { Card, Box, Typography } from "@mui/material";
+
+interface EcommerceSharesTotalProps {
   pages: OmniChoices[];
   startDate: string;
   endDate: string;
-  period: string;
+  onDashboardDataChange?: (data: DashboardData[]) => void;
 }
 
-const EcommerceViewTotal: React.FC<EcommerceViewTotalProps> = ({
+const EcommerceSharesTotal: React.FC<EcommerceSharesTotalProps> = ({
   pages,
   startDate,
   endDate,
-  period,
+  onDashboardDataChange,
 }) => {
-  const [totalCurrentData, setTotalCurrentData] = useState(0);
-  const [totalThenData, setTotalThenData] = useState(0);
+  const [sharesTotal, setSharesTotal] = useState<DashboardTotalData[]>([]);
+  const [percentage, setPercentage] = useState(0);
   const [arrowDirection, setArrowDirection] = useState("mdi:arrow-up");
   const [arrowColor, setArrowColor] = useState("#1AC052");
-  const [percentage, setPercentage] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const dateDistance =
-    startDate && endDate
-      ? calculateDateDistance(period, startDate, endDate)
-      : 7;
-  const { prevStartDate, prevEndDate } =
-    startDate && endDate
-      ? calculatePreviousDates(startDate, endDate, dateDistance)
-      : { prevStartDate: startDate, prevEndDate: endDate };
-
-  const currentDataResult = useGetMultipleFacebookPageData(
+  const { dashboardData, isLoading } = useGetTotalDashboardData(
     pages,
-    "page_views_total",
+    "shares",
     startDate,
-    endDate,
-    "total"
+    endDate
   );
 
-  const previousDataResult = useGetMultipleFacebookPageData(
-    pages,
-    "page_views_total",
-    prevStartDate,
-    prevEndDate,
-    "total"
-  );
+  const extractedDashboardData = useMemo(() => {
+    if (Array.isArray(dashboardData?.data)) {
+      return dashboardData.data.map(
+        (item: { id: number; omni_channels: number }) => ({
+          id: item.id,
+          omni_channels: item.omni_channels,
+        })
+      );
+    }
+    return [];
+  }, [dashboardData]);
+
+  useEffect(() => {
+    if (onDashboardDataChange) {
+      onDashboardDataChange(extractedDashboardData);
+    }
+  }, [extractedDashboardData, onDashboardDataChange]);
 
   useEffect(() => {
     if (!pages || pages.length === 0 || !startDate || !endDate) {
-      setTotalCurrentData(0);
-      setTotalThenData(0);
-      setPercentage(0);
-      setArrowDirection("mdi:arrow-up");
-      setArrowColor("#1AC052");
+      setSharesTotal([]);
       return;
     }
 
-    if (currentDataResult.isLoading || previousDataResult.isLoading) {
-      setIsLoading(true);
-      return;
-    }
-
-    setIsLoading(false);
-
-    let totalCurrent = 0;
-    if (
-      currentDataResult.fbPageData &&
-      Array.isArray(currentDataResult.fbPageData)
-    ) {
-      currentDataResult.fbPageData.forEach((result: FacebookView) => {
-        if (result && result.data && result.data.length > 0) {
-          const values = result.data[0].values;
-          if (values && values.length > 0) {
-            totalCurrent += values[0].value || 0;
-          }
-        }
-      });
-    }
-
-    let totalPrevious = 0;
-    if (
-      previousDataResult.fbPageData &&
-      Array.isArray(previousDataResult.fbPageData)
-    ) {
-      previousDataResult.fbPageData.forEach((result: FacebookView) => {
-        if (result && result.data && result.data.length > 0) {
-          const values = result.data[0].values;
-          if (values && values.length > 0) {
-            totalPrevious += values[0].value || 0;
-          }
-        }
-      });
-    }
-
-    setTotalCurrentData(totalCurrent);
-    setTotalThenData(totalPrevious);
-
-    if (totalPrevious === 0) {
-      setPercentage(Math.round(totalCurrent * 100));
-    } else if (totalPrevious > 0) {
-      setPercentage(
-        Math.round(
-          Math.abs((totalCurrent - totalPrevious) / totalPrevious) * 100
-        )
+    if (Array.isArray(dashboardData?.data)) {
+      const dashboardTotalData: DashboardTotalData[] = dashboardData.data.map(
+        (item: {
+          id: number;
+          shares_count?: number;
+          prev_shares_count?: number;
+        }) => ({
+          id: item.id,
+          presentData: item.shares_count ?? 0,
+          previosData: item.prev_shares_count ?? 0,
+        })
       );
+      setSharesTotal(dashboardTotalData);
     } else {
-      setPercentage(0);
+      setSharesTotal([]);
+    }
+  }, [dashboardData, pages, startDate, endDate]);
+
+  const totalCurrentData = useMemo(
+    () =>
+      sharesTotal.reduce(
+        (sum, item) =>
+          sum + (Number.isFinite(item.presentData) ? item.presentData : 0),
+        0
+      ),
+    [sharesTotal]
+  );
+
+  const totalPreviousData = useMemo(
+    () =>
+      sharesTotal.reduce(
+        (sum, item) =>
+          sum + (Number.isFinite(item.previosData) ? item.previosData : 0),
+        0
+      ),
+    [sharesTotal]
+  );
+
+  useEffect(() => {
+    if (totalPreviousData === 0) {
+      setPercentage(
+        totalCurrentData === 0 ? 0 : Math.round(totalCurrentData * 100)
+      );
+      setArrowDirection(
+        totalCurrentData >= 0 ? "mdi:arrow-up" : "mdi:arrow-down"
+      );
+      setArrowColor(totalCurrentData >= 0 ? "#1AC052" : "#DE3B40");
+      return;
     }
 
-    const isIncreasing = totalCurrent >= totalPrevious;
+    const difference = totalCurrentData - totalPreviousData;
+    const isIncreasing = difference >= 0;
+    const percentChange = Math.round(
+      Math.abs(difference / totalPreviousData) * 100
+    );
+
+    setPercentage(percentChange);
     setArrowDirection(isIncreasing ? "mdi:arrow-up" : "mdi:arrow-down");
     setArrowColor(isIncreasing ? "#1AC052" : "#DE3B40");
-  }, [
-    currentDataResult,
-    previousDataResult,
-    pages,
-    startDate,
-    endDate,
-    totalThenData,
-  ]);
+  }, [totalCurrentData, totalPreviousData]);
 
   return (
     <>
@@ -146,7 +134,6 @@ const EcommerceViewTotal: React.FC<EcommerceViewTotalProps> = ({
           <Box
             sx={{
               display: "flex",
-              //   justifyContent: "center",
               alignItems: "center",
             }}
           >
@@ -156,14 +143,14 @@ const EcommerceViewTotal: React.FC<EcommerceViewTotalProps> = ({
                 height: "32px",
                 borderRadius: "100%",
                 padding: "6px",
-                backgroundColor: "#D7E6F8",
+                backgroundColor: "#F2F7FD",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 fontSize: "20px",
               }}
             >
-              <Iconify icon="flowbite:eye-solid" style={{ color: "#2373D3" }} />
+              <Iconify icon="ph:share-fat-fill" style={{ color: "#2373D3" }} />
             </Box>
 
             <Box
@@ -180,7 +167,7 @@ const EcommerceViewTotal: React.FC<EcommerceViewTotalProps> = ({
                   fontWeight: "500px",
                 }}
               >
-                Lượt xem
+                Lượt chia sẻ
               </Typography>
             </Box>
           </Box>
@@ -249,4 +236,4 @@ const EcommerceViewTotal: React.FC<EcommerceViewTotalProps> = ({
   );
 };
 
-export default EcommerceViewTotal;
+export default EcommerceSharesTotal;
