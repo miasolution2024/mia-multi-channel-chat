@@ -5,6 +5,7 @@ export interface AppSettings {
   facebook_app_id: string;
   facebook_app_secret: string;
   public_directus_url: string;
+  public_frontend_url: string;
   webhook_verify_token: string;
   n8n_webhook_url: string;
   scopes: string[];
@@ -29,8 +30,10 @@ export interface IntegrationLog {
 export interface OmnichannelCreateRequest {
   page_id: string;
   page_name: string;
-  access_token: string;
-  refresh_token?: string;
+  sort?: number;
+  access_token?: string;
+  zalo_access_token?: string;
+  zalo_refresh_token?: string;
   is_enabled: boolean;
   expired_date: Date;
   source: OmnichannelSource;
@@ -54,7 +57,6 @@ export enum OmnichannelSource {
 
 export async function GetintegrationSettingsData(
   services: any,
-  req: any,
   getSchema: any
 ): Promise<AppSettings> {
   const { ItemsService } = services;
@@ -62,7 +64,7 @@ export async function GetintegrationSettingsData(
 
   const integrationSettingsService = new ItemsService("integration_settings", {
     schema,
-    accountability: req.accountability,
+    accountability: { admin: true },
   });
 
   try {
@@ -73,7 +75,7 @@ export async function GetintegrationSettingsData(
     if (integrationSettings.length === 0) {
       throw new Error("No intergration settings found in Directus.");
     }
-    
+
     const integrationSettingsData = integrationSettings[0] as AppSettings;
 
     if (
@@ -93,7 +95,6 @@ export async function GetintegrationSettingsData(
 
 export async function GetIntegrationLogsService(
   services: any,
-  req: any,
   getSchema: any
 ): Promise<any> {
   try {
@@ -102,7 +103,7 @@ export async function GetIntegrationLogsService(
 
     const integrationLogsService = new ItemsService("integration_logs", {
       schema,
-      accountability: req.accountability,
+      accountability: { admin: true },
     });
 
     return integrationLogsService;
@@ -114,7 +115,6 @@ export async function GetIntegrationLogsService(
 
 export async function GetOmnichannelsService(
   services: any,
-  req: any,
   getSchema: any
 ): Promise<any> {
   try {
@@ -123,7 +123,9 @@ export async function GetOmnichannelsService(
 
     const OmnichannelsService = new ItemsService("omni_channels", {
       schema,
-      accountability: req.accountability,
+      accountability: {
+        admin: true,
+      },
     });
 
     return OmnichannelsService;
@@ -380,8 +382,9 @@ export async function AddZaloOANewOmnichannel(
     const newOmichannel: OmnichannelCreateRequest = {
       page_id: page.oa_id,
       page_name: page.name,
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      sort: 1,
+      zalo_access_token: accessToken,
+      zalo_refresh_token: refreshToken,
       is_enabled: true,
       expired_date: expiredDate,
       source: OmnichannelSource.ZaloOA,
@@ -394,14 +397,12 @@ export async function AddZaloOANewOmnichannel(
 
 export async function LogIntegrationEvent(
   services: any,
-  req: any,
   getSchema: any,
   logEntry: IntegrationLog
 ): Promise<string> {
   try {
     const integrationLogsService = await GetIntegrationLogsService(
       services,
-      req,
       getSchema
     );
 
@@ -424,7 +425,7 @@ export async function LogInformationEvent(
   context: string = ""
 ): Promise<string> {
   try {
-    return await LogIntegrationEvent(services, req, getSchema, {
+    return await LogIntegrationEvent(services, getSchema, {
       level: "info",
       message,
       context: context,

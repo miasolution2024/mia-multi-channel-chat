@@ -9,7 +9,7 @@ import { useCallback } from "react";
 import { endpoints } from "@/utils/axios";
 import { toast } from "@/components/snackbar";
 import { OmniChannel } from "@/models/omni-channel/omni-channel";
-import { fDate } from "@/utils/format-time";
+import { fDateTime } from "@/utils/format-time";
 import { Label } from "@/components/label";
 // ----------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ export function OmniChannelsTableRow({
           </Label>
         </TableCell>
         <TableCell sx={{ whiteSpace: "nowrap" }}>
-          {fDate(row.expired_date)}
+          {fDateTime(row.expired_date)}
         </TableCell>
 
         {/* <TableCell>
