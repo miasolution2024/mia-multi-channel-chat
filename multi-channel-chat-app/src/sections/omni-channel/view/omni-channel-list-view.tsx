@@ -40,6 +40,7 @@ import { uuidv4 } from "@/utils/uuidv4";
 import { CONFIG } from "@/config-global";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { websocketMessage } from "@/models/websocket-message";
+import { ConversationChannel } from "@/models/conversation/conversations";
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
@@ -366,8 +367,13 @@ export function OmniChannelsListView() {
               disabled={!c.enableAddFeature}
               key={index}
               onClick={() => {
-                openZaloLoginDialog.onTrue();
-                popover.onClose();
+                if (c.name === ConversationChannel.ZALO) {
+                  openZaloLoginDialog.onTrue();
+                  popover.onClose();
+                }
+                else if (c.link) {
+                  window.location.href = c.link;
+                }
               }}
               sx={{ gap: 1 }}
             >
