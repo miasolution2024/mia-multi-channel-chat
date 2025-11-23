@@ -1,4 +1,4 @@
-import { generatePKCE, redirectToErrorPage } from "../helper";
+import { generatePKCE } from "../helper";
 import {
   GetintegrationSettingsData,
   LogIntegrationEvent,
@@ -8,11 +8,10 @@ export async function handleFacebookAuthRequest(
   req: any,
   res: any,
   services: any,
-  getSchema: any,
+  getSchema: any
 ) {
   const integrationSettingsData = await GetintegrationSettingsData(
     services,
-    req,
     getSchema
   );
 
@@ -27,7 +26,7 @@ export async function handleFacebookAuthRequest(
 
     res.redirect(facebookAuthUrl);
   } catch (directusError: any) {
-    const logId = await LogIntegrationEvent(services, req, getSchema, {
+    await LogIntegrationEvent(services, getSchema, {
       level: "error",
       message: `Failed to load handle auth request: ${directusError.message}`,
       context: "handleAuthRequest",
@@ -38,11 +37,7 @@ export async function handleFacebookAuthRequest(
       timestamp: new Date(),
     });
 
-    redirectToErrorPage(
-      res,
-      integrationSettingsData.public_directus_url,
-      logId
-    );
+    res.redirect(integrationSettingsData.public_frontend_url);
   }
 }
 
@@ -50,11 +45,10 @@ export async function handleInstagramAuthRequest(
   req: any,
   res: any,
   services: any,
-  getSchema: any,
+  getSchema: any
 ) {
   const integrationSettingsData = await GetintegrationSettingsData(
     services,
-    req,
     getSchema
   );
   try {
@@ -65,10 +59,10 @@ export async function handleInstagramAuthRequest(
       `redirect_uri=${redirectUri}&` +
       `scope=${integrationSettingsData.instagram_scopes.join(",")}&` +
       `response_type=code`;
- 
+
     res.redirect(instagramAuthUrl);
   } catch (directusError: any) {
-    const logId = await LogIntegrationEvent(services, req, getSchema, {
+    await LogIntegrationEvent(services, getSchema, {
       level: "error",
       message: `Failed to load handle auth request: ${directusError.message}`,
       context: "handleInstagramAuthRequest",
@@ -79,11 +73,7 @@ export async function handleInstagramAuthRequest(
       timestamp: new Date(),
     });
 
-    redirectToErrorPage(
-      res,
-      integrationSettingsData.public_directus_url,
-      logId
-    );
+    res.redirect(integrationSettingsData.public_frontend_url);
   }
 }
 
@@ -91,13 +81,12 @@ export async function handleZaloOAAuthRequest(
   req: any,
   res: any,
   services: any,
-  getSchema: any,
+  getSchema: any
 ) {
   const { code_verifier, code_challenge } = generatePKCE();
 
   const integrationSettingsData = await GetintegrationSettingsData(
     services,
-    req,
     getSchema
   );
 
@@ -111,7 +100,7 @@ export async function handleZaloOAAuthRequest(
 
     res.redirect(zaloAuthUrl);
   } catch (directusError: any) {
-    const logId = await LogIntegrationEvent(services, req, getSchema, {
+    await LogIntegrationEvent(services, getSchema, {
       level: "error",
       message: `Failed to load handle auth request: ${directusError.message}`,
       context: "handleAuthRequest",
@@ -122,10 +111,6 @@ export async function handleZaloOAAuthRequest(
       timestamp: new Date(),
     });
 
-    redirectToErrorPage(
-      res,
-      integrationSettingsData.public_directus_url,
-      logId
-    );
+    res.redirect(integrationSettingsData.public_frontend_url);
   }
 }

@@ -1,4 +1,3 @@
-import { redirectToErrorPage, redirectToFrontend } from "../helper";
 import {
   AddOrUpdateZaloOAOmnichannel,
   GetintegrationSettingsData,
@@ -33,12 +32,11 @@ export async function handleFacebookCallback(
   const code = req.query.code;
   const integrationSettingsData = await GetintegrationSettingsData(
     services,
-    req,
     getSchema
   );
 
   if (!code) {
-    const logId = await LogIntegrationEvent(services, req, getSchema, {
+    await LogIntegrationEvent(services, getSchema, {
       level: "error",
       message: `No authorization code received from Facebook.`,
       context: "handleFacebookCallback",
@@ -49,12 +47,7 @@ export async function handleFacebookCallback(
       timestamp: new Date(),
     });
 
-    redirectToErrorPage(
-      res,
-      integrationSettingsData.public_directus_url,
-      logId
-    );
-    return;
+    res.redirect(integrationSettingsData.public_frontend_url);
   }
 
   await LogInformationEvent(
@@ -122,7 +115,7 @@ export async function handleFacebookCallback(
 
     await SubscribePagesWebhook(req, services, getSchema, pages);
 
-    redirectToFrontend(res, integrationSettingsData.public_directus_url);
+    res.redirect(integrationSettingsData.public_frontend_url);
   } catch (error: any) {
     const errorMessage =
       error instanceof Error
@@ -131,7 +124,7 @@ export async function handleFacebookCallback(
         ? error
         : JSON.stringify(error);
 
-    const logId = await LogIntegrationEvent(services, req, getSchema, {
+    await LogIntegrationEvent(services, getSchema, {
       level: "error",
       message: `An unexpected error occurred during Facebook connection:`,
       context: "handleFacebookCallback",
@@ -142,11 +135,7 @@ export async function handleFacebookCallback(
       timestamp: new Date(),
     });
 
-    redirectToErrorPage(
-      res,
-      integrationSettingsData.public_directus_url,
-      logId
-    );
+    res.redirect(integrationSettingsData.public_frontend_url);
   }
 }
 
@@ -159,12 +148,11 @@ export async function handleInstagramCallback(
   const code = req.query.code;
   const integrationSettingsData = await GetintegrationSettingsData(
     services,
-    req,
     getSchema
   );
 
   if (!code) {
-    const logId = await LogIntegrationEvent(services, req, getSchema, {
+    await LogIntegrationEvent(services, getSchema, {
       level: "error",
       message: `No authorization code received from Instagram.`,
       context: "handleInstagramCallback",
@@ -175,12 +163,7 @@ export async function handleInstagramCallback(
       timestamp: new Date(),
     });
 
-    redirectToErrorPage(
-      res,
-      integrationSettingsData.public_directus_url,
-      logId
-    );
-    return;
+    res.redirect(integrationSettingsData.public_frontend_url);
   }
 
   await LogInformationEvent(
@@ -242,8 +225,7 @@ export async function handleInstagramCallback(
       accessToken,
       expiresIn
     );
-
-    redirectToFrontend(res, integrationSettingsData.public_directus_url);
+    res.redirect(integrationSettingsData.public_frontend_url);
   } catch (error: any) {
     const errorMessage =
       error instanceof Error
@@ -252,7 +234,7 @@ export async function handleInstagramCallback(
         ? error
         : JSON.stringify(error);
 
-    const logId = await LogIntegrationEvent(services, req, getSchema, {
+    await LogIntegrationEvent(services, getSchema, {
       level: "error",
       message: `An unexpected error occurred during Instagram connection:`,
       context: "handleInstagramCallback",
@@ -263,11 +245,7 @@ export async function handleInstagramCallback(
       timestamp: new Date(),
     });
 
-    redirectToErrorPage(
-      res,
-      integrationSettingsData.public_directus_url,
-      logId
-    );
+    res.redirect(integrationSettingsData.public_frontend_url);
   }
 }
 
@@ -281,12 +259,11 @@ export async function handleZaloOACallback(
   const code_verifier = req.query.code_verifier;
   const integrationSettingsData = await GetintegrationSettingsData(
     services,
-    req,
     getSchema
   );
 
   if (!code || !code_verifier) {
-    const logId = await LogIntegrationEvent(services, req, getSchema, {
+    await LogIntegrationEvent(services, getSchema, {
       level: "error",
       message: `No authorization code received from Zalo.`,
       context: "handleZaloCallback",
@@ -297,12 +274,7 @@ export async function handleZaloOACallback(
       timestamp: new Date(),
     });
 
-    redirectToErrorPage(
-      res,
-      integrationSettingsData.public_directus_url,
-      logId
-    );
-    return;
+    res.redirect(integrationSettingsData.public_frontend_url);
   }
 
   await LogInformationEvent(
@@ -343,7 +315,6 @@ export async function handleZaloOACallback(
 
     const OmnichannelsService = await GetOmnichannelsService(
       services,
-      req,
       getSchema
     );
 
@@ -365,7 +336,7 @@ export async function handleZaloOACallback(
       "handleZaloCallback"
     );
 
-    redirectToFrontend(res, integrationSettingsData.public_directus_url);
+    res.redirect(integrationSettingsData.public_frontend_url);
   } catch (error: any) {
     const errorMessage =
       error instanceof Error
@@ -374,7 +345,7 @@ export async function handleZaloOACallback(
         ? error
         : JSON.stringify(error);
 
-    const logId = await LogIntegrationEvent(services, req, getSchema, {
+    await LogIntegrationEvent(services, getSchema, {
       level: "error",
       message: `An unexpected error occurred during Facebook connection:`,
       context: "handleZaloOACallback",
@@ -385,10 +356,6 @@ export async function handleZaloOACallback(
       timestamp: new Date(),
     });
 
-    redirectToErrorPage(
-      res,
-      integrationSettingsData.public_directus_url,
-      logId
-    );
+    res.redirect(integrationSettingsData.public_frontend_url);
   }
 }

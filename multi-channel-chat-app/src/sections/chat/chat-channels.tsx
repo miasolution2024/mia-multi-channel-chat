@@ -32,6 +32,9 @@ export const CHANNELS = [
   {
     name: ConversationChannel.ZALO_OA,
     src: `${CONFIG.assetsDir}/assets/images/logo/zalo-oa.png`,
+    enableAddFeature: true,
+    // link: `${CONFIG.serverUrl}/directus-extension-social-connector/api/zalo/auth`
+    link: `http://localhost:8055/directus-extension-social-connector/api/zalo/auth`
   },
   {
     name: ConversationChannel.WHATSAPP,
