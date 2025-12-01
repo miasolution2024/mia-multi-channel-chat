@@ -76,9 +76,9 @@ export function useGetOmniChannelsByChannel(
   return memoizedValue;
 }
 
-export async function getZaloQRLoginImage(requestId: string) {
+export async function getZaloQRLoginImage(requestId: string, companyId?: string) {
   try {
-    const url = `${CONFIG.utilitiesAPIUr}/qr-login/${requestId}`;
+    const url = `${CONFIG.utilitiesAPIUr}/qr-login/${requestId}?companyId=${companyId || ""}`;
     const response = await axiosInstance.get(url);
     return response.data;
   } catch (error) {

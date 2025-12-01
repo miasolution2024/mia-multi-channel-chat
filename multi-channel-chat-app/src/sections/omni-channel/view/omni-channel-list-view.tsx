@@ -66,6 +66,7 @@ export function OmniChannelsListView() {
 
   const openZaloLoginDialog = useBoolean();
   const { user } = useAuthContext();
+  
   // const router = useRouter();
   const websocketRef = useRef<WebSocket | null>(null);
 
@@ -384,7 +385,7 @@ export function OmniChannelsListView() {
         </MenuList>
       </CustomPopover>
 
-      <ZaloLoginQR requestId={requestId} open={openZaloLoginDialog.value} onClose={openZaloLoginDialog.onFalse}></ZaloLoginQR>
+      <ZaloLoginQR requestId={requestId} companyId={user?.company_id} open={openZaloLoginDialog.value} onClose={openZaloLoginDialog.onFalse}></ZaloLoginQR>
     </>
   );
 }
