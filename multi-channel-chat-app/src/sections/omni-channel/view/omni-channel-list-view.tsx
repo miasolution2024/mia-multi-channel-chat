@@ -373,7 +373,7 @@ export function OmniChannelsListView() {
                   popover.onClose();
                 }
                 else if (c.link) {
-                  window.location.href = c.link;
+                  window.location.href = c.link(user?.company_id);
                 }
               }}
               sx={{ gap: 1 }}

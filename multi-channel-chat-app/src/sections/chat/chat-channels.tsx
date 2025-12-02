@@ -33,7 +33,7 @@ export const CHANNELS = [
     name: ConversationChannel.ZALO_OA,
     src: `${CONFIG.assetsDir}/assets/images/logo/zalo-oa.png`,
     enableAddFeature: true,
-    link: `${CONFIG.serverUrl}/directus-extension-social-connector/api/zalo/auth`
+    link: (companyid?: string) => `${CONFIG.serverUrl}/directus-extension-social-connector/api/zalo/auth?companyid=${companyid}`,
     // link: `http://localhost:8055/directus-extension-social-connector/api/zalo/auth`
   },
   {
@@ -43,6 +43,8 @@ export const CHANNELS = [
   {
     name: ConversationChannel.INSTAGRAM,
     src: `${CONFIG.assetsDir}/assets/images/logo/instagram.png`,
+    enableAddFeature: true,
+    link: (companyid?: string) => `${CONFIG.serverUrl}/directus-extension-social-connector/api/instagram/auth?companyid=${companyid}`,
   },
   // {
   //   name: ConversationChannel.WEBSITE,
