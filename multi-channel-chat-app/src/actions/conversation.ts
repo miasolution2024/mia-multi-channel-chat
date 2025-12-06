@@ -13,6 +13,7 @@ export function getConversationsURL(userId?: string) {
   if (!userId) return "";
   const queryParams = new URLSearchParams({
     "filter[participants][_some][participant_id][_eq]": userId,
+    "filter[messages][id][_nnull]": "true",
     sort: "-last_message_at",
     fields: [
       "*",
