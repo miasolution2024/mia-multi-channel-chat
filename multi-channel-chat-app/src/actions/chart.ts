@@ -37,10 +37,10 @@ export type MessageCount = {
   count: string;
 };
 
-export function useGetMessagesCount(month: number) {
+export function useGetMessagesCount() {
   try {
     const { data, isLoading, error, isValidating } = useSWR(
-      `${endpoints.messages.list}?aggregate[count]=*&groupBy[]=day(date_created)&filter[month(date_created)][_eq]=${month}`,
+      `${endpoints.messages.list}?aggregate[count]=*&groupBy[]=day(date_created)`,
       fetcher,
       swrConfig
     );
@@ -67,10 +67,10 @@ export type AppointmentCount = {
   count: string;
 };
 
-export function useGetAppointmentsCount(month: number) {
+export function useGetAppointmentsCount() {
   try {
     const { data, isLoading, error, isValidating } = useSWR(
-      `${endpoints.appointments.list}?aggregate[count]=*&groupBy[]=status&filter[month(created_at)][_eq]=${month}`,
+      `${endpoints.appointments.list}?aggregate[count]=*&groupBy[]=status`,
       fetcher,
       swrConfig
     );
@@ -97,27 +97,27 @@ export type FBCommentCount = {
   count: string;
 };
 
-export function useGetFBCommentsCount(year: number) {
+export function useGetConversationsCount(year: number) {
   try {
     const { data, isLoading, error, isValidating } = useSWR(
-      `${endpoints.fbComments.list}?aggregate[count]=*&groupBy[]=month(date_created)&filter[year(date_created)][_eq]=${year}`,
+      `${endpoints.conversations.list}?aggregate[count]=*&groupBy[]=month(date_created)&filter[year(date_created)][_eq]=${year}`,
       fetcher,
       swrConfig
     );
 
     const memoizedValue = useMemo(
       () => ({
-        fbCommentsCount: data?.data as FBCommentCount[],
-        fbCommentsCountLoading: isLoading,
-        fbCommentsCountError: error,
-        fbCommentsCountValidating: isValidating,
+        conversationsCount: data?.data as FBCommentCount[],
+        conversationsCountLoading: isLoading,
+        conversationsCountError: error,
+        conversationsCountValidating: isValidating,
       }),
       [data?.data, error, isLoading, isValidating]
     );
 
     return memoizedValue;
   } catch (error) {
-    console.error("Error during get comments count:", error);
+    console.error("Error during get conversations count:", error);
     throw error;
   }
 }

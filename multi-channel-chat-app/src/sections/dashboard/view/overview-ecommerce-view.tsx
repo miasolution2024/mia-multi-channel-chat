@@ -1,15 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useTheme } from "@mui/material/styles";
-
 import { DashboardContent } from "@/layouts/dashboard";
 
 import { EcommerceYearlySales } from "../ecommerce-yearly-sales";
 import { EcommerceBestSalesman } from "../ecommerce-best-salesman";
 import { EcommerceSaleByGender } from "../ecommerce-sale-by-gender";
 import { EcommerceSalesOverview } from "../ecommerce-sales-overview";
-import { EcommerceWidgetSummary } from "../ecommerce-widget-summary";
 import { EcommerceLatestProducts } from "../ecommerce-latest-products";
 import { EcommerceCurrentBalance } from "../ecommerce-current-balance";
 import { Grid2 as Grid, Typography } from "@mui/material";
@@ -19,7 +16,7 @@ import Image from "next/image";
 import {
   useGetAppointmentsCount,
   useGetCustomersCount,
-  useGetFBCommentsCount,
+  useGetConversationsCount,
   useGetMessagesCount,
 } from "@/actions/chart";
 
@@ -107,13 +104,10 @@ export const monthsTxt = [
 // ----------------------------------------------------------------------
 
 export function OverviewEcommerceView() {
-  const theme = useTheme() as any;
   const { customersCount } = useGetCustomersCount(new Date().getFullYear());
-  const { fbCommentsCount } = useGetFBCommentsCount(new Date().getFullYear());
-  const { messagesCount } = useGetMessagesCount(new Date().getMonth() + 1);
-  const { appointmentsCount } = useGetAppointmentsCount(
-    new Date().getMonth() + 1
-  );
+  const { conversationsCount } = useGetConversationsCount(new Date().getFullYear());
+  const { messagesCount } = useGetMessagesCount();
+  const { appointmentsCount } = useGetAppointmentsCount();
 
   //customer
   const totalCustomers = customersCount?.reduce(
@@ -185,22 +179,22 @@ export function OverviewEcommerceView() {
   };
 
   //comment
-  const totalComments = fbCommentsCount?.reduce(
+  const totalComments = conversationsCount?.reduce(
     (sum, c) => sum + parseInt(c.count || "0"),
     0
   );
 
   const commentsChartData = {
-    categories: fbCommentsCount?.map(
+    categories: conversationsCount?.map(
       (m) => monthsTxt[m.date_created_month - 1]
     ),
-    series: fbCommentsCount?.map((m) => m.count),
+    series: conversationsCount?.map((m) => m.count),
   };
 
-  const currentCommentsMonthData = fbCommentsCount?.find(
+  const currentCommentsMonthData = conversationsCount?.find(
     (m) => m.date_created_month === new Date().getMonth() + 1
   );
-  const prevCommentsMonthData = fbCommentsCount?.find(
+  const prevCommentsMonthData = conversationsCount?.find(
     (m) => m.date_created_month === new Date().getMonth()
   );
 
@@ -215,8 +209,8 @@ export function OverviewEcommerceView() {
     prevCommentsMonthCount === 0
       ? 0
       : ((currentCommentsMonthCount - prevCommentsMonthCount) /
-          prevCommentsMonthCount) *
-        100;
+        prevCommentsMonthCount) *
+      100;
 
   return (
     <DashboardContent maxWidth="xl">
@@ -281,10 +275,10 @@ export function OverviewEcommerceView() {
             />
           </Grid>
         )}
-        {fbCommentsCount && (
+        {conversationsCount && (
           <Grid size={{ xs: 12, md: 3, sm: 6 }}>
             <AnalyticsWidgetSummary
-              title="Monthly Comments"
+              title="Conversations"
               percent={percentCommentsChange}
               total={totalComments}
               color='info'
@@ -300,77 +294,6 @@ export function OverviewEcommerceView() {
             />
           </Grid>
         )}
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <EcommerceWidgetSummary
-            title="Product sold"
-            percent={2.6}
-            total={765}
-            chart={{
-              categories: [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-              ],
-              series: [22, 8, 35, 50, 82, 84, 77, 12],
-            }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <EcommerceWidgetSummary
-            title="Total balance"
-            percent={-0.1}
-            total={18765}
-            chart={{
-              colors: [
-                theme.vars.palette.warning.light,
-                theme.vars.palette.warning.main,
-              ],
-              categories: [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-              ],
-              series: [56, 47, 40, 62, 73, 30, 23, 54],
-            }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <EcommerceWidgetSummary
-            title="Sales profit"
-            percent={0.6}
-            total={4876}
-            chart={{
-              colors: [
-                theme.vars.palette.error.light,
-                theme.vars.palette.error.main,
-              ],
-              categories: [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-              ],
-              series: [40, 70, 75, 70, 50, 28, 7, 64],
-            }}
-          />
-        </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <EcommerceSaleByGender
