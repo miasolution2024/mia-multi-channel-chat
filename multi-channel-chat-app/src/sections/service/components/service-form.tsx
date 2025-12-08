@@ -188,14 +188,7 @@ export function ServiceForm({ service }: Props) {
           price: data.price,
           duration: data.duration,
           note: data.note,
-          file_training: {
-            create: [{
-              services_id: "+",
-              directus_files_id: { id: fileTrainingId },
-            }],
-            update: [],
-            delete: [],
-          },
+          
           omni_channels: {
             create:
               data.omni_channels?.map((channelId: number) => ({
@@ -205,7 +198,18 @@ export function ServiceForm({ service }: Props) {
             update: [],
             delete: [],
           },
+          ...(fileTrainingId ? {
+            file_training: {
+              create: [{
+                services_id: "+",
+                directus_files_id: { id: fileTrainingId },
+              }],
+              update: [],
+              delete: [],
+            },
+          } : {}),
         };
+        
         await createService(createPayload as unknown as ServiceFormData);
       }
 
