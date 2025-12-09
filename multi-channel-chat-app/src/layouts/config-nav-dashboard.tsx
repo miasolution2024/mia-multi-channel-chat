@@ -104,7 +104,7 @@ export const navData = [
       },
 
       {
-        title: "AI đề xuất nội dung",
+        title: "AI sản xuất nội dung",
         path: paths.dashboard.contentAssistant.root,
         icon: ICONS.blog,
       },

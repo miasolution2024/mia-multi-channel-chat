@@ -46,7 +46,7 @@ export function useGetCustomerJourneyProcess(
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, name, id]);
+  }, [page, limit, name, id, status]);
 
   // Auto-fetch when parameters change
   useEffect(() => {
