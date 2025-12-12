@@ -72,6 +72,11 @@ export const navData = [
     subheader: "Định vị khách hàng",
     items: [
       {
+        title: "Giai đoạn khách hàng",
+        path: paths.dashboard.customerJourney.root,
+        icon: ICONS.suppier,
+      },
+      {
         title: "Hành trình khách hàng",
         path: paths.dashboard.customerJourneyProcess.root,
         icon: ICONS.category,
@@ -81,12 +86,6 @@ export const navData = [
         path: paths.dashboard.customerGroup.root,
         icon: ICONS.banking,
       },
-      {
-        title: "Giai đoạn khách hàng",
-        path: paths.dashboard.customerJourney.root,
-        icon: ICONS.suppier,
-      },
-
       {
         title: "Hành vi khách hàng",
         path: paths.dashboard.customerInsight.root,

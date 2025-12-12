@@ -96,7 +96,7 @@ export function CustomerJourneySelectionDialog({
                     />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Tên hành trình</Typography>
+                    <Typography variant="subtitle2">Tên giai đoạn</Typography>
                   </TableCell>
                 </TableRow>
               </TableHead>
