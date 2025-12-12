@@ -10,7 +10,7 @@ import { Message, MessageType } from "@/models/message/message";
 import { Participant } from "@/models/participants/participant";
 import { useEffect, useRef, useState } from "react";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
-import { getConversationDetailURL } from "@/actions/conversation";
+import { getConversationDetailURL, getConversationsUnreadCountURL } from "@/actions/conversation";
 import { mutate } from "swr";
 import { websocketMessage } from "@/models/websocket-message";
 import { CONFIG } from "@/config-global";
@@ -28,13 +28,17 @@ export function ChatMessageList({
   messages: Message[];
   participants: Participant[];
   loading: boolean;
-  selectConversationId: string;
+  selectConversationId: number;
 }) {
   const { messagesEndRef } = useMessagesScroll(messages);
 
   const slides = messages
     .filter((message: Message) => message.type === MessageType.IMAGE)
-    .map((message: Message) => ({ src: message.content }));
+    .flatMap((message: Message) =>
+      message.attachments.map((a) => ({
+        src: `${CONFIG.serverUrl}/assets/${a.directus_files_id.id}`,
+      }))
+    );
 
   const lightbox = useLightBox(slides);
 
@@ -134,6 +138,7 @@ export function ChatMessageList({
           setPlayNotification(true);
 
         mutate(getConversationDetailURL(selectConversationId));
+        mutate(getConversationsUnreadCountURL());
       }
       if (data.type === "ping") {
         connection.send(JSON.stringify({ type: "pong" }));
@@ -201,7 +206,11 @@ export function ChatMessageList({
             key={message.id}
             message={message}
             participants={participants}
-            onOpenLightbox={() => lightbox.onOpen(message.content)}
+            onOpenLightbox={() =>
+              lightbox.onOpen(
+                `${CONFIG.serverUrl}/assets/${message.attachments[0].directus_files_id.id}`
+              )
+            }
           />
         ))}
       </Scrollbar>

@@ -72,8 +72,8 @@ export function StepFormatHtml() {
       {/* AI Notes Input - Prominent at top */}
       <Box sx={{ mb: 3 }}>
         <RHFTextField
-          name="ai_notes_html_coding"
-          placeholder={"Viết mô tả HTML bạn hướng đến AI đề xuất"}
+          name="additional_notes_step_4"
+          placeholder={"Viết mô tả hình ảnh bạn hướng đến AI đề xuất"}
           multiline={isNotesExpanded}
           rows={isNotesExpanded ? 4 : 1}
           onClick={() => setIsNotesExpanded(true)}
@@ -129,7 +129,6 @@ export function StepFormatHtml() {
             value={tabValue}
             onChange={handleTabChange}
             aria-label="HTML editor tabs"
-            sx={{marginLeft: 3}}
           >
             <Tab label="Chỉnh sửa" {...a11yProps(0)} />
             <Tab label="Xem trước" {...a11yProps(1)} />

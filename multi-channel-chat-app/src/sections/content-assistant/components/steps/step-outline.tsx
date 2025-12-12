@@ -12,13 +12,14 @@ import { Iconify } from "@/components/iconify";
 // ----------------------------------------------------------------------
 
 export function StepOutline() {
+
   return (
     <Stack spacing={3}>
       {/* AI Notes Input - Prominent at top */}
       <Box sx={{ mb: 3 }}>
         <RHFTextField
-          name="ai_notes_write_article"
-          placeholder="Viết thêm mô tả chi tiết khi tạo nội dung bài viết"
+          name="additional_notes_step_2"
+          placeholder="Viết thêm mô tả chi tiết và lưu ý bài viết"
           multiline
           minRows={1}
           maxRows={4}
@@ -40,7 +41,6 @@ export function StepOutline() {
           sx={{
             "& .MuiOutlinedInput-root": {
               transition: "all 0.3s ease",
-              backgroundColor: "background.paper",
               "&:hover": {
                 boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
               },

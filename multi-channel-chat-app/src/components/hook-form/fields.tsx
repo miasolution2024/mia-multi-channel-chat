@@ -4,7 +4,7 @@ import { RHFPhoneInput } from "./rhf-phone-input";
 import { RHFRating } from "./rhf-rating";
 import { RHFTextField } from "./rhf-text-field";
 import { RHFUpload, RHFUploadAvatar, RHFUploadBox } from "./rhf-upload";
-import { RHFSelect } from "./rhf-select";
+import { RHFMultiSelect, RHFSelect } from "./rhf-select";
 import { RHFAutocomplete } from "./rhf-autocomplete";
 import { RHFSwitch } from "./rhf-switch";
 import { RHFDatePicker } from "./rhf-date-picker";
@@ -19,6 +19,7 @@ export const Field = {
   Phone: RHFPhoneInput,
   Editor: RHFEditor,
   Select: RHFSelect,
+  MultiSelect: RHFMultiSelect,
   Autocomplete: RHFAutocomplete,
   Switch: RHFSwitch,
   DatePicker: RHFDatePicker,

@@ -1,95 +1,90 @@
 import { autoMiaAxiosInstance } from "@/utils/axios";
 
-export type PostRequest = {
-  id: number;
-  startStep: number;
-  endStep: number;
-}[]
-
-export type CampaignRequest = {
-  campaignId: number;
-  step: number;
-}
-export type CustomerInsightRequest = {
-  customer_group_id: number;
-  startStep: number;
-  endStep: number;
-}
-
-export type CustomerInsightResponse = PostResponse
-
-
-
-interface PostResponse {
-  success: boolean;
-  message?: string;
-  data?: {
-    totalStepRun: number;
-    step: number;
-    post_id: number;
+interface Step1Data {
+  topic: string;
+  post_type: string;
+  main_seo_keyword: string;
+  secondary_seo_keywords: string[];
+  customer_group: {
+    "customer_group_id": number;
   }[];
+  customer_journey: {
+    "customer_journey_id": number;
+  }[];
+  omni_channels: {
+    "omni_channels_id": number;
+  }[];
+  ai_rule_based: {
+    "ai_rule_based_id": number;
+  }[];
+  content_tone: {
+    "content_tone_id": number;
+  }[];
+  additional_notes_step_1: string;
 }
 
-export type CampaignResponse = PostResponse
+interface PostBaiVietRequest {
+  step1: Step1Data | Record<string, unknown>;
+  step2: Record<string, unknown>;
+  step3: Record<string, unknown>;
+  step4: Record<string, unknown>;
+}
 
-
-
-export const createPost = async (
-  data: PostRequest
-): Promise<PostResponse> => {
-  try {
-    const response = await autoMiaAxiosInstance.post("/webhook/post-bai-viet", 
-     { data}
-    );
-    return {
-      success: true,
-      data: response.data || []
+interface PostBaiVietResponse {
+  data?: {
+    id: number;
+    status: string;
+    post_type: string | null;
+    topic: string;
+    main_seo_keyword: string;
+    outline_post?: string;
+    post_goal?: string;
+    post_content?: string;
+    post_html_format?: string;
+    omni_channels?: {
+      omni_channels_id: number;
     };
-  } catch (error: unknown) {
+    customer_group: {
+      customer_group_id: {
+        id: number;
+        name: string;
+      };
+    }[];
+    content_tone: {
+      content_tone_id: {
+        id: number;
+        tone_name: string | null;
+        tone_description: string;
+      };
+    }[];
+    customer_journey: {
+      customer_journey_id: {
+        id: number;
+        name: string;
+      };
+    }[];
+    ai_rule_based: {
+      ai_rule_based_id: {
+        id: number;
+        content: string;
+      };
+    }[];
+    media_generated_ai: {
+      directus_files_id: string;
+      id: number;
+      url: string;
+    }[];
+  };
+  [key: string]: unknown;
+}
+
+export const createPost = async (data: PostBaiVietRequest): Promise<PostBaiVietResponse> => {
+  try {
+    const response = await autoMiaAxiosInstance.post("/webhook/post-bai-viet", [data]);
+    console.log('response', response)
+    return response?.data?.[0] || {};
+  } catch (error) {
     console.error("Error calling post-bai-viet API:", error);
-    return {
-      success: false,
-      message: 'Có lỗi xảy ra'
-    };
-  }
-};
-
-export const createCampaignN8N = async (
-  data: CampaignRequest[]
-): Promise<CampaignResponse> => {
-  try {
-    const response = await autoMiaAxiosInstance.post("/webhook/campaign", 
-     { data}
-    );
-    return {
-      success: true,
-      data: response.data || []
-    };
-  } catch (error: unknown) {
-    console.error("Error calling campaign API:", error);
-    return {
-      success: false,
-      message: 'Có lỗi xảy ra'
-    };
-  }
-};
-
-export const createCustomerInsightN8N = async (
-  data: CustomerInsightRequest[]
-): Promise<CustomerInsightResponse> => {
-  try {
-    const response = await autoMiaAxiosInstance.post("/webhook/insight", 
-     { data}
-    );
-    return {
-      success: true,
-      data: response.data || []
-    };
-  } catch (error: unknown) {
-    console.error("Error calling customer insight API:", error);
-    return {
-      success: false,
-      message: 'Có lỗi xảy ra'
-    };
+    return {};
   }
 };

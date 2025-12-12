@@ -8,41 +8,27 @@ import IconButton from "@mui/material/IconButton";
 import { Iconify } from "@/components/iconify";
 
 import { initialConversation } from "./utils/initial-conversation";
-import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { User } from "@/models/auth/user";
-import { mutate } from "swr";
-import { paths } from "@/routes/path";
-import {
-  createConversationAsync,
-  getConversationsURL,
-} from "@/actions/conversation";
 import { sendMessage } from "@/actions/message";
 import {
   Conversation,
   ConversationChannel,
 } from "@/models/conversation/conversations";
-import { Participant } from "@/models/participants/participant";
 
 // ----------------------------------------------------------------------
 
 export function ChatMessageInput({
   disabled,
-  recipients,
-  onAddRecipients,
   selectedConversationId,
   selectedChannel,
   conversation,
 }: {
   disabled: boolean;
-  recipients: Participant[];
-  onAddRecipients: (recipients: Participant[]) => void;
-  selectedConversationId?: string;
+  selectedConversationId?: number;
   selectedChannel: ConversationChannel;
   conversation?: Conversation;
 }) {
-  const router = useRouter();
-
   const { user } = useAuthContext();
 
   const fileRef = useRef<any | null>(null);
@@ -60,9 +46,8 @@ export function ChatMessageInput({
     [user]
   );
 
-  const { messageData, conversationData } = initialConversation({
+  const { messageData } = initialConversation({
     message,
-    recipients,
     me: myContact,
     selectedConversationId,
     conversation,
@@ -83,31 +68,14 @@ export function ChatMessageInput({
     try {
       if (!message) return;
 
-      if (selectedConversationId) {
-        await sendMessage(messageData);
-        // mutate(getConversationDetailURL(selectedConversationId));
-      } else {
-        // If the conversation does not exist
-        const res = await createConversationAsync(conversationData);
-        mutate(getConversationsURL(selectedChannel, user?.id));
-        router.push(`${paths.dashboard.chat}?id=${res.data.id}`);
-        onAddRecipients([]);
-      }
+      if (!selectedConversationId) return;
+      await sendMessage(messageData);
     } catch (error) {
       console.error(error);
     } finally {
       setMessage("");
     }
-  }, [
-    conversationData,
-    message,
-    messageData,
-    onAddRecipients,
-    router,
-    selectedConversationId,
-    selectedChannel,
-    user?.id,
-  ]);
+  }, [message, messageData, selectedConversationId]);
 
   return (
     <>

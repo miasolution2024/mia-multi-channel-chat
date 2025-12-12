@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -27,7 +27,8 @@ import type {
   DataItem,
 } from "@/components/custom-table/custom-table";
 import { usePopover, CustomPopover } from "@/components/custom-popover";
-import { useAiRules } from "@/hooks/apis/use-ai-rules";
+import { toast } from "@/components/snackbar";
+import { getAiRules, deleteAiRule } from "@/actions/ai-rules";
 
 import { AiRule } from "../types";
 
@@ -103,30 +104,53 @@ const TABLE_HEAD: TableConfig<DataItem>[] = [
 export function AiRulesListView() {
   const router = useRouter();
   const confirm = useBoolean();
+  const loading = useBoolean(true);
 
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
+  const [rules, setRules] = useState<AiRule[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [page, setPage] = useState<number>(0); // 0-based for MUI pagination
   const [pageSize, setPageSize] = useState<number>(20); // Default to 20 items per page
 
-  // Use the custom hook for AI rules management
-  const { rules, totalCount, loading, deleteRule } = useAiRules({
-    page: page + 1, // Convert to 1-based for API
-    pageSize,
-    autoFetch: true,
-  });
+  // Fetch AI rules with pagination
+  useEffect(() => {
+    const fetchRules = async () => {
+      try {
+        loading.onTrue();
+        const response = await getAiRules(page + 1, pageSize); // Convert to 1-based for API
+        setRules(response.data || []);
+        setTotalCount(response.meta?.total_count || 0);
+      } catch (error) {
+        console.error("Error fetching AI rules:", error);
+        toast.error("Không thể tải danh sách quy tắc AI");
+      } finally {
+        loading.onFalse();
+      }
+    };
+
+    fetchRules();
+  }, [loading, page, pageSize]); // Re-fetch when page or pageSize changes
 
   const handleDeleteConfirm = useCallback(async () => {
     if (selectedRuleId) {
       try {
-        await deleteRule(selectedRuleId);
-      } catch {
-        // Error handling is already done in the hook
+        await deleteAiRule(selectedRuleId);
+
+        // Refresh the current page after deletion
+        const response = await getAiRules(page + 1, pageSize);
+        setRules(response.data || []);
+        setTotalCount(response.meta?.total_count || 0);
+
+        toast.success("Xóa quy tắc thành công!");
+      } catch (error) {
+        console.error("Error deleting AI rule:", error);
+        toast.error("Không thể xóa quy tắc AI");
       } finally {
         setSelectedRuleId(null);
         confirm.onFalse();
       }
     }
-  }, [selectedRuleId, confirm, deleteRule]);
+  }, [selectedRuleId, confirm, page, pageSize]);
 
   const handleDeleteClick = useCallback(
     (ruleId: string) => {
@@ -200,8 +224,8 @@ export function AiRulesListView() {
                           )
                         : undefined,
                   }))}
-                  loading={loading}
-                  firstLoading={loading}
+                  loading={loading.value}
+                  firstLoading={loading.value}
                   count={totalCount}
                   page={page}
                   pageSize={pageSize}

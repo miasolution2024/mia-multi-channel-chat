@@ -34,7 +34,7 @@ export function ChatHeaderDetail({
   participants: Participant[];
   loading: boolean;
   is_chatbot_active: boolean;
-  selectedConversationId: string;
+  selectedConversationId: number;
 }) {
   const popover = usePopover();
 

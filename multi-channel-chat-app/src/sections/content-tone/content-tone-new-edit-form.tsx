@@ -6,10 +6,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z as zod } from 'zod';
 
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
-import CardHeader from "@mui/material/CardHeader";
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
 
 import { paths } from '@/routes/path';
 import { toast } from '@/components/snackbar';
@@ -87,7 +87,7 @@ export function ContentToneNewEditForm({ currentTone }: Props) {
             label="Mô tả"
             placeholder="Nhập mô tả văn phong AI..."
             multiline
-            rows={14}
+            rows={4}
           />
 
           <Stack alignItems="flex-end" sx={{ mt: 3 }}>

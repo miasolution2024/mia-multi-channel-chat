@@ -91,7 +91,7 @@ export function AiRulesNewEditForm({ currentRule }: Props) {
             name="content"
             label="Nội dung quy tắc"
             multiline
-            rows={14}
+            rows={4}
             placeholder="Nhập nội dung quy tắc AI..."
           />
         </Stack>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
 import CardHeader from "@mui/material/CardHeader";
@@ -12,175 +12,138 @@ import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
+import CircularProgress from "@mui/material/CircularProgress";
 import { useFormContext } from "react-hook-form";
 
 import { RHFTextField, RHFEditor, RHFUpload } from "@/components/hook-form";
 import { Iconify } from "@/components/iconify";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { CONFIG } from "@/config-global";
-import {
-  MediaGeneratedAiItem,
-  updateContentAssistant,
-  getContentAssistantList,
-} from "@/actions/content-assistant";
-import { createPost, PostRequest } from "@/actions/auto-mia";
-import { buildStepWriteArticleData, FormData } from "../../utils";
+import { createPost } from "@/actions/auto-mia";
 import { toast } from "@/components/snackbar";
+import { Content } from "../../view/content-assistant-list-view";
+import { CONFIG } from "@/config-global";
+import { MediaGeneratedAiItem } from "@/actions/content-assistant";
 
 // ----------------------------------------------------------------------
 
-// Extended File interface to include preview property
-interface FileWithPreview extends File {
-  preview?: string;
-}
+type Props = {
+  currentContent?: Content;
+};
 
-interface StepContentProps {
-  contentAssistantId?: string;
-  hasDataChanged?: boolean;
-  setAiImagesToCheckDelete?: (value: MediaGeneratedAiItem[]) => void;
-}
-
-export function StepContent({
-  contentAssistantId,
-  hasDataChanged,
-  setAiImagesToCheckDelete,
-}: StepContentProps) {
+export function StepContent({ currentContent }: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
 
-  const { setValue, watch, getValues } = useFormContext();
-  const mediaGeneratedAi = watch("media_generated_ai");
-  const videoData = watch("video");
+  const { setValue, watch } = useFormContext();
+  const mediaGeneratedAi = watch("media_generated_ai") || [];
 
-  // Check if video data exists
-  const hasVideo =
-    videoData &&
-    ((Array.isArray(videoData) && videoData.length > 0) ||
-      (!Array.isArray(videoData) && videoData));
-
-  // Initialize generated images from existing mediaGeneratedAi data
-  useEffect(() => {
-    if (mediaGeneratedAi && mediaGeneratedAi.length > 0) {
-      const imageUrls = mediaGeneratedAi.map(
-        (item: MediaGeneratedAiItem | string) => {
-          const fileId =
-            typeof item === "string" ? item : item.directus_files_id;
-          return `${CONFIG.serverUrl}/assets/${fileId}`;
-        }
-      );
-      setGeneratedImages(imageUrls);
-    }
-  }, [mediaGeneratedAi]);
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
   const handleGenerateImage = async () => {
-    if (!contentAssistantId) {
-      toast.error("Content Assistant ID not found");
-      return;
-    }
-
+    setIsGenerating(true);
     try {
-      setIsGenerating(true);
-
-      // Build data for WRITE_ARTICLE step
-      const formData = getValues() as FormData;
-
-      // Check if there are data changes to determine if we should exclude media
-      // If no data changes, exclude media information from the update
-      const shouldExcludeMedia = !hasDataChanged; // Exclude media if no data changes
-
-      const stepData = await buildStepWriteArticleData(
-        {
-          ...formData,
-          is_generated_by_AI: true,
+      const formData = watch();
+      const apiData = {
+        id: currentContent?.id || formData.id || null,
+        step1: {},
+        step2: {},
+        step3: {
+          post_content: formData.post_content,
+          ai_notes_create_image_step_3: formData.ai_notes_create_image_step_3,
+          isGeneratedByAI: true,
         },
-        undefined,
-        shouldExcludeMedia
-      );
+        step4: {},
+      };
 
-      // Save current form data to Directus
-      const updateResponse = await updateContentAssistant(contentAssistantId, {
-        ...stepData,
-        is_generated_by_AI: true,
-      });
-      if (!updateResponse) {
-        throw new Error("Failed to save data to Directus");
-      }
-      // Call N8N with specific parameters
-      const inputN8NData: PostRequest = [
-        {
-          id: parseInt(contentAssistantId),
-          startStep: 3,
-          endStep: 4,
-        },
-      ];
-
-      const n8nResponse = await createPost(inputN8NData);
-
-      if (!n8nResponse.success) {
-        throw new Error("Failed to generate images via N8N");
-      }
-
-      // Fetch updated data from Directus to get AI-generated images
-      const updatedDataResponse = await getContentAssistantList({
-        id: Number(contentAssistantId),
-      });
-      if (updatedDataResponse.data[0]) {
-        // Update form with new AI-generated images
-        if (updatedDataResponse.data[0].media_generated_ai) {
-          const imageIds = updatedDataResponse.data[0].media_generated_ai?.map(
+      const response = await createPost(apiData);
+      if (response?.data?.media_generated_ai) {
+        setGeneratedImages(
+          response?.data?.media_generated_ai?.map((item) => {
+            return `${CONFIG.serverUrl}/assets/${item.directus_files_id}&key=system-large-contain`;
+          })
+        );
+        setValue(
+          "media_generated_ai",
+          response.data.media_generated_ai?.map(
             (item) => item.directus_files_id
-          );
-          setValue("media_generated_ai", imageIds, {
-            shouldDirty: true,
-          });
+          )
+        );
+      }
 
-          const imageIdsToCheckDelete = updatedDataResponse.data[0].media_generated_ai;
-          if (imageIdsToCheckDelete?.length) {
-            setAiImagesToCheckDelete?.(imageIdsToCheckDelete);
-          }
-        }
-        toast.success("Images generated successfully!");
+      if (response?.data) {
+        toast.success("Tạo sinh hình ảnh thành công!");
       } else {
-        throw new Error("Failed to fetch updated data from Directus");
+        toast.error("Có lỗi xảy ra khi tạo sinh hình ảnh!");
       }
     } catch (error) {
-      console.error("Error generating images:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to generate images"
-      );
+      console.error("Error generating image:", error);
+      toast.error("Có lỗi xảy ra khi tạo sinh hình ảnh!");
     } finally {
       setIsGenerating(false);
     }
   };
 
   const handleRemoveImage = (index: number) => {
-    const removedImageUrl = generatedImages[index];
     const updatedImages = generatedImages.filter((_, i) => i !== index);
     setGeneratedImages(updatedImages);
 
     const updatedMedia = mediaGeneratedAi.filter(
       (item: MediaGeneratedAiItem | string) => {
         const fileId = typeof item === "string" ? item : item.directus_files_id;
-        const imageUrl = `${CONFIG.serverUrl}/assets/${fileId}`;
-        return imageUrl !== removedImageUrl;
+        return !generatedImages.includes(
+          `${CONFIG.serverUrl}/assets/${fileId}&key=system-large-contain`
+        );
       }
     );
-    setValue("media_generated_ai", updatedMedia);
+    setValue("media_generated_ai", [...updatedMedia, ...updatedImages]);
   };
 
   return (
     <Box>
       <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
         <Tab label="Bài viết" />
-        {!hasVideo && <Tab label="Tệp đính kèm" />}
+        <Tab label="Tệp đính kèm" />
       </Tabs>
 
       {activeTab === 0 && (
         <Card>
+          <Box sx={{ m: 3 }}>
+            <RHFTextField
+              name="additional_notes_step_3"
+              placeholder="💬 Viết thêm mô tả chi tiết và lưu ý bài viết"
+              multiline
+              minRows={1}
+              maxRows={4}
+              InputProps={{
+                startAdornment: (
+                  <Iconify
+                    icon="solar:magic-stick-3-bold"
+                    sx={{
+                      color: "primary.main",
+                      mr: 1,
+                      fontSize: 20,
+                    }}
+                  />
+                ),
+                sx: {
+                  alignItems: "flex-start",
+                },
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                  },
+                  "&.Mui-focused": {
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                  },
+                },
+              }}
+            />
+          </Box>
           <CardHeader title="Nội dung bài viết" />
           <Stack spacing={3} sx={{ p: 3 }}>
             <RHFEditor
@@ -192,14 +155,14 @@ export function StepContent({
         </Card>
       )}
 
-      {activeTab === 1 && !hasVideo && (
+      {activeTab === 1 && (
         <Card>
           <CardHeader title="Tệp đính kèm" />
           <Stack spacing={3} sx={{ p: 3 }}>
             {/* AI Notes for Image Generation */}
             <Box>
               <RHFTextField
-                name="ai_notes_create_image"
+                name="ai_notes_create_image_step_3"
                 placeholder="Viết mô tả hình ảnh bạn hướng đến AI đề xuất"
                 multiline
                 minRows={1}
@@ -249,11 +212,17 @@ export function StepContent({
               <Button
                 variant="contained"
                 onClick={handleGenerateImage}
-                startIcon={<Iconify icon="solar:gallery-add-bold" />}
+                startIcon={
+                  isGenerating ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <Iconify icon="solar:gallery-add-bold" />
+                  )
+                }
                 disabled={isGenerating}
                 sx={{ mb: 3 }}
               >
-                Tạo sinh hình ảnh
+                {isGenerating ? "Đang tạo sinh..." : "Tạo sinh hình ảnh"}
               </Button>
 
               {/* Hiển thị ảnh đã generate */}
@@ -315,19 +284,20 @@ export function StepContent({
             {/* File Upload Section */}
             <Box>
               <Typography variant="h6" sx={{ mb: 2 }}>
-                Hình ảnh được đính kèm
+                Tệp được đính kèm
               </Typography>
               <RHFUpload
                 name="media"
                 multiple
                 accept={{
-                  "image/*": [".jpeg", ".jpg", ".png"],
+                  "image/*": [".jpeg", ".jpg", ".png", ".gif"],
                 }}
                 helperText="Chọn nhiều hình ảnh để đính kèm"
                 hidePreview={true}
               />
+
               {/* Hiển thị ảnh đã upload */}
-              {Array.isArray(watch("media")) && watch("media").length > 0 && (
+              {watch("media")?.length > 0 && (
                 <Paper sx={{ p: 2, mt: 2 }}>
                   <Typography variant="subtitle2" sx={{ mb: 2 }}>
                     Hình ảnh đã tải lên ({watch("media").length})
@@ -338,10 +308,7 @@ export function StepContent({
                         <Box sx={{ position: "relative" }}>
                           <Box
                             component="img"
-                            src={
-                              (file as FileWithPreview).preview ||
-                              URL.createObjectURL(file)
-                            }
+                            src={URL.createObjectURL(file)}
                             alt={`Uploaded ${index + 1}`}
                             sx={{
                               width: "100%",
@@ -356,9 +323,7 @@ export function StepContent({
                             size="small"
                             color="error"
                             onClick={() => {
-                              const currentMedia = Array.isArray(watch("media"))
-                                ? watch("media")
-                                : [];
+                              const currentMedia = watch("media") || [];
                               const updatedMedia = currentMedia.filter(
                                 (_: File, i: number) => i !== index
                               );
@@ -390,19 +355,9 @@ export function StepContent({
                 </Paper>
               )}
             </Box>
-
-            <Divider />
-
-            {/* Video Upload Section */}
           </Stack>
         </Card>
       )}
-
-      <LoadingOverlay
-        open={isGenerating}
-        title="Đang tạo sinh hình ảnh..."
-        description="AI đang phân tích nội dung và tạo sinh hình ảnh phù hợp"
-      />
     </Box>
   );
 }

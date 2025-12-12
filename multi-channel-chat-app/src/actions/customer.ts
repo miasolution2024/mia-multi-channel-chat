@@ -5,10 +5,60 @@ import { Customer, CustomerRequest } from "@/models/customer/customer";
 
 // ----------------------------------------------------------------------
 
-export function useGetCustomers() {
-  const url = endpoints.customers.list;
+export function getCustomersByOmniChannelUrl(
+  pageId: string,
+  searchText?: string
+) {
+  if (!pageId) return "";
+  let queryParams;
 
-  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrConfig);
+  if (searchText) {
+    queryParams = new URLSearchParams({
+      "filter[omni_channel][page_id][_eq]": pageId,
+      "filter[name][_icontains]": searchText,
+      fields: ["id", "name", "phone_number", "email"].join(","),
+    }).toString();
+  } else {
+    queryParams = new URLSearchParams({
+      "filter[omni_channel][page_id][_eq]": pageId,
+      fields: ["id", "name", "phone_number", "email"].join(","),
+    }).toString();
+  }
+
+  return `${endpoints.customers.list}?${queryParams}`;
+}
+
+export function useGetCustomersByOmniChannel(
+  pageId: string,
+  searchText?: string
+) {
+  const { data, isLoading, error, isValidating } = useSWR(
+    getCustomersByOmniChannelUrl(pageId, searchText),
+    fetcher,
+    swrConfig
+  );
+
+  const memoizedValue = useMemo(
+    () => ({
+      customers: (data?.data as Customer[]) || [],
+      customersLoading: isLoading,
+      customersError: error,
+      customersValidating: isValidating,
+      customersEmpty: !isLoading && !data?.data.length,
+    }),
+    [data?.data, error, isLoading, isValidating]
+  );
+
+  return memoizedValue;
+}
+
+// ----------------------------------------------------------------------
+export function useGetCustomers() {
+  const { data, isLoading, error, isValidating } = useSWR(
+    endpoints.customers.list,
+    fetcher,
+    swrConfig
+  );
 
   const memoizedValue = useMemo(
     () => ({

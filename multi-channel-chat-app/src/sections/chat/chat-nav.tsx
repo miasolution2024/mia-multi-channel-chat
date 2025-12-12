@@ -6,7 +6,6 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Drawer from "@mui/material/Drawer";
 import TextField from "@mui/material/TextField";
-import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 
@@ -17,21 +16,19 @@ import { Scrollbar } from "@/components/scrollbar";
 
 import { ToggleButton } from "./styles";
 import { ChatNavItem } from "./chat-nav-item";
-import { ChatNavAccount } from "./chat-nav-account";
-import { ChatNavItemSkeleton } from "./chat-skeleton";
+import { ChatPageFilter } from "./chat-nav-page-filter";
 import { ChatNavSearchResults } from "./chat-nav-search-results";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
-import { today } from "@/utils/format-time";
 import { paths } from "@/routes/path";
 import { useRouter } from "next/navigation";
-import { Participant } from "@/models/participants/participant";
+import useSWRInfinite from "swr/infinite";
 import {
   Conversation,
   ConversationChannel,
 } from "@/models/conversation/conversations";
-import { initialConversation } from "./utils/initial-conversation";
 import {
-  createConversationAsync,
+  getConversationByParticipantId,
+  getConversationsUnreadCountURL,
   getConversationsURL,
 } from "@/actions/conversation";
 import { websocketMessage } from "@/models/websocket-message";
@@ -39,6 +36,12 @@ import { mutate } from "swr";
 import { CONFIG } from "@/config-global";
 import NotificationSound from "@/components/notification-sound/notification-sound";
 import { uuidv4 } from "@/utils/uuidv4";
+import { fetcher } from "@/utils/axios";
+import { useGetOmniChannelsByChannel } from "@/actions/omni-channel";
+import { useGetCustomersByOmniChannel } from "@/actions/customer";
+import { Customer } from "@/models/customer/customer";
+import { useDebounce } from "@/hooks/use-debounce";
+import { SelectChangeEvent } from "@mui/material";
 
 // ----------------------------------------------------------------------
 
@@ -47,18 +50,12 @@ const NAV_WIDTH = 320;
 const NAV_COLLAPSE_WIDTH = 96;
 
 export function ChatNav({
-  loading,
-  contacts,
   collapseNav,
-  conversations,
   selectedConversationId,
   channel,
 }: {
-  loading: boolean;
-  contacts: Participant[];
   collapseNav: any;
-  conversations: Conversation[];
-  selectedConversationId: string;
+  selectedConversationId: number;
   channel: ConversationChannel;
 }) {
   const router = useRouter();
@@ -66,7 +63,6 @@ export function ChatNav({
   const mdUp = useResponsive("up", "md");
 
   const { user } = useAuthContext();
-  const allIds = conversations.map((c) => c.id);
 
   const {
     openMobile,
@@ -74,33 +70,59 @@ export function ChatNav({
     onCloseMobile,
     onCloseDesktop,
     collapseDesktop,
-    onCollapseDesktop,
   } = collapseNav;
 
-  const [searchContacts, setSearchContacts] = useState<{
-    query: string;
-    results: Participant[];
-  }>({
-    query: "",
-    results: [],
-  });
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const myContact = useMemo(
-    () => ({
-      id: `${user?.id}`,
-      role: user?.role,
-      email: `${user?.email}`,
-      full_name: `${user?.full_name}`,
-      lastActivity: today(),
-      avatar: `${user?.avatar}`,
-      status: "online",
-    }),
-    [user]
+  const debouncedQuery = useDebounce(searchQuery);
+
+  const [selectedPageId, setSelectedPageId] = useState<string>("");
+
+  const getKey = (pageIndex: number, previousPageData: any) => {
+    if (
+      (previousPageData && previousPageData?.data?.length === 0) ||
+      !selectedPageId ||
+      !user?.id
+    )
+      return null;
+    const url = getConversationsURL(channel, selectedPageId, user?.id);
+
+    return `${url}&page=${pageIndex + 1}`;
+  };
+
+  const { data, setSize } = useSWRInfinite<{
+    data: Conversation[];
+  }>(getKey, fetcher);
+
+  const conversations = useMemo(
+    () => (data ? data.flatMap((page) => page.data) : []),
+    [data]
   );
 
+  const allIds = conversations.map((c) => c.id);
+
+  const { omniChannels } = useGetOmniChannelsByChannel(channel);
+
+  const { customers } = useGetCustomersByOmniChannel(
+    selectedPageId,
+    debouncedQuery
+  );
+
+  useEffect(() => {
+    if (omniChannels.length > 0) {
+      setSelectedPageId(omniChannels[0].page_id);
+    }
+  }, [omniChannels]);
+
+  useEffect(() => {
+    setSize(1);
+  }, [selectedPageId, setSize]);
+
   const websocketRef = useRef<WebSocket | null>(null);
+  const chatNavRef = useRef<any>(null);
 
   const [playNotification, setPlayNotification] = useState<boolean>(false);
+
   useEffect(() => {
     if (playNotification) {
       const timer = setTimeout(() => {
@@ -176,10 +198,12 @@ export function ChatNav({
       if (data.event === "create") {
         console.log(`New conversation created`);
         setPlayNotification(true);
-        mutate(getConversationsURL(channel, user?.id));
+        mutate(getConversationsURL(channel, selectedPageId, user?.id));
+        mutate(getConversationsUnreadCountURL());
       } else if (data.event === "update") {
         console.log(`Conversation updated updated!`);
-        mutate(getConversationsURL(channel, user?.id));
+        mutate(getConversationsURL(channel, selectedPageId, user?.id));
+        mutate(getConversationsUnreadCountURL());
       }
 
       if (data.type === "ping") {
@@ -223,84 +247,65 @@ export function ChatNav({
     }
   }, [onCloseDesktop, mdUp]);
 
-  const handleToggleNav = useCallback(() => {
-    if (mdUp) {
-      onCollapseDesktop();
-    } else {
-      onCloseMobile();
-    }
-  }, [mdUp, onCloseMobile, onCollapseDesktop]);
-
-  const handleClickCompose = useCallback(() => {
-    if (!mdUp) {
-      onCloseMobile();
-    }
-    router.push(paths.dashboard.chat);
-  }, [mdUp, onCloseMobile, router]);
-
   const handleSearchContacts = useCallback(
-    (inputValue: any) => {
-      setSearchContacts((prevState) => ({ ...prevState, query: inputValue }));
-
-      if (inputValue) {
-        const results = contacts.filter((contact: Participant) =>
-          contact.participant_name.toLowerCase().includes(inputValue)
-        );
-
-        setSearchContacts((prevState) => ({ ...prevState, results }));
-      }
+    (inputValue: string) => {
+      setSearchQuery(inputValue);
     },
-    [contacts]
+    [customers]
   );
 
   const handleClickAwaySearch = useCallback(() => {
-    setSearchContacts({ query: "", results: [] });
+    setSearchQuery("");
   }, []);
 
   const handleClickResult = useCallback(
-    async (result: Participant) => {
+    async (result: Customer) => {
       handleClickAwaySearch();
 
-      const linkTo = (id: string) =>
+      const linkTo = (id: number) =>
         router.push(`${paths.dashboard.chat}?id=${id}`);
 
       try {
-        const conversation = conversations.find((c) =>
-          c.participants.some((p) => p.participant_id == result.participant_id)
-        );
-        // Check if the conversation already exists
-        if (!!conversation?.id) {
-          // linkTo(conversation.id);
+        const conversationSearchResults = (await getConversationByParticipantId(
+          result.id
+        )) as Conversation[];
+
+        if (conversationSearchResults.length > 0) {
+          linkTo(conversationSearchResults[0].id);
           return;
         }
-
-        // Find the recipient in contacts
-        const recipient = contacts.find(
-          (contact: any) => contact.id === result.id
-        );
-        if (!recipient) {
-          console.error("Recipient not found");
-          return;
-        }
-
-        // Prepare conversation data
-        const { conversationData } = initialConversation({
-          recipients: [recipient],
-          me: myContact,
-          selectedChannel: channel,
-        });
-
-        // Create a new conversation
-        const res = await createConversationAsync(conversationData);
-        linkTo(res.data.id);
       } catch (error) {
         console.error("Error handling click result:", error);
       }
     },
-    [contacts, handleClickAwaySearch, myContact, router, conversations]
+    [handleClickAwaySearch, router, conversations]
   );
 
-  const renderLoading = <ChatNavItemSkeleton />;
+  const loadMoreRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node) return;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            setSize((prev) => prev + 1);
+          }
+        },
+        { threshold: 1.0 }
+      );
+
+      observer.observe(node);
+
+      return () => observer.disconnect();
+    },
+    [setSize]
+  );
+
+  const handSelectPage = (event: SelectChangeEvent) => {
+    setSelectedPageId(event.target.value);
+    if (chatNavRef.current) {
+      chatNavRef.current.scrollTop = 0;
+    }
+  };
 
   const renderList = (
     <nav>
@@ -314,14 +319,16 @@ export function ChatNav({
             onCloseMobile={onCloseMobile}
           />
         ))}
+
+        <div ref={loadMoreRef}></div>
       </Box>
     </nav>
   );
 
   const renderListResults = (
     <ChatNavSearchResults
-      query={searchContacts.query}
-      results={searchContacts.results}
+      query={searchQuery}
+      results={customers}
       onClickResult={handleClickResult}
     />
   );
@@ -330,7 +337,7 @@ export function ChatNav({
     <ClickAwayListener onClickAway={handleClickAwaySearch}>
       <TextField
         fullWidth
-        value={searchContacts.query}
+        value={searchQuery}
         onChange={(event) => handleSearchContacts(event.target.value)}
         placeholder="Search contacts..."
         InputProps={{
@@ -355,39 +362,21 @@ export function ChatNav({
       >
         {!collapseDesktop && (
           <>
-            <ChatNavAccount />
+            <ChatPageFilter
+              pages={omniChannels}
+              handleChange={handSelectPage}
+              pageId={selectedPageId}
+            />
             <Box sx={{ flexGrow: 1 }} />
           </>
-        )}
-
-        <IconButton onClick={handleToggleNav}>
-          <Iconify
-            icon={
-              collapseDesktop
-                ? "eva:arrow-ios-forward-fill"
-                : "eva:arrow-ios-back-fill"
-            }
-          />
-        </IconButton>
-
-        {!collapseDesktop && (
-          <IconButton onClick={handleClickCompose}>
-            <Iconify width={24} icon="solar:user-plus-bold" />
-          </IconButton>
         )}
       </Stack>
 
       <Box sx={{ p: 2.5, pt: 0 }}>{!collapseDesktop && renderSearchInput}</Box>
 
-      {loading ? (
-        renderLoading
-      ) : (
-        <Scrollbar sx={{ pb: 1 }}>
-          {searchContacts.query && !!allIds.length
-            ? renderListResults
-            : renderList}
-        </Scrollbar>
-      )}
+      <Scrollbar ref={chatNavRef} sx={{ pb: 1 }}>
+        {searchQuery && !!allIds.length ? renderListResults : renderList}
+      </Scrollbar>
     </>
   );
 

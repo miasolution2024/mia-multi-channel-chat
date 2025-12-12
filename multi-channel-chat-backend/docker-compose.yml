@@ -17,8 +17,7 @@ services:
     volumes:
       - ./extensions:/directus/extensions
       - ./migrations:/directus/migrations
-      - ./key.json:/directus/key.json
-      
+      - ../../files/directus/key.json:/directus/key.json
     depends_on:
       cache:
         condition: service_healthy
@@ -35,7 +34,7 @@ services:
       CACHE_ENABLED: "true"
       CACHE_AUTO_PURGE: "true"
       CACHE_STORE: "redis"
-      REDIS: "redis://cache:6379"
+      REDIS: ${REDIS_CONNECTION_URL}
 
       ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
       ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
@@ -53,12 +52,14 @@ services:
       EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD}
 
       CORS_ENABLED: true
-      CORS_ORIGIN: "http://localhost:3000,https://mia-multi-channel-chat-1vmrsdspw-mia-solutions-projects.vercel.app"
+      CORS_ORIGIN: "http://localhost:3000,https://donghan-aichat.miasolution.vn"
 
       ACCESS_TOKEN_TTL: "1d"
 
       WEBSOCKETS_ENABLED: true
 
+      EXTENSIONS_AUTO_RELOAD: true
+      
       FILES_MAX_UPLOAD_SIZE: "20mb"
 
       ROBOTS_TXT: |
@@ -71,7 +72,3 @@ services:
 
         User-agent: Meta
         Allow: /assets/
-volumes:
-  extensions:
-  database:
-  migrations:
