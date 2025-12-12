@@ -97,6 +97,7 @@ export function RHFMultiSelectSearchable({
   // Initial load
   useEffect(() => {
     loadData("", 1, true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Search handler

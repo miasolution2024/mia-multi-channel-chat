@@ -13,6 +13,10 @@ import {
   IconButton,
   MenuList,
   MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 
 import { paths } from "@/routes/path";
@@ -82,12 +86,30 @@ function AiRuleActionMenu({ onEdit, onDelete }: AiRuleActionMenuProps) {
 }
 
 const TABLE_HEAD: TableConfig<DataItem>[] = [
-  { key: "id", label: "ID", align: "left" },
-  { key: "content", label: "Nội dung", align: "left" },
+  { key: "id", label: "ID", align: "left", width: 100 },
+  {
+    key: "content",
+    label: "Nội dung",
+    align: "left",
+    render: (item: DataItem) => (
+      <Box
+        sx={{
+          cursor: "pointer",
+          "&:hover": {
+            textDecoration: "underline",
+          },
+        }}
+      >
+        {item.content as string}
+      </Box>
+    ),
+  },
   {
     key: "actions",
     label: "Hành động",
     align: "center",
+    width: 120,
+    sticky: "right",
     render: (item: DataItem) => (
       <AiRuleActionMenu
         rule={item as AiRule}
@@ -103,8 +125,10 @@ const TABLE_HEAD: TableConfig<DataItem>[] = [
 export function AiRulesListView() {
   const router = useRouter();
   const confirm = useBoolean();
+  const contentDialog = useBoolean();
 
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
+  const [selectedContent, setSelectedContent] = useState<string>("");
   const [page, setPage] = useState<number>(0); // 0-based for MUI pagination
   const [pageSize, setPageSize] = useState<number>(20); // Default to 20 items per page
 
@@ -134,6 +158,14 @@ export function AiRulesListView() {
       confirm.onTrue();
     },
     [confirm]
+  );
+
+  const handleContentClick = useCallback(
+    (content: string) => {
+      setSelectedContent(content);
+      contentDialog.onTrue();
+    },
+    [contentDialog]
   );
 
   // Handle page change
@@ -182,7 +214,23 @@ export function AiRulesListView() {
                   tableConfig={TABLE_HEAD.map((col) => ({
                     ...col,
                     render:
-                      col.key === "actions"
+                      col.key === "content"
+                        ? (item: DataItem) => (
+                            <Box
+                              onClick={() =>
+                                handleContentClick(item.content as string)
+                              }
+                              sx={{
+                                cursor: "pointer",
+                                "&:hover": {
+                                  textDecoration: "underline",
+                                },
+                              }}
+                            >
+                              {item.content as string}
+                            </Box>
+                          )
+                        : col.key === "actions"
                         ? (item: DataItem) => (
                             <AiRuleActionMenu
                               rule={item as AiRule}
@@ -229,6 +277,23 @@ export function AiRulesListView() {
           </Button>
         }
       />
+
+      <Dialog
+        open={contentDialog.value}
+        onClose={contentDialog.onFalse}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Nội dung quy tắc</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ whiteSpace: "pre-wrap", pt: 2 }}>
+            {selectedContent}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={contentDialog.onFalse}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

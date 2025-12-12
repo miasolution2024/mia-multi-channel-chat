@@ -69,12 +69,12 @@ export const navData = [
     ],
   },
   {
-    subheader: "Chiến dịch Marketing",
+    subheader: "Định vị khách hàng",
     items: [
       {
-        title: "Quản lý chiến dịch",
-        path: paths.dashboard.marketingCampaign.root,
-        icon: ICONS.inventory,
+        title: "Hành trình khách hàng",
+        path: paths.dashboard.customerJourneyProcess.root,
+        icon: ICONS.category,
       },
       {
         title: "Nhóm khách hàng",
@@ -86,18 +86,25 @@ export const navData = [
         path: paths.dashboard.customerJourney.root,
         icon: ICONS.suppier,
       },
-      {
-        title: "Hành trình khách hàng",
-        path: paths.dashboard.customerJourneyProcess.root,
-        icon: ICONS.category,
-      },
+
       {
         title: "Hành vi khách hàng",
         path: paths.dashboard.customerInsight.root,
         icon: ICONS.user,
       },
+    ],
+  },
+  {
+    subheader: "Chiến dịch Marketing",
+    items: [
       {
-        title: "AI đề xuất nội dung",
+        title: "Quản lý chiến dịch",
+        path: paths.dashboard.marketingCampaign.root,
+        icon: ICONS.inventory,
+      },
+
+      {
+        title: "AI sản xuất nội dung",
         path: paths.dashboard.contentAssistant.root,
         icon: ICONS.blog,
       },
