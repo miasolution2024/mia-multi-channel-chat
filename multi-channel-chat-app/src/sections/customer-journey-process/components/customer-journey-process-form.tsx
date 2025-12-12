@@ -182,7 +182,7 @@ export function CustomerJourneyProcessForm({ customerJourneyProcess }: Props) {
               startIcon={<Iconify icon="mingcute:add-line" />}
               onClick={() => createCustomerJourneyDialogOpen.onTrue()}
             >
-              Thêm hành trình
+              Thêm giai đoạn
             </Button>
           }
           sx={{ mb: 3 }}
