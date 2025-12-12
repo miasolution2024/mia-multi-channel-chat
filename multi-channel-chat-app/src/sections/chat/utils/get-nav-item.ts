@@ -1,6 +1,5 @@
 import { Conversation } from "@/models/conversation/conversations";
 import { MessageType } from "@/models/message/message";
-import { ParticipantType } from "@/models/participants/participant";
 
 export function getNavItem({
   currentUserId,
@@ -12,9 +11,7 @@ export function getNavItem({
   const { messages, participants } = conversation;
 
   const participantsInConversation = participants.filter(
-    (participant) =>
-      participant.participant_id !== currentUserId &&
-      participant.participant_type !== ParticipantType.CHATBOT
+    (participant) => participant.participant_id !== currentUserId
   );
 
   const displayName = participantsInConversation
@@ -26,17 +23,12 @@ export function getNavItem({
   let displayText = "";
 
   if (lastMessage) {
-    const sender =
-      lastMessage.sender_id === currentUserId || lastMessage.sender_type === ParticipantType.CHATBOT
-        ? "You: "
-        : "";
+    const sender = lastMessage.sender_id === currentUserId ? "You: " : "";
 
     const message =
       lastMessage.type === MessageType.IMAGE
         ? "Sent a photo"
-        : lastMessage.type === MessageType.TEXT
-        ? lastMessage.content
-        : "Sent an attachment";
+        : lastMessage.content;
 
     displayText = `${sender}${message}`;
   }

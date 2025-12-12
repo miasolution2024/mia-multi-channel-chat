@@ -1,785 +1,824 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import * as zod from "zod";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
-import { alpha } from "@mui/material/styles";
-import Backdrop from "@mui/material/Backdrop";
-import Typography from "@mui/material/Typography";
-import LinearProgress from "@mui/material/LinearProgress";
+import { alpha } from "@mui/material";
 
-import { paths } from "@/routes/path";
 import { toast } from "@/components/snackbar";
 import { Form } from "@/components/hook-form";
-import { Content } from "./view/content-assistant-list-view";
-import { CONFIG } from "@/config-global";
+import { LoadingOverlay } from "@/components/loading-overlay";
 
 import {
   ContentStepper,
   StepResearch,
   StepOutline,
   StepContent,
+  PublishModal,
   StepFormatHtml,
 } from "./components";
-import { createPost } from "@/actions/auto-mia";
-import { POST_STATUS } from "@/constants/auto-post";
-import { uploadFile } from "@/actions/upload";
+import { POST_STEP, POST_TYPE } from "@/constants/auto-post";
+import {
+  ContentSchema,
+  FormData,
+  getFieldsForStep,
+  getDefaultValues,
+  buildStepResearchData,
+  buildStepOutlineData,
+  buildStepWriteArticleData,
+  buildStepHtmlCodingData,
+  hasFormDataChanged,
+  FileWithApiProperties,
+  MediaGeneratedAiItem,
+  transformMediaItems,
+} from "./utils";
+import { CreateContentAssistantRequest } from "./types/content-assistant-create";
+import { UpdateContentAssistantRequest } from "./types/content-assistant-update";
+import { createPost, PostRequest } from "@/actions/auto-mia";
+import { ContentAssistantApiResponse, getContentAssistantList } from "@/actions/content-assistant";
+  import { useRouter } from "next/navigation";
+import { Content } from "./view/content-assistant-list-view";
+import { useCreateContentAssistant } from "@/hooks/apis/use-create-content-assistant";
+import { useUpdateContentAssistant } from "@/hooks/apis/use-update-content-assistant";
+import { useGetContentAssistantById } from "@/hooks/apis/use-get-content-assistant-by-id";
+
 
 // ----------------------------------------------------------------------
 
-const ContentSchema = zod.object({
-  // Step 1: Research & Analysis
-  topic: zod.string().min(1, { message: "Chủ đề là bắt buộc!" }),
-  post_type: zod.string().min(1, { message: "Loại bài viết là bắt buộc!" }),
-  main_seo_keyword: zod
-    .string()
-    .min(1, { message: "Từ khoá SEO chính là bắt buộc!" }),
-  secondary_seo_keywords: zod.string().array().default([]),
-  customer_group: zod.number().array().min(1, "Nhóm khách hàng là bắt buộc"),
-  customer_journey: zod
-    .number()
-    .array()
-    .min(1, { message: "Hành trình khách hàng là bắt buộc!" }),
-  additional_notes: zod.string().default(""),
-  ai_rule_based: zod.number().array().default([]),
-  content_tone: zod.number().array().default([]),
-  additional_notes_step_1: zod.string().default(""),
-  omni_channels: zod
-    .number()
-    .array()
-    .min(1, { message: "Omni channel là bắt buộc" }),
+interface ContentAssistantMultiStepFormProps {
+  editData?: Content | ContentAssistantApiResponse | null;
+}
 
-  // Step 2: Outline
-  outline_post: zod.string().min(1, { message: "Dàn ý không được để trống" }),
-  post_goal: zod.string().min(1, { message: "Mục tiêu không được để trống" }),
-  post_notes: zod.string().default(""),
-  additional_notes_step_2: zod.string().default(""),
-
-  // Step 3: Content
-  post_content: zod.string().default(""),
-  additional_notes_step_3: zod.string().default(""),
-  ai_notes_create_image_step_3: zod.string().default(""),
-  media: zod.instanceof(File).array().default([]),
-  media_generated_ai: zod
-    .array(
-      zod.object({
-        id: zod.number(),
-        ai_content_suggestions_id: zod.number(),
-        directus_files_id: zod.string(),
-      })
-    )
-    .default([]),
-
-  // Step 4: Format
-  additional_notes_step_4: zod.string().default(""),
-  post_html_format: zod.string().default(""),
-
-  // fields not in form
-  status: zod.string().default(POST_STATUS.DRAFT),
-  id: zod.number().nullable().default(null),
-});
-
-type FormData = zod.infer<typeof ContentSchema>;
-
-// ----------------------------------------------------------------------
-
-// Helper function to upload files
-const uploadFiles = async (
-  files: File[]
-): Promise<Array<{ id: string; url: string }>> => {
-  if (!files || files.length === 0) {
-    return [];
-  }
-
-  const uploadPromises = files.map(async (file: File) => {
-    const uploadResponse = await uploadFile(file);
-    return {
-      id: uploadResponse.data.id,
-      url: `${CONFIG.serverUrl}/admin/files/${uploadResponse.data.id}`,
+const getVideoDuration = (file: File): Promise<number> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const media = new Audio(reader.result as string);
+      media.onloadedmetadata = () => {
+        resolve(media.duration);
+      };
+    };
+    reader.readAsDataURL(file);
+    reader.onerror = (error) => {
+      reject(error);
     };
   });
 
-  return await Promise.all(uploadPromises);
-};
+export function ContentAssistantMultiStepForm({
+  editData,
+}: ContentAssistantMultiStepFormProps) {
 
-type Props = {
-  editData?: Content;
-  onIdChange?: (
-    watchMethod: () => Record<string, unknown>,
-    activeStep: number
-  ) => void;
-};
+  const [aiImagesToCheckDelete, setAiImagesToCheckDelete] = useState<MediaGeneratedAiItem[]>([]);
 
-export function ContentAssistantMultiStepForm({ editData, onIdChange }: Props) {
   const router = useRouter();
-  const [activeStep, setActiveStep] = useState(0);
-  const [isNextLoading, setIsNextLoading] = useState(false);
-  const [cachedStep1Data, setCachedStep1Data] =
-    useState<Partial<FormData> | null>(null);
-  const [cachedStep2Data, setCachedStep2Data] =
-    useState<Partial<FormData> | null>(null);
-
-  const defaultValues: Partial<FormData> = useMemo(
-    () => ({
-      // Step 1
-      topic: "",
-      post_type: "social_post",
-      main_seo_keyword: "",
-      secondary_seo_keywords: [],
-      customer_group: [],
-      customer_journey: [],
-      content_tone: [],
-      ai_rule_based: [],
-      additional_notes_step_1: "",
-      status: POST_STATUS.DRAFT as string,
-      id: null,
-      omni_channels: [],
-
-      // Step 2
-      outline_post: "",
-      post_goal: "",
-      post_notes: "",
-      additional_notes_step_2: "",
-
-      // Step 3
-      post_content: "",
-      additional_notes_step_3: "",
-      ai_notes_create_image_step_3: "",
-      media: [],
-      media_generated_ai: [],
-
-      // Step 4
-      additional_notes_step_4: "",
-      post_html_format: "",
-    }),
-    []
+  const getInitStep = (initStep: string | undefined) => {
+    if (!initStep) return POST_STEP.RESEARCH_ANALYSIS;
+    if ([POST_STEP.GENERATE_IMAGE, POST_STEP.WRITE_ARTICLE].includes(initStep))
+      return POST_STEP.WRITE_ARTICLE;
+    if (
+      [POST_STEP.RESEARCH_ANALYSIS, POST_STEP.MAKE_OUTLINE, POST_STEP.HTML_CODING].includes(initStep)
+    )
+      return initStep;
+  };
+  const [activeStep, setActiveStep] = useState(
+    editData ? getInitStep(editData?.current_step) : POST_STEP.RESEARCH_ANALYSIS
   );
+  const [isNextLoading, setIsNextLoading] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [hasDataChanged, setHasDataChanged] = useState(false);
+  const { createContentAssistant, isLoading: isCreating } =
+    useCreateContentAssistant();
+  const { updateContentAssistant, isLoading: isUpdating } =
+    useUpdateContentAssistant();
+  const { getContentAssistant } = useGetContentAssistantById();
+
+  useEffect(() => {
+    if(editData?.current_step) {
+      const initStep = getInitStep(editData?.current_step);
+      setActiveStep(initStep);
+    }
+  }, [editData])
+  
+
+
+  const isProcessing = isCreating || isUpdating || isNextLoading;
+  const initialDataRef = useRef<FormData | null>(null);
+
+  const defaultValues = getDefaultValues(editData);
 
   const methods = useForm<FormData>({
     resolver: zodResolver(ContentSchema),
     defaultValues,
     mode: "onChange",
+    shouldFocusError: true,
   });
+  const { watch } = methods;
 
-  const {
-    reset,
-    handleSubmit,
-    trigger,
-    formState: { isSubmitting },
-  } = methods;
-
+  // Store initial data when form is loaded with existing data
   useEffect(() => {
-    if (editData) {
-      // Extract IDs from nested objects for edit mode
-      try {
-        const editValues = {
-          // Step 1
-          topic: editData.topic || "",
-          post_type: editData.post_type || "social_post",
-          main_seo_keyword: editData.main_seo_keyword || "",
-          secondary_seo_keywords: editData.secondary_seo_keywords || [],
-          customer_group: Array.isArray(editData.customer_group)
-            ? editData.customer_group
-                .map(
-                  (item: { customer_group_id: { id: number } }) =>
-                    item.customer_group_id?.id
-                )
-                .filter((id: number) => id > 0)
-            : [],
-          customer_journey: Array.isArray(editData.customer_journey)
-            ? editData.customer_journey
-                .map(
-                  (item: { customer_journey_id: { id: number } }) =>
-                    item.customer_journey_id?.id
-                )
-                .filter((id: number) => id > 0)
-            : [],
-          content_tone: Array.isArray(editData.content_tone)
-            ? editData.content_tone
-                .map(
-                  (item: { content_tone_id: { id: number } }) =>
-                    item.content_tone_id?.id
-                )
-                .filter((id: number) => id > 0)
-            : [],
-          ai_rule_based: Array.isArray(editData.ai_rule_based)
-            ? editData.ai_rule_based
-                .map(
-                  (item: { ai_rule_based_id: { id: number } }) =>
-                    item.ai_rule_based_id?.id
-                )
-                .filter((id: number) => id > 0)
-            : [],
-          additional_notes_step_1: editData.additional_notes_step_1 || "",
-          status: (editData.status as string) || (POST_STATUS.DRAFT as string),
-          id: typeof editData.id === "number" ? editData.id : null,
-          omni_channels: Array.isArray(editData.omni_channels)
-            ? editData.omni_channels
-                .map(
-                  (item: { omni_channels_id: number }) => item.omni_channels_id
-                )
-                .filter((id: number) => id > 0)
-            : [],
+    const currentData = methods.getValues();
+    if (currentData.id && !initialDataRef.current) {
+      initialDataRef.current = { ...currentData };
+    }
+  }, [methods]);
 
-          // Step 2
-          outline_post: editData.outline_post || "",
-          post_goal: editData.post_goal || "",
-          post_notes: editData.post_notes || "",
-          additional_notes_step_2: editData.additional_notes_step_2 || "",
-
-          // Step 3
-          post_content:
-            typeof editData.post_content === "string"
-              ? editData.post_content
-              : "",
-          additional_notes_step_3: editData.additional_notes_step_3 || "",
-          ai_notes_create_image_step_3:
-            editData.ai_notes_create_image_step_3 || "",
-          media: editData.media || [],
-          media_generated_ai: editData.media_generated_ai || [],
-
-          // Step 4
-          additional_notes_step_4: editData.additional_notes_step_4 || "",
-          post_html_format: editData.post_html_format || "",
-        };
-        reset(editValues);
-        // Set cache with current edit data to prevent unnecessary API calls
-        setCachedStep1Data(getStep1FormData(editValues as FormData));
-        setCachedStep2Data(getStep2FormData(editValues as FormData));
-
-        // Determine the appropriate step based on editData.action
-        let targetStep = 0;
-        if (editData.action) {
-          const actionToStepMap: Record<string, number> = {
-            research_analysis: 0,
-            make_outline: 1,
-            write_article: 2,
-            generate_image: 2,
-            HTML_coding: 3,
-          };
-          targetStep = actionToStepMap[editData.action] ?? 0;
-        } else {
-          // Fallback: determine step based on available data if no action
-          if (
-            typeof editData.post_html_format === "string" &&
-            editData.post_html_format.trim() !== ""
-          ) {
-            targetStep = 3; // Step 4 (Format HTML)
-          } else if (
-            typeof editData.post_content === "string" &&
-            editData.post_content.trim() !== ""
-          ) {
-            targetStep = 2; // Step 3 (Content)
-          } else if (
-            typeof editData.outline_post === "string" &&
-            editData.outline_post.trim() !== ""
-          ) {
-            targetStep = 1; // Step 2 (Outline)
-          } else {
-            targetStep = 0; // Step 1 (Research)
-          }
-        }
-        setActiveStep(targetStep);
-      } catch (error) {
-        console.error("Error mapping editData:", error);
-        reset(defaultValues);
-        setActiveStep(0);
+  // Watch for form changes to enable/disable save draft
+  useEffect(() => {
+    const subscription = methods.watch((data) => {
+      if (data?.id && initialDataRef.current) {
+        // Use the same logic as handleStepProcess to detect changes
+        const hasChanged = hasFormDataChanged(
+          data as FormData,
+          initialDataRef.current,
+          activeStep
+        );
+        setHasDataChanged(hasChanged);
+      } else if (!data?.id) {
+        // For new records (no id), check if any required fields have content
+        const hasContent = !!(data?.topic?.trim() || data?.post_type || data?.main_seo_keyword?.trim());
+        setHasDataChanged(hasContent);
+      } else {
+        setHasDataChanged(false);
       }
-    } else {
-      reset(defaultValues);
-      setActiveStep(0);
-    }
-  }, [editData, defaultValues, reset]);
+    });
+    return () => subscription.unsubscribe();
+  }, [methods, activeStep]);
 
-  // Notify parent component when activeStep changes
-  useEffect(() => {
-    if (onIdChange && methods) {
-      onIdChange(methods.watch, activeStep);
-    }
-  }, [activeStep]); // Only depend on activeStep to avoid loops
+  const { handleSubmit } = methods;
 
-  const buildStep1Data = (formData: FormData) => ({
-    topic: formData.topic,
-    post_type: formData.post_type,
-    main_seo_keyword: formData.main_seo_keyword,
-    secondary_seo_keywords: formData.secondary_seo_keywords || [],
-    customer_group:
-      formData.customer_group?.map((item) => ({
-        customer_group_id: item,
-      })) || [],
-    customer_journey:
-      formData.customer_journey?.map((item) => ({
-        customer_journey_id: item,
-      })) || [],
-    ai_rule_based:
-      formData.ai_rule_based?.map((item) => ({
-        ai_rule_based_id: item,
-      })) || [],
-    content_tone:
-      formData.content_tone?.map((item) => ({
-        content_tone_id: item,
-      })) || [],
-    additional_notes_step_1: formData.additional_notes_step_1,
-    status: formData.status || POST_STATUS.DRAFT,
-    omni_channels: formData.omni_channels?.map((item) => ({
-      omni_channels_id: item,
-    })),
-  });
-
-  const getStep1FormData = (formData: FormData) => ({
-    topic: formData.topic,
-    post_type: formData.post_type,
-    main_seo_keyword: formData.main_seo_keyword,
-    secondary_seo_keywords: formData.secondary_seo_keywords,
-    customer_group: formData.customer_group,
-    customer_journey: formData.customer_journey,
-    ai_rule_based: formData.ai_rule_based,
-    content_tone: formData.content_tone,
-    additional_notes_step_1: formData.additional_notes_step_1,
-    omni_channels: formData.omni_channels,
-  });
-
-  const getStep2FormData = (formData: FormData) => ({
-    outline_post: formData.outline_post,
-    post_goal: formData.post_goal,
-    post_notes: formData.post_notes,
-    additional_notes_step_2: formData.additional_notes_step_2,
-    omni_channels: formData.omni_channels,
-  });
-
-  const isStep1DataChanged = (
-    currentData: Partial<FormData>,
-    cachedData: Partial<FormData> | null
-  ) => {
-    if (!cachedData) return true;
-
-    return JSON.stringify(currentData) !== JSON.stringify(cachedData);
-  };
-
-  const isStep2DataChanged = (
-    currentData: Partial<FormData>,
-    cachedData: Partial<FormData> | null
-  ) => {
-    if (!cachedData) return true;
-
-    return JSON.stringify(currentData) !== JSON.stringify(cachedData);
-  };
-
-  const handleNext = async () => {
-    const fieldsToValidate = getFieldsForStep(activeStep);
-    const isStepValid = await trigger(fieldsToValidate);
-
-    if (!isStepValid) return;
-    let imageUrls: string[] = [];
-
-    switch (activeStep) {
-      case 0:
-        // Call API for step 1 - step research
-        const formData = methods.getValues();
-        const currentStep1Data = getStep1FormData(formData);
-
-        // Check if step 1 data has changed
-        if (!isStep1DataChanged(currentStep1Data, cachedStep1Data)) {
-          // Data hasn't changed, skip API call
-          setActiveStep((prevStep) => Math.min(prevStep + 1, 3));
-          break;
-        }
-
-        setIsNextLoading(true);
-        try {
-          const apiData = {
-            step1: buildStep1Data(formData),
-            step2: {},
-            step3: {},
-            step4: {},
-            id: editData?.id || null,
-          };
-
-          const response = await createPost(apiData);
-          if (response?.data) {
-            methods.setValue(
-              "outline_post",
-              response?.data?.outline_post || ""
-            );
-            methods.setValue("post_goal", response?.data?.post_goal || "");
-            methods.setValue("id", response?.data?.id);
-          }
-
-          // Cache the step 1 data after successful API call
-          setCachedStep1Data(currentStep1Data);
-
-          setActiveStep((prevStep) => Math.min(prevStep + 1, 3));
-        } catch (error) {
-          console.error("Error calling API:", error);
-          toast.error("Có lỗi xảy ra khi tạo dàn ý!");
-        } finally {
-          setIsNextLoading(false);
-        }
-        break;
-
-      case 1:
-        // Call API for step 2 - step outline
-        const formDataStep2 = methods.getValues();
-        const currentStep2Data = getStep2FormData(formDataStep2);
-
-        // Check if step 2 data has changed
-        if (!isStep2DataChanged(currentStep2Data, cachedStep2Data)) {
-          // Data hasn't changed, skip API call
-          setActiveStep((prevStep) => Math.min(prevStep + 1, 3));
-          break;
-        }
-
-        setIsNextLoading(true);
-        try {
-          const apiData = {
-            id: editData?.id || formDataStep2.id || null,
-            step1: {},
-            step2: {
-              outline_post: formDataStep2.outline_post,
-              post_goal: formDataStep2.post_goal,
-              post_notes: formDataStep2.post_notes,
-              additional_notes_step_2: formDataStep2.additional_notes_step_2,
-              omni_channels: formDataStep2.omni_channels?.map((item) => ({
-                omni_channels_id: item,
-              })),
-            },
-            step3: {},
-            step4: {},
-          };
-
-          const response = await createPost(apiData);
-          if (response?.data?.post_content) {
-            methods.setValue("post_content", response.data.post_content);
-          }
-
-          // Cache the step 2 data after successful API call
-          setCachedStep2Data(currentStep2Data);
-
-          setActiveStep((prevStep) => Math.min(prevStep + 1, 3));
-        } catch (error) {
-          console.error("Error calling API:", error);
-          toast.error("Có lỗi xảy ra khi tạo nội dung!");
-        } finally {
-          setIsNextLoading(false);
-        }
-        break;
-
-      case 2:
-        // Call API for step 3 - step content
-        setIsNextLoading(true);
-        try {
-          const formData = methods.getValues();
-          // Upload media files if they exist
-          const mediaArray = await uploadFiles(formData.media || []);
-          imageUrls = [
-            ...formData.media_generated_ai?.map(
-              (item) => item.directus_files_id
-            ),
-            ...mediaArray?.map((item) => item.id),
-          ];
-          const apiData = {
-            id: editData?.id || formData.id || null,
-            step1: {},
-            step2: {},
-            step3: {},
-            step4: {
-              post_content: formData.post_content,
-              image_urls: imageUrls?.map(
-                (item) => `${CONFIG.serverUrl}/assets/${item}`
-              ),
-            },
-          };
-
-          const response = await createPost(apiData);
-          if (response?.data?.post_html_format) {
-            methods.setValue(
-              "post_html_format",
-              response.data.post_html_format
-            );
-          }
-
-          setActiveStep((prevStep) => Math.min(prevStep + 1, 3));
-        } catch (error) {
-          console.error("Error calling API:", error);
-          toast.error("Có lỗi xảy ra khi tạo HTML format!");
-        } finally {
-          setIsNextLoading(false);
-        }
-        break;
-      case 3:
-        // Call API for step 4 - step format html
-        setIsNextLoading(true);
-        try {
-          const formData = methods.getValues();
-          const apiData = {
-            id: editData?.id || formData.id || null,
-            step1: {},
-            step2: {},
-            step3: {},
-            step4: {
-              post_content: formData.post_content,
-              post_html_format: formData.post_html_format,
-              additional_notes_step_4: formData.additional_notes_step_4,
-            },
-          };
-
-          await createPost(apiData);
-          // set success
-        } catch (error) {
-          console.error("Error calling API:", error);
-          toast.error("Có lỗi xảy ra khi tạo HTML format!");
-        } finally {
-          setIsNextLoading(false);
-        }
-      default:
-        setActiveStep((prevStep) => Math.min(prevStep + 1, 3));
-        break;
-    }
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevStep) => Math.max(prevStep - 1, 0));
-  };
-
-  const getFieldsForStep = (step: number): (keyof FormData)[] => {
-    switch (step) {
-      case 0:
-        return [
-          "topic",
-          "post_type",
-          "main_seo_keyword",
-          "secondary_seo_keywords",
-          "customer_group",
-          "customer_journey",
-          "omni_channels",
-          "ai_rule_based",
-          "content_tone",
-          "additional_notes_step_1",
-          "status",
-          "id",
-        ];
-      case 1:
-        return [
-          "outline_post",
-          "post_goal",
-          "post_notes",
-          "additional_notes_step_2",
-        ];
-      case 2:
-        return [
-          "post_content",
-          "additional_notes_step_3",
-          "ai_notes_create_image_step_3",
-          "media",
-          "media_generated_ai",
-        ];
-      case 3:
-        return ["additional_notes_step_4", "post_html_format"];
-      default:
-        return [];
-    }
-  };
-
-  const onSubmit = handleSubmit(async (data) => {
+  const handleSubmitPost = async () => {
     try {
-      setIsNextLoading(true);
-      const apiData = {
-        id: editData?.id || data.id || null,
-        step1: {},
-        step2: {},
-        step3: {},
-        step4: {},
-        isPosted: true,
-      };
-      await createPost(apiData);
-
-      toast.success("Đăng bài thành công!");
-
-      router.push(paths.dashboard.contentAssistant.root);
+      // Handle final form submission
     } catch (error) {
       console.error(error);
       toast.error("Có lỗi xảy ra!");
+      throw error;
+    }
+  };
+
+  const onSubmit = handleSubmit(handleSubmitPost);
+
+  const getLoadingMessage = () => {
+    const isUpdate = !!methods.getValues().id;
+
+    if (activeStep === POST_STEP.RESEARCH_ANALYSIS) {
+      if (isUpdate) {
+        return "Đang cập nhật và tạo dàn ý...";
+      }
+      return "Đang tạo mới và tạo dàn ý...";
+    } else if (activeStep === POST_STEP.MAKE_OUTLINE) {
+      return "Đang cập nhật và tạo nội dung...";
+    } else if (activeStep === POST_STEP.WRITE_ARTICLE) {
+      return "Đang xử lý...";
+    } else if (activeStep === POST_STEP.HTML_CODING) {
+      return "Đang lưu thông tin HTML...";
+    }
+
+    return "Đang xử lý...";
+  };
+
+  const handleStepProcess = useCallback(
+    async (data: FormData, currentStep: string) => {
+      setIsNextLoading(true);
+      try {
+        const isUpdate = !!data?.id;
+        let response;
+        let shouldCallN8N = true;
+        let nextStep: string;
+        let n8nStartStep: number;
+        let n8nEndStep: number;
+
+        // Determine step-specific configurations
+        if (currentStep === POST_STEP.RESEARCH_ANALYSIS) {
+          nextStep = POST_STEP.MAKE_OUTLINE;
+          n8nStartStep = 1;
+          n8nEndStep = 2;
+        } else if (currentStep === POST_STEP.MAKE_OUTLINE) {
+          nextStep = POST_STEP.WRITE_ARTICLE;
+          n8nStartStep = 2;
+          n8nEndStep = 3;
+        } else if (currentStep === POST_STEP.WRITE_ARTICLE) {
+          // Check if HTML coding step should be shown
+          const postType = data.post_type;
+          if (postType === POST_TYPE.SEO_POST) {
+            nextStep = POST_STEP.HTML_CODING;
+            n8nStartStep = 4;
+            n8nEndStep = 5;
+          } else {
+            // For other post types, show publish modal
+            setShowPublishModal(true);
+            return;
+          }
+        } else if (currentStep === POST_STEP.HTML_CODING) {
+          // HTML coding is the last step, only update data without calling N8N
+          shouldCallN8N = false;
+          nextStep = POST_STEP.HTML_CODING; // Stay on the same step
+          n8nStartStep = 0; // Not used
+          n8nEndStep = 0; // Not used
+        } else {
+          return;
+        }
+
+        if (isUpdate) {
+          // Check if data has changed before calling update API
+          if (!hasFormDataChanged(data, initialDataRef.current, currentStep)) {
+            shouldCallN8N = false;
+            setActiveStep(nextStep);
+            if(postType === POST_TYPE.SEO_POST) {
+              toast.success("Cập nhật thông tin HTML thành công 222");
+            }
+            return;
+          }
+
+          // Update existing content assistant with step-specific data
+          let updateData;
+          if (currentStep === POST_STEP.RESEARCH_ANALYSIS) {
+            updateData = await buildStepResearchData(
+              data,
+              false
+            ) as UpdateContentAssistantRequest;
+          } else if (currentStep === POST_STEP.MAKE_OUTLINE) {
+            updateData = buildStepOutlineData(
+              data
+            ) as UpdateContentAssistantRequest;
+          } else if (currentStep === POST_STEP.WRITE_ARTICLE) {
+            const dataMediaEdit = {
+              media: (editData?.media as FileWithApiProperties[]) || [],
+              media_generated_ai:
+                (editData?.media_generated_ai as MediaGeneratedAiItem[]) || [],
+              id: editData?.id?.toString(),
+            };
+            updateData = (await buildStepWriteArticleData(
+              data,
+              dataMediaEdit,
+            )) as UpdateContentAssistantRequest;
+          } else if (currentStep === POST_STEP.HTML_CODING) {
+            updateData = buildStepHtmlCodingData(
+              data
+            ) as UpdateContentAssistantRequest;
+          }
+
+          if (!updateData) {
+            toast.error("Không thể xây dựng dữ liệu cho step này");
+            return;
+          }
+          response = await updateContentAssistant(data.id!, updateData);
+
+          // Update initial data reference after successful update
+          if (response?.data?.id) {
+            initialDataRef.current = { ...data };
+          }
+        } else {
+          // Create new content assistant (only for RESEARCH_ANALYSIS step)
+          if (currentStep === POST_STEP.RESEARCH_ANALYSIS) {
+            const createData = await buildStepResearchData(
+              data,
+              true
+            ) as CreateContentAssistantRequest;
+            response = await createContentAssistant(createData);
+
+            if (response?.data?.id) {
+              methods.setValue("id", response.data.id);
+              // Set initial data reference for new record
+              const updatedData = { ...data, id: response.data.id };
+              initialDataRef.current = updatedData;
+            }
+          } else {
+            toast.error("Không thể tạo mới ở step này");
+            return;
+          }
+        }
+
+        if (!response?.data?.id) {
+          toast.error(
+            "Có lỗi xảy ra khi " +
+              (isUpdate ? "cập nhật" : "tạo") +
+              " content assistant"
+          );
+          return;
+        }
+
+        // Call n8n flow only if we made changes
+        if (shouldCallN8N) {
+          const inputN8NData: PostRequest = [
+            {
+              id: response.data.id,
+              startStep: n8nStartStep,
+              endStep: n8nEndStep,
+            },
+          ];
+
+          const n8nResponse = await createPost(inputN8NData);
+
+          if (!n8nResponse?.success) {
+            let errorMessage = "Có lỗi xảy ra trong quá trình xử lý";
+            if (currentStep === POST_STEP.RESEARCH_ANALYSIS) {
+              errorMessage = "Có lỗi xảy ra khi tạo dàn ý";
+            } else if (currentStep === POST_STEP.MAKE_OUTLINE) {
+              errorMessage = "Có lỗi xảy ra khi tạo nội dung";
+            } else if (currentStep === POST_STEP.WRITE_ARTICLE) {
+              errorMessage = "Có lỗi xảy ra khi tạo HTML";
+            }
+            toast.error(n8nResponse?.message || errorMessage);
+            return;
+          }
+
+          // Get latest data after N8N processing
+          const detailResponse = await getContentAssistant(response.data.id);
+
+          if (detailResponse) {
+            if (currentStep === POST_STEP.RESEARCH_ANALYSIS) {
+              methods.setValue(
+                "outline_post",
+                detailResponse.outline_post || ""
+              );
+              methods.setValue("post_goal", detailResponse.post_goal || "");
+            } else if (currentStep === POST_STEP.MAKE_OUTLINE) {
+              methods.setValue(
+                "post_content",
+                detailResponse.post_content || ""
+              );
+            } else if (currentStep === POST_STEP.WRITE_ARTICLE) {
+              // Update form with HTML format data if available
+              if (detailResponse.post_html_format) {
+                methods.setValue(
+                  "post_html_format",
+                  detailResponse.post_html_format || ""
+                );
+              }
+            } else if (currentStep === POST_STEP.HTML_CODING) {
+              // Update form with AI notes for HTML coding if available
+              if (detailResponse.ai_notes_html_coding) {
+                methods.setValue(
+                  "ai_notes_html_coding",
+                  detailResponse.ai_notes_html_coding || ""
+                );
+              }
+            }
+          }
+        }
+
+        // Update initialDataRef only when successfully moving to next step
+        initialDataRef.current = { ...data };
+        
+        // For HTML_CODING step, not after saving data
+        if (currentStep === POST_STEP.HTML_CODING) {
+          // show message success and redirect to list
+          toast.success("Cập nhật HTML thành công");
+          router.push('/dashboard/content-assistant');
+        } else {
+          setActiveStep(nextStep);
+        }
+      } catch (error) {
+        console.error("Error in handleStepProcess:", error);
+        toast.error("Có lỗi xảy ra trong quá trình xử lý");
+      } finally {
+        setIsNextLoading(false);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      updateContentAssistant,
+      createContentAssistant,
+      methods,
+      getContentAssistant,
+    ]
+  );
+
+  const handleNext = useCallback(async () => {
+    if (!activeStep) return;  
+    const fieldsToValidate = getFieldsForStep(activeStep);
+    const isStepValid = await methods.trigger(fieldsToValidate);
+    if (!isStepValid) {
+      return;
+
+    }
+
+    const formData = methods.getValues();
+    switch (activeStep) {
+      case POST_STEP.RESEARCH_ANALYSIS:
+        // handle case is_post_video and is_post_reels: at least 1 is true
+        if (formData.video.length > 0 && !formData.is_post_video && !formData.is_post_reels) {
+          toast.error("Vui lòng chọn ít nhất 1 loại bài đăng");
+          return;
+        }
+
+        if (formData.is_post_reels && formData.video.length > 0) {
+          const videoFile = formData.video[0];
+          if (videoFile instanceof File) {
+            const duration = await getVideoDuration(videoFile);
+            if (duration > 60) {
+              toast.error("Video dài hơn 60 giây không thể đăng ở dạng reel.");
+              return;
+            }
+          }
+        }
+
+        await handleStepProcess(formData, POST_STEP.RESEARCH_ANALYSIS);
+        return;
+      case POST_STEP.MAKE_OUTLINE:
+        await handleStepProcess(formData, POST_STEP.MAKE_OUTLINE);
+        return;
+      case POST_STEP.WRITE_ARTICLE:
+        // Check if HTML coding step should be shown
+        const postType = formData.post_type;
+        if (postType === POST_TYPE.SEO_POST) {
+          await handleStepProcess(formData, POST_STEP.WRITE_ARTICLE);
+        } else {
+          setShowPublishModal(true);
+        }
+        return;
+      case POST_STEP.HTML_CODING:
+        await handleStepProcess(formData, POST_STEP.HTML_CODING);
+        return;
+      default:
+        break;
+    }
+  }, [activeStep, methods, handleStepProcess]);
+
+  const handleSaveDraft = useCallback(
+    async ({hideToast = false} : {hideToast?: boolean}) => {
+      try {
+        const formData = methods.getValues();
+        const stepToSave = activeStep;
+        const isUpdate = !!formData?.id;
+        let response;
+
+         // handle case is_post_video and is_post_reels: at least 1 is true
+        if (formData.video.length > 0 && !formData.is_post_video && !formData.is_post_reels) {
+          toast.error("Vui lòng chọn ít nhất 1 loại bài đăng");
+          return;
+        }
+
+        if (formData.is_post_reels && formData.video.length > 0) {
+          const videoFile = formData.video[0];
+          if (videoFile instanceof File) {
+            const duration = await getVideoDuration(videoFile);
+            if (duration > 60) {
+              toast.error("Video dài hơn 60 giây không thể đăng ở dạng reel.");
+              return;
+            }
+          }
+        }
+
+        setIsNextLoading(true);
+
+        if (!isUpdate) {
+          // Create new content assistant if no ID exists
+          if (stepToSave !== POST_STEP.RESEARCH_ANALYSIS) {
+            return;
+          }
+          
+          // Validate form before saving draft for new records
+          const fieldsToValidate = getFieldsForStep(stepToSave);
+          const isStepValid = await methods.trigger(fieldsToValidate);
+          if (!isStepValid) {
+            toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
+            return;
+          }
+          
+          const createData = await buildStepResearchData(
+            formData,
+            true
+          ) as CreateContentAssistantRequest;
+          response = await createContentAssistant(createData);
+
+          if (response?.data?.id) {
+            methods.setValue("id", response.data.id);
+            // Set initial data reference for new record
+            const updatedData = { ...formData, id: response.data.id };
+            initialDataRef.current = updatedData;
+          } else {
+            toast.error("Có lỗi xảy ra khi tạo content assistant");
+            return;
+          }
+        }
+
+        let stepData;
+
+        // Build data based on current step
+        switch (stepToSave) {
+          case POST_STEP.RESEARCH_ANALYSIS:
+            stepData = await buildStepResearchData(
+              formData,
+              false
+            ) as UpdateContentAssistantRequest;
+            break;
+          case POST_STEP.MAKE_OUTLINE:
+            stepData = buildStepOutlineData(
+              formData
+            ) as UpdateContentAssistantRequest;
+            break;
+          case POST_STEP.WRITE_ARTICLE:
+            const dataMediaEdit = {
+              media: (editData?.media as FileWithApiProperties[]) || [],
+              media_generated_ai:
+                (editData?.media_generated_ai as MediaGeneratedAiItem[]) || aiImagesToCheckDelete,
+              id: editData?.id?.toString(),
+            };
+            stepData = (await buildStepWriteArticleData(
+              formData,
+              dataMediaEdit,
+            )) as UpdateContentAssistantRequest;
+            break;
+          case POST_STEP.HTML_CODING:
+            stepData = buildStepHtmlCodingData(
+              formData
+            ) as UpdateContentAssistantRequest;
+            break;
+          default:
+            toast.error("Step không hợp lệ để lưu nháp");
+            return;
+        }
+
+        const contentId = isUpdate ? formData.id! : response!.data!.id;
+        await updateContentAssistant(contentId, stepData);
+
+        // Refresh data from server after successful save to update media field
+        try {
+          const refreshedData = await getContentAssistantList(
+        {
+          id: Number(contentId),
+        }
+      );
+          if (refreshedData.data[0]) {
+            // Use getDefaultValues to properly transform the data
+            const newImageData = transformMediaItems(refreshedData.data[0].media as unknown as MediaGeneratedAiItem[]);
+            if (newImageData) {
+              methods.setValue('media', newImageData);
+            }
+          }
+        } catch (error) {
+          console.error("Error refreshing data after save:", error);
+        }
+
+        // Reset hasDataChanged state since data is now saved
+        setHasDataChanged(false);
+
+        setShowPublishModal(false);
+        if(!hideToast){
+          toast.success("Đã lưu bản nháp thành công!");
+        }
+      } catch (error) {
+        console.error("Error saving draft:", error);
+        toast.error("Có lỗi xảy ra khi lưu bản nháp");
+      } finally {
+        setIsNextLoading(false);
+      }
+    },
+    [methods, editData, updateContentAssistant, activeStep, createContentAssistant, aiImagesToCheckDelete]
+  );
+
+  const handlePublish = async () => {
+    try {
+      setIsNextLoading(true);
+      const formData = methods.getValues();
+
+      if (!formData?.id) {
+        toast.error("Không thể đăng bài khi chưa có ID");
+        return;
+      }
+
+      // Save current step data first
+      const dataMediaEdit = {
+        media: (editData?.media as FileWithApiProperties[]) || [],
+        media_generated_ai:
+          (editData?.media_generated_ai as MediaGeneratedAiItem[]) || [],
+        id: editData?.id?.toString(),
+      };
+      const stepData = await buildStepWriteArticleData(formData, dataMediaEdit);
+      const response = await updateContentAssistant(formData.id, stepData);
+
+      if (response?.data?.id) {
+        const inputN8NData: PostRequest = [
+          {
+            id: response.data.id,
+            startStep: 4,
+            endStep: 6,
+          },
+        ];
+
+        const responseN8N = await createPost(inputN8NData);
+
+        // update current_step thành done
+        if (responseN8N?.success) {
+          await updateContentAssistant(formData.id, {
+            current_step: POST_STEP.PUBLISHED,
+          });
+          toast.success("Đã đăng bài thành công!");
+          router.push(`/dashboard/content-assistant`);
+        }
+      }
+
+      setShowPublishModal(false);
+    } catch (error) {
+      console.error("Error publishing:", error);
+      toast.error("Có lỗi xảy ra khi đăng bài");
     } finally {
       setIsNextLoading(false);
     }
-  });
+  };
+
+  const handleRegenData = useCallback(async () => {
+    try {
+      setIsNextLoading(true);
+      const formData = methods.getValues();
+
+      if (!formData?.id) {
+        toast.error("Không thể tái tạo dữ liệu khi chưa có ID");
+        return;
+      }
+
+      // Step 1: Update data to Directus (update ai_notes_html_coding, post_html_format)
+      const updateData = buildStepHtmlCodingData(formData) as UpdateContentAssistantRequest;
+      const response = await updateContentAssistant(formData.id, updateData);
+
+      if (!response?.data?.id) {
+        toast.error("Có lỗi xảy ra khi cập nhật dữ liệu");
+        return;
+      }
+
+      // Step 2: Call N8N flow for HTML coding step
+      const inputN8NData: PostRequest = [
+        {
+          id: response.data.id,
+          startStep: 4,
+          endStep: 5,
+        },
+      ];
+
+      const n8nResponse = await createPost(inputN8NData);
+
+      if (!n8nResponse?.success) {
+        toast.error(n8nResponse?.message || "Có lỗi xảy ra khi tái tạo HTML");
+        return;
+      }
+
+      // Step 3: Get latest data after N8N processing
+      const detailResponse = await getContentAssistant(response.data.id);
+
+      if (detailResponse) {
+        // Step 4: Update form with refreshed data
+        if (detailResponse.post_html_format) {
+          methods.setValue("post_html_format", detailResponse.post_html_format || "");
+        }
+        if (detailResponse.ai_notes_html_coding) {
+          methods.setValue("ai_notes_html_coding", detailResponse.ai_notes_html_coding || "");
+        }
+
+        // Update initial data reference
+        initialDataRef.current = { ...formData };
+        setHasDataChanged(false);
+
+        toast.success("Đã tái tạo dữ liệu HTML thành công!");
+      }
+    } catch (error) {
+      console.error("Error regenerating data:", error);
+      toast.error("Có lỗi xảy ra khi tái tạo dữ liệu");
+    } finally {
+      setIsNextLoading(false);
+    }
+  }, [methods, updateContentAssistant, getContentAssistant]);
 
   const renderStepContent = () => {
+    const formData = methods.getValues();
+    const contentAssistantId = formData.id?.toString();
+
     switch (activeStep) {
-      case 0:
+      case POST_STEP.RESEARCH_ANALYSIS:
         return <StepResearch />;
-      case 1:
+      case POST_STEP.MAKE_OUTLINE:
         return <StepOutline />;
-      case 2:
-        return <StepContent />;
-      case 3:
+      case POST_STEP.WRITE_ARTICLE:
+        return <StepContent setAiImagesToCheckDelete={setAiImagesToCheckDelete} contentAssistantId={contentAssistantId} hasDataChanged={hasDataChanged} />;
+      case POST_STEP.HTML_CODING:
         return <StepFormatHtml />;
-
       default:
-        return <StepResearch />;
+        return null;
     }
   };
 
-  const renderActions = () => (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 2,
-        mt: 4,
-        p: 3,
-        borderRadius: 1.5,
-        bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
-      }}
-    >
-      {activeStep !== 0 && (
-        <Button
-          sx={{ borderRadius: 2 }}
-          size="large"
-          variant="outlined"
-          onClick={
-            activeStep === 0
-              ? () => router.push(paths.dashboard.contentAssistant.root)
-              : handleBack
-          }
-        >
-          Quay lại
-        </Button>
-      )}
+  const postType = watch('post_type');
 
-      <Stack direction="row" spacing={2}>
-        {activeStep < 3 ? (
-          <Button
-            variant="contained"
-            onClick={handleNext}
-            size="large"
-            sx={{ borderRadius: 2 }}
-            loading={isNextLoading}
-            disabled={isNextLoading}
-          >
-            {isNextLoading ? "Đang tạo dàn ý..." : "Tiếp theo"}
-          </Button>
-        ) : (
-          <Button
-            type="submit"
-            variant="contained"
-            loading={isSubmitting}
-            size="large"
-            sx={{ borderRadius: 2 }}
-          >
-            {!editData ? "Tạo nội dung" : "Cập nhật"}
-          </Button>
-        )}
-      </Stack>
-    </Box>
-  );
-
-  const getLoadingMessage = () => {
-    switch (activeStep) {
-      case 0:
-        return "Đang phân tích chủ đề và tạo dàn ý...";
-      case 1:
-        return "Đang tạo nội dung chi tiết...";
-      case 2:
-        return "Đang xử lý hình ảnh và định dạng HTML...";
-      case 3:
-        return "Đang hoàn thiện định dạng cuối cùng...";
-      default:
-        return "Đang xử lý...";
+  const handleBack = () => {
+    if (!activeStep) return;
+     const steps = [POST_STEP.RESEARCH_ANALYSIS, POST_STEP.MAKE_OUTLINE, POST_STEP.WRITE_ARTICLE];
+    if (postType === POST_TYPE.SEO_POST) {
+      steps.push(POST_STEP.HTML_CODING);
+    }
+    const currentIndex = steps.indexOf(activeStep);
+    if (currentIndex > 0) {
+      setActiveStep(steps[currentIndex - 1]);
     }
   };
+
+  const isLastStep = postType === POST_TYPE.FACEBOOK_POST ? activeStep === POST_STEP.WRITE_ARTICLE : activeStep === POST_STEP.HTML_CODING;
+  const isFirstStep = activeStep === POST_STEP.RESEARCH_ANALYSIS;
+
+  if (!activeStep) return null;
 
   return (
     <>
+      <LoadingOverlay
+        open={isNextLoading}
+        title="Đang xử lý..."
+        description={getLoadingMessage()}
+      />
       <Form methods={methods} onSubmit={onSubmit}>
-        <ContentStepper activeStep={activeStep} />
+        <Stack>
+          <ContentStepper currentStep={activeStep} postType={postType} />
 
-        {renderStepContent()}
+          <Box
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
+              border: (theme) => `dashed 1px ${theme.palette.divider}`,
+            }}
+          >
+            {renderStepContent()}
+          </Box>
 
-        {renderActions()}
+          <Stack
+            direction="row"
+            spacing={2}
+            justifyContent="center"
+            sx={{ 
+              position: 'sticky',
+              bottom: 0,
+              backgroundColor: 'background.paper',
+              py: 2,
+              mb: 2,
+              zIndex: 1000,
+            }}
+          >
+            <Button
+              size="large"
+              variant="outlined"
+              onClick={handleBack}
+              disabled={isFirstStep}
+              sx={{ minWidth: 150, borderRadius: 2 }}
+            >
+              Quay lại
+            </Button>
+
+            {/* Show Re gen data button only in HTML CODING step */}
+            {activeStep === POST_STEP.HTML_CODING && (
+              <Button
+                size="large"
+                variant="outlined"
+                onClick={handleRegenData}
+                disabled={isProcessing}
+                sx={{ minWidth: 150, borderRadius: 2 }}
+              >
+                {isProcessing ? "Đang tạo..." : "Tạo lại HTML"}
+              </Button>
+            )}
+
+            {/* Show Save Draft button when data has changed */}
+            {hasDataChanged && postType !== POST_TYPE.SEO_POST && (
+              <Button
+                size="large"
+                variant="outlined"
+                onClick={() => handleSaveDraft({})}
+                disabled={isProcessing}
+                sx={{ minWidth: 150, borderRadius: 2 }}
+              >
+                {isProcessing ? "Đang lưu..." : "Lưu nháp"}
+              </Button>
+            )}
+
+            <Button
+              size="large"
+              variant="contained"
+              onClick={handleNext}
+              disabled={isProcessing}
+              sx={{ minWidth: 150, borderRadius: 2 }}
+            >
+              {isProcessing
+                ? "Đang xử lý..."
+                : isLastStep
+                ? "Hoàn thành"
+                : "Tiếp theo"}
+            </Button>
+          </Stack>
+        </Stack>
       </Form>
 
-      {/* Loading Overlay */}
-      <Backdrop
-        sx={{
-          color: "#fff",
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: "rgba(0, 0, 0, 0.8)",
-          backdropFilter: "blur(4px)",
+      <PublishModal
+        open={showPublishModal}
+        onClose={() => setShowPublishModal(false)}
+        onSaveDraft={ async () => {
+          await handleSaveDraft({hideToast: true});
         }}
-        open={isNextLoading}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 3,
-            p: 4,
-            borderRadius: 2,
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            minWidth: 320,
-          }}
-        >
-          <Box sx={{ textAlign: "center", width: "100%" }}>
-            <Typography
-              variant="h6"
-              sx={{
-                color: "#fff",
-                fontWeight: 600,
-                mb: 1,
-              }}
-            >
-              Đang xử lý...
-            </Typography>
-
-            <Typography
-              variant="body2"
-              sx={{
-                color: "rgba(255, 255, 255, 0.8)",
-                mb: 2,
-                lineHeight: 1.5,
-              }}
-            >
-              {getLoadingMessage()}
-            </Typography>
-
-            <LinearProgress
-              sx={{
-                width: "100%",
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                "& .MuiLinearProgress-bar": {
-                  backgroundColor: "#fff",
-                  borderRadius: 3,
-                },
-              }}
-            />
-
-            <Typography
-              variant="caption"
-              sx={{
-                color: "rgba(255, 255, 255, 0.6)",
-                mt: 2,
-                display: "block",
-              }}
-            >
-              Quá trình này có thể mất 1-2 phút. Vui lòng không tắt trình duyệt.
-            </Typography>
-          </Box>
-        </Box>
-      </Backdrop>
+        onPublish={handlePublish}
+        isSavingDraft={isNextLoading}
+        isPublishing={isNextLoading}
+      />
     </>
   );
 }

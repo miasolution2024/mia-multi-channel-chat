@@ -21,53 +21,61 @@ export const paths = {
   dashboard: {
     root: `${ROOTS.DASHBOARD}`,
     chat: `${ROOTS.DASHBOARD}/chat`,
-    omniChannels: {
-      root: `${ROOTS.DASHBOARD}/omni-channels`,
-      new: `${ROOTS.DASHBOARD}/,omni-channelsnew`,
-      edit: (id: string | number) => `${ROOTS.DASHBOARD}/omni-channels/${id}/edit`,
-      details: (id: string) => `${ROOTS.DASHBOARD}/omni-channels/${id}`,
-    },
     contentAssistant: {
       root: `${ROOTS.DASHBOARD}/content-assistant`,
       new: `${ROOTS.DASHBOARD}/content-assistant/new`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/content-assistant/${id}/edit`,
     },
     contentTone: {
-    root: `${ROOTS.DASHBOARD}/content-tone`,
-    new: `${ROOTS.DASHBOARD}/content-tone/new`,
-    edit: (id: string) => `${ROOTS.DASHBOARD}/content-tone/${id}/edit`,
-  },
-  aiRules: {
-    root: `${ROOTS.DASHBOARD}/ai-rules`,
-    new: `${ROOTS.DASHBOARD}/ai-rules/new`,
-    edit: (id: string) => `${ROOTS.DASHBOARD}/ai-rules/${id}/edit`,
-  },
-    customer: {
-      root: `${ROOTS.DASHBOARD}/customer`,
+      root: `${ROOTS.DASHBOARD}/content-tone`,
+      new: `${ROOTS.DASHBOARD}/content-tone/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/content-tone/${id}/edit`,
     },
-    supplier: {
-      root: `${ROOTS.DASHBOARD}/supplier`,
+    aiRules: {
+      root: `${ROOTS.DASHBOARD}/ai-rules`,
+      new: `${ROOTS.DASHBOARD}/ai-rules/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/ai-rules/${id}/edit`,
     },
-    category: {
-      root: `${ROOTS.DASHBOARD}/category`,
+    marketingCampaign: {
+      root: `${ROOTS.DASHBOARD}/marketing-campaign`,
+      new: `${ROOTS.DASHBOARD}/marketing-campaign/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/marketing-campaign/${id}/edit`,
     },
-    purchaseOrder: {
-      root: `${ROOTS.DASHBOARD}/purchase-order`,
-      new: `${ROOTS.DASHBOARD}/purchase-order/new`,
-      edit: (id: string) => `${ROOTS.DASHBOARD}/purchase-order/${id}/edit`,
-      details: (id: string) => `${ROOTS.DASHBOARD}/purchase-order/${id}`,
+    scheduleCalendar: {
+      root: `${ROOTS.DASHBOARD}/schedule-calendar`,
+      new: `${ROOTS.DASHBOARD}/schedule-calendar/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/schedule-calendar/${id}/edit`,
     },
-    salesOrder: {
-      root: `${ROOTS.DASHBOARD}/sales-order`,
-      details: (id: string) => `${ROOTS.DASHBOARD}/sales-order/${id}`,
+    customerJourney: {
+      root: `${ROOTS.DASHBOARD}/customer-journey`,
+      new: `${ROOTS.DASHBOARD}/customer-journey/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/customer-journey/${id}/edit`,
     },
-    product: {
-      root: `${ROOTS.DASHBOARD}/product`,
-      new: `${ROOTS.DASHBOARD}/product/new`,
-      edit: (id: string) => `${ROOTS.DASHBOARD}/product/${id}/edit`,
+    customerJourneyProcess: {
+      root: `${ROOTS.DASHBOARD}/customer-journey-process`,
+      new: `${ROOTS.DASHBOARD}/customer-journey-process/new`,
+      edit: (id: string) =>
+        `${ROOTS.DASHBOARD}/customer-journey-process/${id}/edit`,
     },
-    inventoryTransaction: {
-      root: `${ROOTS.DASHBOARD}/inventory-transaction`,
+    customerInsight: {
+      root: `${ROOTS.DASHBOARD}/customer-insight`,
+      new: `${ROOTS.DASHBOARD}/customer-insight/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/customer-insight/${id}/edit`,
     },
+    customerGroup: {
+      root: `${ROOTS.DASHBOARD}/customer-group`,
+      new: `${ROOTS.DASHBOARD}/customer-group/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/customer-group/${id}/edit`,
+    },
+     service: {
+      root: `${ROOTS.DASHBOARD}/service`,
+      new: `${ROOTS.DASHBOARD}/service/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/service/${id}/edit`,
+    },
+    omniChannel: {
+      root: `${ROOTS.DASHBOARD}/omni-channel`,
+      new: `${ROOTS.DASHBOARD}/omni-channel/new`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/omni-channel/${id}/edit`,
+    }
   },
 };

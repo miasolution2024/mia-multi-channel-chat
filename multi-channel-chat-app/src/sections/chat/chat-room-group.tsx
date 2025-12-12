@@ -11,16 +11,15 @@ import { useBoolean } from '@/hooks/use-boolean';
 
 import { CollapseButton } from './styles';
 import { ChatRoomParticipantDialog } from './chat-room-participant-dialog';
-import { Participant } from '@/models/participants/participant';
 
 // ----------------------------------------------------------------------
 
-export function ChatRoomGroup({ participants }: { participants: Participant[] }) {
+export function ChatRoomGroup({ participants }: any) {
   const collapse = useBoolean(true);
 
-  const [selected, setSelected] = useState<Participant | null>(null);
+  const [selected, setSelected] = useState(null);
 
-  const handleOpen = useCallback((participant: Participant) => {
+  const handleOpen = useCallback((participant: any) => {
     setSelected(participant);
   }, []);
 
@@ -32,17 +31,19 @@ export function ChatRoomGroup({ participants }: { participants: Participant[] })
 
   const renderList = (
     <>
-      {participants.map((participant: Participant) => (
+      {participants.map((participant: any) => (
         <ListItemButton key={participant.id} onClick={() => handleOpen(participant)}>
           <Badge
+            variant={participant.status}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           >
-            <Avatar alt={participant.participant_name} src={participant.participant_avatar} />
+            <Avatar alt={participant.name} src={participant.avatarUrl} />
           </Badge>
 
           <ListItemText
             sx={{ ml: 2 }}
-            primary={participant.participant_name}
+            primary={participant.name}
+            secondary={participant.role}
             primaryTypographyProps={{ noWrap: true, typography: 'subtitle2' }}
             secondaryTypographyProps={{ noWrap: true, component: 'span', typography: 'caption' }}
           />

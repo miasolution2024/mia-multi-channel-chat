@@ -1,19 +1,11 @@
 name: Vercel Production Deployment
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-<<<<<<<< HEAD:.github/workflows/deploy-post-automation.yaml
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_POST_AUTOMATION_PROJECT_ID }}
-on:
-  push:
-    branches:
-      - post-automation
-========
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_MIA_ADMIN_PROJECT_ID }}
 on:
   push:
     branches:
       - master
->>>>>>>> master:.github/workflows/deploy-mia-admin.yaml
 jobs:
   Deploy-Production:
     runs-on: ubuntu-latest

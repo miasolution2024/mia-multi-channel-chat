@@ -16,12 +16,6 @@ import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fToNow } from "@/utils/format-time";
 import { paths } from "@/routes/path";
-import { Conversation } from "@/models/conversation/conversations";
-import {
-  getConversationsUnreadCountURL,
-  readConversationAsync,
-} from "@/actions/conversation";
-import { mutate } from "swr";
 
 // ----------------------------------------------------------------------
 
@@ -30,12 +24,7 @@ export function ChatNavItem({
   collapse,
   conversation,
   onCloseMobile,
-}: {
-  selected?: boolean;
-  collapse?: boolean;
-  conversation: Conversation;
-  onCloseMobile: () => void;
-}) {
+}: any) {
   const { user } = useAuthContext();
 
   const searchParams = useSearchParams();
@@ -64,13 +53,10 @@ export function ChatNavItem({
           newSearchParams.append(key, searchParams.get(key) || "");
         }
       }
-      newSearchParams.set("id", conversation.id.toString());
+      newSearchParams.set("id", conversation.id);
 
       const newQueryString = newSearchParams.toString();
 
-      await readConversationAsync(conversation.id);
-      mutate(getConversationsUnreadCountURL());
-      
       router.push(`${paths.dashboard.chat}?${newQueryString}`);
     } catch (error) {
       console.error(error);
@@ -80,9 +66,9 @@ export function ChatNavItem({
 
   const renderSingle = (
     <Badge
-      badgeContent={conversation?.unread_count}
-      color="error"
-      overlap="circular"
+      key={status}
+      variant="standard"
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
     >
       <Avatar
         alt={participant_name}
@@ -103,7 +89,13 @@ export function ChatNavItem({
           ...(selected && { bgcolor: "action.selected" }),
         }}
       >
-        {renderSingle}
+        <Badge
+          color="error"
+          overlap="circular"
+          badgeContent={collapse ? conversation.unreadCount : 0}
+        >
+          {renderSingle}
+        </Badge>
 
         {!collapse && (
           <>
@@ -118,8 +110,8 @@ export function ChatNavItem({
               secondaryTypographyProps={{
                 noWrap: true,
                 component: "span",
-                variant: conversation.unread_count ? "subtitle2" : "body2",
-                color: conversation.unread_count
+                variant: conversation.unreadCount ? "subtitle2" : "body2",
+                color: conversation.unreadCount
                   ? "text.primary"
                   : "text.secondary",
               }}
@@ -135,7 +127,7 @@ export function ChatNavItem({
                 {fToNow(lastActivity)}
               </Typography>
 
-              {!!conversation.unread_count && (
+              {!!conversation.unreadCount && (
                 <Box
                   sx={{
                     width: 8,

@@ -6,6 +6,8 @@ import https from "https";
 
 import { CONFIG } from "@/config-global";
 import { SWRConfiguration } from "swr";
+import { signOut } from "@/actions/auth";
+import { toast } from "@/components/snackbar";
 
 export const swrConfig: SWRConfiguration = {
   revalidateOnFocus: false,
@@ -23,7 +25,22 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    Promise.reject(
+    // Handle 403 Forbidden - Auto logout
+    // if (error.response?.status === 403) {
+    //   try {
+    //     signOut();
+    //     toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+        
+    //     // Redirect to login page
+    //     if (typeof window !== 'undefined') {
+    //       window.location.href = '/auth/sign-in';
+    //     }
+    //   } catch (logoutError) {
+    //     console.error("Error during auto logout:", logoutError);
+    //   }
+    // }
+
+    return Promise.reject(
       (error.response &&
         error.response.data &&
         error.response.data.errorMessage) ||
@@ -45,7 +62,22 @@ const autoMiaAxiosInstance = axios.create({
 autoMiaAxiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    Promise.reject(
+    // Handle 403 Forbidden - Auto logout
+    if (error.response?.status === 403) {
+      try {
+        signOut();
+        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+        
+        // Redirect to login page
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/sign-in';
+        }
+      } catch (logoutError) {
+        console.error("Error during auto logout:", logoutError);
+      }
+    }
+
+    return Promise.reject(
       (error.response &&
         error.response.data &&
         error.response.data.errorMessage) ||
@@ -55,6 +87,26 @@ autoMiaAxiosInstance.interceptors.response.use(
 );
 
 export { autoMiaAxiosInstance };
+
+// ----------------------------------------------------------------------
+
+// Facebook axios instance
+const facebookAxiosInstance = axios.create({
+  baseURL: "https://graph.facebook.com/v24.0/",
+  httpsAgent: process.env.NODE_ENV === "development" ? agent : undefined,
+});
+
+facebookAxiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    Promise.reject(
+      (error.response &&
+        error.response.data &&
+        error.response.data.errorMessage) ||
+        "Something went wrong!"
+    );
+  }
+);
 
 // ----------------------------------------------------------------------
 
@@ -81,6 +133,19 @@ export const autoMiaFetcher = async (args: any) => {
     return res.data;
   } catch (error) {
     console.error("Failed to fetch from Auto MIA:", error);
+    throw error;
+  }
+};
+
+// Facebook fetcher
+export const facebookFetcher = async (args: any) => {
+  try {
+    const [url, config] = Array.isArray(args) ? args : [args];
+
+    const res = await facebookAxiosInstance.get(url, { ...config });
+    return res.data;
+  } catch (error) {
+    console.error("Failed to fetch from Facebook:", error);
     throw error;
   }
 };
@@ -159,11 +224,6 @@ export const endpoints = {
     create: "items/mc_conversations",
     update: "items/mc_conversations",
   },
-  omniChannels: {
-    list: "items/omni_channels",
-    create: "items/omni_channels",
-    update: "items/omni_channels",
-  },
   messages: {
     list: "items/mc_messages",
     create: "items/mc_messages",
@@ -194,5 +254,47 @@ export const endpoints = {
     create: "/items/customer_journey",
     update: "/items/customer_journey",
     delete: "/items/customer_journey",
-  }
+  },
+  customerJourneyProcess: {
+    list: "/items/customer_journey_process",
+    create: "/items/customer_journey_process",
+    update: "/items/customer_journey_process",
+    delete: "/items/customer_journey_process",
+  },
+  omniChannels: {
+    list: "/items/omni_channels",
+    create: "/items/omni_channels",
+    update: "/items/omni_channels",
+    delete: "/items/omni_channels",
+  },
+  services: {
+    list: "/items/services",
+    create: "/items/services",
+    update: "/items/services",
+    delete: "/items/services",
+  },
+  campaign: {
+    list: "/items/campaign",
+    create: "/items/campaign",
+    update: "/items/campaign",
+    delete: "/items/campaign",
+  },
+  customerInsights: {
+    list: "/items/customer_insight",
+    create: "/items/customer_insight",
+    update: "/items/customer_insight",
+    delete: "/items/customer_insight",
+  },
+  customerGroupCustomerJourney: {
+    create: "/items/customer_group_customer_journey",
+    update: "/items/customer_group_customer_journey",
+    list: "/items/customer_group_customer_journey",
+    delete: "/items/customer_group_customer_journey",
+  },
+  dashboardData: {
+    list: "/items/dashboard_data",
+  },
+  pagePostsData: {
+    list: "/items/most_notice_post",
+  },
 };

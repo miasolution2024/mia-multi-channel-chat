@@ -1,5 +1,5 @@
 export interface Common {
-  id: number;
+  id?: string;
   user_created?: string;
   date_created?: string;
   user_updated?: string;

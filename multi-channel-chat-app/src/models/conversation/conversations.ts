@@ -1,9 +1,6 @@
 import { Common } from "../common";
 import { Message, MessageCreateRequest } from "../message/message";
-import {
-  Participant,
-  ParticipantCreateRequest,
-} from "../participants/participant";
+import { Participant, ParticipantCreateRequest } from "../participants/participant";
 
 export enum ConversationType {
   GROUP = "GROUP",
@@ -11,12 +8,10 @@ export enum ConversationType {
 }
 
 export enum ConversationChannel {
-  ZALO = "Zalo",
-  FACEBOOK = "Facebook",
+  ZALO = "ZALO",
+  FACEBOOK = "FACEBOOK",
   WHATSAPP = "WHATSAPP",
-  WEBSITE = "WEBSITE",
-  INSTAGRAM = "INSTAGRAM",
-  ZALO_OA = "ZALO_OA",
+  WEBSITE = "WEBSITE"
 }
 
 export type Conversation = Common & {
@@ -29,14 +24,9 @@ export type Conversation = Common & {
   is_chatbot_active: boolean;
   channel: ConversationChannel;
   messages: Message[];
-  participants: Participant[];
-  unread_count: number;
-  omni_channel: {
-    id: number;
-    page_id: string;
-    page_name: string;
-  };
+  participants: Participant[]
 };
+
 
 export type ConversationCreateRequest = {
   type: ConversationType;
@@ -48,12 +38,5 @@ export type ConversationCreateRequest = {
   is_chatbot_active: boolean;
   channel: ConversationChannel;
   messages: MessageCreateRequest[];
-  participants: ParticipantCreateRequest[];
-};
-
-export type ConversationSumUnreadCountByChannel = {
-  channel: string;
-  count: {
-    unread_count: string;
-  };
-};
+  participants: ParticipantCreateRequest[]
+}

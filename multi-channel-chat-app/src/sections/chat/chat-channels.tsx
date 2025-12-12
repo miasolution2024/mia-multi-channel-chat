@@ -8,7 +8,6 @@ import { Scrollbar } from "@/components/scrollbar";
 import { ConversationChannel } from "@/models/conversation/conversations";
 import { Avatar, Badge, ListItemButton } from "@mui/material";
 import { CONFIG } from "@/config-global";
-import { useGetUnreadCountGroupByChannel } from "@/actions/conversation";
 
 // ----------------------------------------------------------------------
 
@@ -16,28 +15,20 @@ const NAV_COLLAPSE_WIDTH = 80;
 
 const CHANNELS = [
   {
+    name: ConversationChannel.WEBSITE,
+    src: `${CONFIG.assetsDir}/assets/images/logo/logo.png`,
+  },
+  {
     name: ConversationChannel.FACEBOOK,
     src: `${CONFIG.assetsDir}/assets/images/logo/facebook.png`,
   },
   {
     name: ConversationChannel.ZALO,
-    src: `${CONFIG.assetsDir}/assets/images/logo/zalo.webp`,
-  },
-  {
-    name: ConversationChannel.ZALO_OA,
-    src: `${CONFIG.assetsDir}/assets/images/logo/zalo-oa.png`,
+    src: `${CONFIG.assetsDir}/assets/images/logo/zalo.png`,
   },
   {
     name: ConversationChannel.WHATSAPP,
     src: `${CONFIG.assetsDir}/assets/images/logo/whatsapp.png`,
-  },
-  {
-    name: ConversationChannel.INSTAGRAM,
-    src: `${CONFIG.assetsDir}/assets/images/logo/instagram.png`,
-  },
-  {
-    name: ConversationChannel.WEBSITE,
-    src: `${CONFIG.assetsDir}/assets/images/logo/logo.png`,
   },
 ];
 
@@ -48,46 +39,37 @@ export function ChatChannels({
   selectedChannel: ConversationChannel;
   handleSelectChannel: (channel: ConversationChannel) => void;
 }) {
-  const { conversationUnRead } = useGetUnreadCountGroupByChannel();
-
   const renderList = (
     <nav>
       <Box component="ul">
         {CHANNELS.map(
-          (c: { name: ConversationChannel; src: string }, index: number) => {
-            const unreadCount = parseInt(
-              conversationUnRead?.find((item) => item.channel === c.name)?.count
-                .unread_count || "0"
-            );
-
-            return (
-              <Box key={index} component="li" sx={{ display: "flex" }}>
-                <ListItemButton
-                  onClick={() => handleSelectChannel(c.name)}
-                  sx={{
-                    py: 1.5,
-                    px: 2.5,
-                    gap: 2,
-                    ...(c.name === selectedChannel && {
-                      bgcolor: "action.selected",
-                    }),
-                  }}
+          (c: { name: ConversationChannel; src: string }, index: number) => (
+            <Box key={index} component="li" sx={{ display: "flex" }}>
+              <ListItemButton
+                onClick={() => handleSelectChannel(c.name)}
+                sx={{
+                  py: 1.5,
+                  px: 2.5,
+                  gap: 2,
+                  ...(c.name === selectedChannel && {
+                    bgcolor: "action.selected",
+                  }),
+                }}
+              >
+                <Badge
+                  key={index}
+                  variant="standard"
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 >
-                  <Badge
-                    badgeContent={unreadCount}
-                    color="error"
-                    overlap="circular"
-                  >
-                    <Avatar
-                      alt={c.name}
-                      src={c.src}
-                      sx={{ width: 40, height: 40 }}
-                    />
-                  </Badge>
-                </ListItemButton>
-              </Box>
-            );
-          }
+                  <Avatar
+                    alt={c.name}
+                    src={c.src}
+                    sx={{ width: 40, height: 40 }}
+                  />
+                </Badge>
+              </ListItemButton>
+            </Box>
+          )
         )}
       </Box>
     </nav>
