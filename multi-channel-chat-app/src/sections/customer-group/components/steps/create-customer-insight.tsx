@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { CustomTable } from "@/components/custom-table";
 import { Iconify } from "@/components/iconify";
-import { 
+import {
   Button,
   Dialog,
   DialogActions,
@@ -12,25 +12,35 @@ import {
   IconButton,
   Stack,
   Typography,
-} from '@mui/material';
+} from "@mui/material";
 import { useGetCustomerInsights } from "@/hooks/apis/use-get-customer-insight";
 import { CustomerInsight } from "@/sections/customer-insight/types";
 import { TableConfig } from "@/components/custom-table/custom-table";
 
-export function CreateCustomerInsight({customerGroupId}: {customerGroupId?: number}) {
+export function CreateCustomerInsight({
+  customerGroupId,
+}: {
+  customerGroupId?: number;
+}) {
   const { setValue } = useFormContext();
-  const [customerInsights, setCustomerInsights] = useState<CustomerInsight[]>([]);  
+  const [customerInsights, setCustomerInsights] = useState<CustomerInsight[]>(
+    []
+  );
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [contentDialogOpen, setContentDialogOpen] = useState(false);
-  const [selectedContent, setSelectedContent] = useState<{id: string | number, title: string, content: string}>({id: '', title: '', content: ''});
+  const [selectedContent, setSelectedContent] = useState<{
+    id: string | number;
+    title: string;
+    content: string;
+  }>({ id: "", title: "", content: "" });
 
   // Fetch customer insights using the hook
   const { data: insightsData = [], isLoading } = useGetCustomerInsights({
     page: 1,
     limit: 100,
-    customerGroupId
+    customerGroupId,
   });
 
   // Transform insights data to customer insights format
@@ -51,12 +61,14 @@ export function CreateCustomerInsight({customerGroupId}: {customerGroupId?: numb
   // Handle confirm delete
   const handleConfirmDelete = () => {
     if (itemToDelete) {
-      console.log('itemToDelete',itemToDelete)
+      console.log("itemToDelete", itemToDelete);
       // Remove item from the table
-      setCustomerInsights(prev => prev.filter(item => item.id.toString() !== itemToDelete.toString()));
-      
+      setCustomerInsights((prev) =>
+        prev.filter((item) => item.id.toString() !== itemToDelete.toString())
+      );
+
       // Track deleted ID
-      setDeletedIds(prev => [...prev, itemToDelete]);
+      setDeletedIds((prev) => [...prev, itemToDelete]);
     }
     setDeleteConfirmOpen(false);
     setItemToDelete(null);
@@ -69,7 +81,11 @@ export function CreateCustomerInsight({customerGroupId}: {customerGroupId?: numb
   };
 
   // Handle show content dialog
-  const handleShowContent = (id: string | number, title: string, content: string) => {
+  const handleShowContent = (
+    id: string | number,
+    title: string,
+    content: string
+  ) => {
     setSelectedContent({ id, title, content });
     setContentDialogOpen(true);
   };
@@ -77,7 +93,7 @@ export function CreateCustomerInsight({customerGroupId}: {customerGroupId?: numb
   // Handle close content dialog
   const handleCloseContentDialog = () => {
     setContentDialogOpen(false);
-    setSelectedContent({ id: '', title: '', content: '' });
+    setSelectedContent({ id: "", title: "", content: "" });
   };
 
   // Expose deleted IDs through form context
@@ -86,7 +102,7 @@ export function CreateCustomerInsight({customerGroupId}: {customerGroupId?: numb
   }, [deletedIds, setValue]);
 
   // Table configuration
-  const TABLE_CONFIG= [
+  const TABLE_CONFIG = [
     {
       key: "id",
       label: "ID",
@@ -100,39 +116,56 @@ export function CreateCustomerInsight({customerGroupId}: {customerGroupId?: numb
       align: "left",
       width: 200,
       render: (item: CustomerInsight) => {
+        const journeyName = item["10769dd4"]?.customer_journey_id?.name || "-";
         return (
-          <Typography variant="body2">
-            {item["10769dd4"]?.customer_journey_id?.name || "-"}
+          <Typography
+            variant="body2"
+            sx={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              maxWidth: 190,
+              cursor: "pointer",
+              "&:hover": {
+                backgroundColor: "action.hover",
+                borderRadius: 1,
+              },
+            }}
+            onClick={() =>
+              handleShowContent(item.id, "Giai đoạn khách hàng", journeyName)
+            }
+          >
+            {journeyName}
           </Typography>
         );
       },
     },
-    { 
-      key: "insight_content", 
-      label: "Hành vi khách hàng", 
-      align: "left", 
+    {
+      key: "insight_content",
+      label: "Hành vi khách hàng",
+      align: "left",
       width: 300,
       render: (item: CustomerInsight) => {
         return (
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+          <Typography
+            variant="body2"
+            sx={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
               maxWidth: 290,
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor: 'action.hover',
-                borderRadius: 1
-              }
+              cursor: "pointer",
+              "&:hover": {
+                backgroundColor: "action.hover",
+                borderRadius: 1,
+              },
             }}
-            onClick={() => handleShowContent(item.id,"", item.content)}
+            onClick={() => handleShowContent(item.id, "", item.content)}
           >
             {item.content}
           </Typography>
         );
-      }
+      },
     },
     {
       key: "actions",
@@ -147,18 +180,18 @@ export function CreateCustomerInsight({customerGroupId}: {customerGroupId?: numb
               size="small"
               color="error"
               onClick={() => handleDeleteItem(item.id.toString())}
-              sx={{ 
-                '&:hover': { 
-                  backgroundColor: 'error.lighter' 
-                } 
+              sx={{
+                "&:hover": {
+                  backgroundColor: "error.lighter",
+                },
               }}
             >
               <Iconify icon="solar:trash-bin-trash-bold" width={18} />
             </IconButton>
           </Stack>
         );
-      }
-    }
+      },
+    },
   ];
 
   return (
@@ -223,10 +256,10 @@ export function CreateCustomerInsight({customerGroupId}: {customerGroupId?: numb
           <DialogContentText
             component="div"
             sx={{
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
               lineHeight: 1.6,
-              fontSize: '0.875rem'
+              fontSize: "0.875rem",
             }}
           >
             {selectedContent.content}

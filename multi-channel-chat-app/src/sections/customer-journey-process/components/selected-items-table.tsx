@@ -30,7 +30,9 @@ export function SelectedItemsTable({
   });
 
   const items = useMemo(() => {
-    return data?.filter((item) => selectedIds.includes(item.id.toString())) || [];
+    return (
+      data?.filter((item) => selectedIds.includes(item.id.toString())) || []
+    );
   }, [data, selectedIds]);
 
   if (selectedIds.length === 0) {
@@ -58,12 +60,9 @@ export function SelectedItemsTable({
         <TableHead>
           <TableRow>
             <TableCell>
-              <Typography variant="subtitle2">
-                Tên hành trình
-              </Typography>
+              <Typography variant="subtitle2">Tên giai đoạn</Typography>
             </TableCell>
-            <TableCell width={60} align="center">
-            </TableCell>
+            <TableCell width={60} align="center"></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

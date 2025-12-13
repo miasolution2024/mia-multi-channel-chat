@@ -138,10 +138,22 @@ export function CustomerInsightListView() {
       align: "left",
       width: 200,
       render: (item: CustomerInsight) => {
+        const journeyName = item["10769dd4"]?.customer_journey_id?.name || "-";
         return (
-          <Typography variant="body2">
-            {item["10769dd4"]?.customer_journey_id?.name || "-"}
-          </Typography>
+          <Tooltip title={journeyName} arrow>
+            <Typography
+              variant="body2"
+              sx={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                maxWidth: 180,
+                cursor: "pointer",
+              }}
+            >
+              {journeyName}
+            </Typography>
+          </Tooltip>
         );
       },
     },
@@ -151,11 +163,25 @@ export function CustomerInsightListView() {
       label: "Nhóm khách hàng",
       align: "left",
       width: 200,
-      render: (item: CustomerInsight) => (
-        <Typography variant="body2">
-          {item["6475a12b"]?.customer_group_id?.name || "-"}
-        </Typography>
-      ),
+      render: (item: CustomerInsight) => {
+        const groupName = item["6475a12b"]?.customer_group_id?.name || "-";
+        return (
+          <Tooltip title={groupName} arrow>
+            <Typography
+              variant="body2"
+              sx={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                maxWidth: 180,
+                cursor: "pointer",
+              }}
+            >
+              {groupName}
+            </Typography>
+          </Tooltip>
+        );
+      },
     },
     {
       key: "actions",
@@ -296,9 +322,7 @@ export function CustomerInsightListView() {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Xóa"
-        content={
-            "Bạn có chắc chắn muốn xóa hành vi khách hàng này?"
-        }
+        content={"Bạn có chắc chắn muốn xóa hành vi khách hàng này?"}
         action={
           <Button
             variant="contained"
