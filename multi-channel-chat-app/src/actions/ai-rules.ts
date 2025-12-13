@@ -12,7 +12,7 @@ export async function getAiRules(page?: number, limit: number = 20) {
     
     // Add pagination parameters
     const offset = page !== undefined ? (page - 1) * limit : 0; // Calculate offset based on page and limit
-    url = `${url}?limit=${limit}&offset=${offset}&meta=*&sort[]=-created_at`;
+    url = `${url}?limit=${limit}&offset=${offset}&meta=*&sort[]=-created_at&filter[_and][0][type][_eq]=POST_SOCIAL`;
     
     const response = await axiosInstance.get(url);
     return response.data;

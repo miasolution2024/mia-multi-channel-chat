@@ -34,7 +34,7 @@ export function useAiRules(options: UseAiRulesOptions = {}): UseAiRulesReturn {
       
       const response = await getAiRules(page, pageSize);
       setRules(response.data || []);
-      setTotalCount(response.meta?.total_count || 0);
+      setTotalCount(response.meta?.filter_count || 0);
     } catch (err) {
       const errorMessage = 'Không thể tải danh sách quy tắc AI';
       setError(errorMessage);
