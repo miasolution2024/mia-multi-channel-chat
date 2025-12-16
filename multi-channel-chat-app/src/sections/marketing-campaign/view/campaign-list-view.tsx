@@ -150,7 +150,9 @@ function CampaignActionMenu({
   onDelete,
 }: CampaignActionMenuProps) {
   const popover = usePopover();
-  const canDelete = campaign.status === CAMPAIGN_STATUS.TODO && campaign.ai_content_suggestions?.length === 0;
+  const canDelete =
+    campaign.status === CAMPAIGN_STATUS.TODO &&
+    campaign.ai_content_suggestions?.length === 0;
 
   return (
     <>
@@ -214,10 +216,10 @@ export function CampaignListView() {
     }>;
   }>({ open: false, title: "", items: [] });
 
-  const filters = useSetState({ 
-    name: "", 
+  const filters = useSetState({
+    name: "",
     status: "" as string,
-    post_type: "" as string
+    post_type: "" as string,
   });
   const debouncedName = useDebounce(filters.state.name, 500);
 
@@ -233,11 +235,11 @@ export function CampaignListView() {
   // Move TABLE_CONFIG inside component to access setPopupState
   const TABLE_CONFIG: CampaignTableConfig[] = [
     { key: "id", id: "id", label: "ID", width: 80 },
-    { 
-      key: "name", 
-      id: "name", 
-      label: "Tên chiến dịch", 
-      align: "left", 
+    {
+      key: "name",
+      id: "name",
+      label: "Tên chiến dịch",
+      align: "left",
       width: 200,
       render: (item: CampaignDataItem) => (
         <Tooltip title={item.name} arrow>
@@ -437,7 +439,9 @@ export function CampaignListView() {
       width: 120,
       render: (item: CampaignDataItem) => (
         <Box>
-          {item.start_date ? new Date(item.start_date).toLocaleDateString('vi-VN') : "N/A"}
+          {item.start_date
+            ? new Date(item.start_date).toLocaleDateString("vi-VN")
+            : "N/A"}
         </Box>
       ),
     },
@@ -449,7 +453,9 @@ export function CampaignListView() {
       width: 120,
       render: (item: CampaignDataItem) => (
         <Box>
-          {item.end_date ? new Date(item.end_date).toLocaleDateString('vi-VN') : "N/A"}
+          {item.end_date
+            ? new Date(item.end_date).toLocaleDateString("vi-VN")
+            : "N/A"}
         </Box>
       ),
     },
@@ -504,9 +510,8 @@ export function CampaignListView() {
     setPage(0); // Reset to first page when filters change
   }, [filters]);
 
-  const canReset = !!filters.state.name || 
-    !!filters.state.status || 
-    !!filters.state.post_type;
+  const canReset =
+    !!filters.state.name || !!filters.state.status || !!filters.state.post_type;
 
   const handleDeleteRow = useCallback(
     async (id: string | number) => {
@@ -560,11 +565,11 @@ export function CampaignListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Chiến dịch Marketing"
+        heading="Chiến dịch Content"
         links={[
           { name: "Dashboard", href: paths.dashboard.root },
           {
-            name: "Chiến dịch Marketing",
+            name: "Chiến dịch Content",
             href: paths.dashboard.marketingCampaign,
           },
           { name: "Danh sách" },
@@ -589,7 +594,7 @@ export function CampaignListView() {
           justifyContent="space-between"
         >
           <TextField
-          size="small"
+            size="small"
             fullWidth
             value={filters.state.name}
             onChange={(e) => filters.setState({ name: e.target.value })}
@@ -597,7 +602,10 @@ export function CampaignListView() {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Iconify icon="eva:search-fill" sx={{ color: "text.disabled" }} />
+                  <Iconify
+                    icon="eva:search-fill"
+                    sx={{ color: "text.disabled" }}
+                  />
                 </InputAdornment>
               ),
             }}
@@ -661,10 +669,10 @@ export function CampaignListView() {
           page={page}
           pageSize={pageSize}
           onChangePage={(_, newPage) => setPage(newPage)}
-           onChangePageSize={(event) => {
-              setPageSize(parseInt(event.target.value, 10));
-              setPage(0);
-            }}
+          onChangePageSize={(event) => {
+            setPageSize(parseInt(event.target.value, 10));
+            setPage(0);
+          }}
           onSelect={(selected) => setSelected(selected.map(String))}
           loading={isLoading}
           count={total}

@@ -4,9 +4,7 @@ import {
   RHFTextField,
 } from "@/components/hook-form";
 import { Iconify } from "@/components/iconify";
-import {
-  useGetCustomerJourneys
-} from "@/hooks/apis/use-get-customer-journeys";
+import { useGetCustomerJourneys } from "@/hooks/apis/use-get-customer-journeys";
 import {
   ContentSelectionDialog,
   SelectedItemsTable,
@@ -89,30 +87,26 @@ export function PostContentInfoStep() {
             },
           }}
         />
-          <RHFTextField
-            required
-            name="main_seo_keyword"
-            label="Từ khoá SEO chính"
-          />
-          <RHFAutocomplete
-            sx={{ width: "100%" }}
-            name="secondary_seo_keywords"
-            label="Từ khoá SEO phụ"
-            placeholder="+ Thêm từ khoá"
-            multiple
-            freeSolo
-            disableCloseOnSelect
-            options={[]}
-            getOptionLabel={(option: string) => option}
-            renderOption={(
-              props: React.HTMLAttributes<HTMLLIElement>,
-              option: string
-            ) => (
-              <li {...props} key={option}>
-                {option}
-              </li>
-            )}
-          />
+        <RHFTextField required name="main_seo_keyword" label="Từ khoá chính" />
+        <RHFAutocomplete
+          sx={{ width: "100%" }}
+          name="secondary_seo_keywords"
+          label="Từ khoá phụ"
+          placeholder="+ Thêm từ khoá"
+          multiple
+          freeSolo
+          disableCloseOnSelect
+          options={[]}
+          getOptionLabel={(option: string) => option}
+          renderOption={(
+            props: React.HTMLAttributes<HTMLLIElement>,
+            option: string
+          ) => (
+            <li {...props} key={option}>
+              {option}
+            </li>
+          )}
+        />
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
           <RHFSelect
             name="customer_journey"

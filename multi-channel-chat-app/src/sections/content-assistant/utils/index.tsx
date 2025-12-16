@@ -30,7 +30,7 @@ const ContentSchema = zod.object({
   post_type: zod.string().min(1, { message: "Loại bài viết là bắt buộc!" }),
   main_seo_keyword: zod
     .string()
-    .min(1, { message: "Từ khoá SEO chính là bắt buộc!" }),
+    .min(1, { message: "Từ khoá chính là bắt buộc!" }),
   secondary_seo_keywords: zod.string().array().default([]),
   customer_group: zod.number().array().min(1, "Nhóm khách hàng là bắt buộc"),
   services: zod.number().array().min(1, "Dịch vụ là bắt buộc"),
@@ -128,10 +128,7 @@ export const getDefaultValues = (
               const nested = obj.customer_journey_id as Record<string, unknown>;
               if (nested.id && typeof nested.id === "number") return nested.id;
             }
-            if (
-              obj.services_id &&
-              typeof obj.services_id === "object"
-            ) {
+            if (obj.services_id && typeof obj.services_id === "object") {
               const nested = obj.services_id as Record<string, unknown>;
               if (nested.id && typeof nested.id === "number") return nested.id;
             }
@@ -155,7 +152,8 @@ export const getDefaultValues = (
               }
               if (typeof obj.omni_channels_id === "object") {
                 const nested = obj.omni_channels_id as Record<string, unknown>;
-                if (nested.id && typeof nested.id === "number") return nested.id;
+                if (nested.id && typeof nested.id === "number")
+                  return nested.id;
               }
             }
           }
@@ -209,8 +207,8 @@ export const getDefaultValues = (
         extractIds(editData.omni_channels).length > 0
           ? extractIds(editData.omni_channels)
           : [],
-        is_post_video: editData.is_post_video || true,
-        is_post_reels: editData.is_post_reels || false,
+      is_post_video: editData.is_post_video || true,
+      is_post_reels: editData.is_post_reels || false,
       // Step 2
       outline_post: getString(apiData.outline_post),
       post_goal: getString(apiData.post_goal),
@@ -291,7 +289,7 @@ export const buildStepWriteArticleData = async (
     media_generated_ai?: MediaGeneratedAiItem[];
     id?: string;
   },
-  excludeMedia = false,
+  excludeMedia = false
 ) => {
   // Process media data for upload and deletion only if not excluding media
   let mediaArray: Array<{ id: string }> = [];
@@ -383,7 +381,9 @@ export const getDeletedMediaFiles = (
   );
 
   // Count new File objects being added
-  const newFileCount = currentMedia.filter(file => file instanceof File).length;
+  const newFileCount = currentMedia.filter(
+    (file) => file instanceof File
+  ).length;
 
   // Special handling when all current media are new File objects
   if (currentApiFiles.length === 0 && newFileCount > 0) {
@@ -403,7 +403,7 @@ export const getDeletedMediaFiles = (
       const fileWithProps = file as File & { idItem?: string; path?: string };
       const processed = {
         path: fileWithProps.path || fileWithProps.name,
-        idItem: fileWithProps.idItem
+        idItem: fileWithProps.idItem,
       };
       return processed;
     }
@@ -411,17 +411,17 @@ export const getDeletedMediaFiles = (
   });
 
   if (currentApiFiles.length === 0 && newFileCount > 0) {
-    const currentFileNames = currentMedia.map(file => {
+    const currentFileNames = currentMedia.map((file) => {
       if (file instanceof File) {
         const fileWithProps = file as File & { path?: string; idItem?: string };
         return fileWithProps.path || file.name;
       }
       return file.path;
     });
-    
+
     return processedOriginalMedia
       .filter((originalFile) => {
-        const isFromApi = 
+        const isFromApi =
           (originalFile.path && originalFile.path.startsWith("image-")) ||
           originalFile.idItem;
         if (!isFromApi) return false;
@@ -435,7 +435,7 @@ export const getDeletedMediaFiles = (
 
   return processedOriginalMedia
     .filter((originalFile) => {
-      const isFromApi = 
+      const isFromApi =
         (originalFile.path && originalFile.path.startsWith("image-")) ||
         originalFile.idItem;
       if (!isFromApi) return false;
@@ -485,7 +485,7 @@ export const getNewMediaFiles = (
 
     // Check if this is a transformed media file (has idItem property)
     // These are existing media files that were transformed from API data
-    if ('idItem' in file && file.idItem) {
+    if ("idItem" in file && file.idItem) {
       return false; // Exclude transformed media files from upload
     }
 
@@ -495,7 +495,7 @@ export const getNewMediaFiles = (
       return originalFile.path === file.name;
     });
   });
-}
+};
 
 // Helper function to process media data for API update
 export const processMediaDataForUpdate = async (
@@ -505,11 +505,9 @@ export const processMediaDataForUpdate = async (
     media_generated_ai?: MediaGeneratedAiItem[];
   }
 ) => {
-  const currentMedia = (formData.media as (File | FileWithApiProperties)[]) || [];
-  const newMediaFiles = getNewMediaFiles(
-    currentMedia,
-    editData?.media || []
-  );
+  const currentMedia =
+    (formData.media as (File | FileWithApiProperties)[]) || [];
+  const newMediaFiles = getNewMediaFiles(currentMedia, editData?.media || []);
   const deletedMediaIds = getDeletedMediaFiles(
     currentMedia,
     editData?.media || []
@@ -578,10 +576,7 @@ export const hasFormDataChanged = (
       "is_generated_by_AI",
     ];
   } else if (step === POST_STEP.HTML_CODING) {
-    fieldsToCompare = [
-      "ai_notes_html_coding",
-      "post_html_format",
-    ];
+    fieldsToCompare = ["ai_notes_html_coding", "post_html_format"];
   } else {
     // Default to RESEARCH_ANALYSIS fields
     fieldsToCompare = [
@@ -595,7 +590,7 @@ export const hasFormDataChanged = (
       "content_tone",
       "ai_notes_make_outline",
       "omni_channels",
-       "is_post_video",
+      "is_post_video",
       "is_post_reels",
       "video",
     ];
@@ -614,7 +609,10 @@ export const hasFormDataChanged = (
   });
 };
 
-export const buildStepResearchData = async (formData: FormData, isCreate = false) => {
+export const buildStepResearchData = async (
+  formData: FormData,
+  isCreate = false
+) => {
   // Handle video upload if present
   let videoId = null;
   if (Array.isArray(formData.video) && formData.video.length > 0) {
@@ -622,7 +620,7 @@ export const buildStepResearchData = async (formData: FormData, isCreate = false
     if (videoFile instanceof File) {
       const videoUploadResult = await uploadFile(videoFile);
       videoId = videoUploadResult.data.id;
-    } else if (typeof videoFile === 'string') {
+    } else if (typeof videoFile === "string") {
       videoId = videoFile;
     }
   }
@@ -632,7 +630,7 @@ export const buildStepResearchData = async (formData: FormData, isCreate = false
     const uniqueAiRuleBased = [...new Set(formData.ai_rule_based || [])];
     const uniqueContentTone = [...new Set(formData.content_tone || [])];
     const uniqueOmniChannels = [...new Set(formData.omni_channels || [])];
-    
+
     // Format for create API
     return {
       current_step: POST_STEP.RESEARCH_ANALYSIS,
@@ -670,10 +668,14 @@ export const buildStepResearchData = async (formData: FormData, isCreate = false
         delete: [],
       },
       customer_journey: {
-        create: formData.customer_journey ? [{
-          ai_content_suggestions_id: "+",
-          customer_journey_id: { id: formData.customer_journey },
-        }] : [],
+        create: formData.customer_journey
+          ? [
+              {
+                ai_content_suggestions_id: "+",
+                customer_journey_id: { id: formData.customer_journey },
+              },
+            ]
+          : [],
         update: [],
         delete: [],
       },
@@ -714,9 +716,13 @@ export const buildStepResearchData = async (formData: FormData, isCreate = false
       formData.services?.map((item: number) => ({
         services_id: item,
       })) || [],
-    customer_journey: formData.customer_journey ? [{
-      customer_journey_id: formData.customer_journey,
-    }] : [],
+    customer_journey: formData.customer_journey
+      ? [
+          {
+            customer_journey_id: formData.customer_journey,
+          },
+        ]
+      : [],
     ai_rule_based:
       formData.ai_rule_based?.map((item) => ({
         ai_rule_based_id: item,
@@ -739,7 +745,9 @@ export const getStartStepFromCurrentStep = (currentStep?: string): number => {
   return CONTENT_STEP_TO_START_STEP[currentStep] || 1;
 };
 
-export const transformMediaItems = (mediaItems: MediaGeneratedAiItem[]): File[] => {
+export const transformMediaItems = (
+  mediaItems: MediaGeneratedAiItem[]
+): File[] => {
   return mediaItems.map((mediaItem: MediaGeneratedAiItem) => {
     const imageUrl = `${CONFIG.serverUrl}/assets/${mediaItem.directus_files_id}`;
     // Create a File-like object that RHFUpload can handle

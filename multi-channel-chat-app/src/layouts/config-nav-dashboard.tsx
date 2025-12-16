@@ -94,16 +94,16 @@ export const navData = [
     ],
   },
   {
-    subheader: "Chiến dịch Marketing",
+    subheader: "Content Marketing",
     items: [
       {
-        title: "Quản lý chiến dịch",
+        title: "Chiến dịch content",
         path: paths.dashboard.marketingCampaign.root,
         icon: ICONS.inventory,
       },
 
       {
-        title: "AI sản xuất nội dung",
+        title: "AI viết bài",
         path: paths.dashboard.contentAssistant.root,
         icon: ICONS.blog,
       },

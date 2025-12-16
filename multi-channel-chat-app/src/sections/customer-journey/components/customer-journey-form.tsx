@@ -1,25 +1,22 @@
-'use client';
+"use client";
 
-import { z as zod } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { z as zod } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
+import { Card, Stack, Button, CardHeader } from "@mui/material";
+
+import { paths } from "@/routes/path";
+import { useBoolean } from "@/hooks/use-boolean";
+import { toast } from "@/components/snackbar";
+import { Form, RHFSwitch, RHFTextField } from "@/components/hook-form";
+import { CustomerJourney, CustomerJourneyFormData } from "../types";
 import {
-  Card,
-  Stack,
-  Button,
-  CardHeader,
-} from '@mui/material';
-
-import { paths } from '@/routes/path';
-import { useBoolean } from '@/hooks/use-boolean';
-import { toast } from '@/components/snackbar';
-import { Form, RHFSwitch, RHFTextField } from '@/components/hook-form';
-import { CustomerJourney, CustomerJourneyFormData } from '../types';
-import { createCustomerJourney, updateCustomerJourney } from '@/actions/customer-journey';
-
+  createCustomerJourney,
+  updateCustomerJourney,
+} from "@/actions/customer-journey";
 
 // ----------------------------------------------------------------------
 
@@ -28,11 +25,9 @@ type Props = {
 };
 
 const CustomerJourneySchema = zod.object({
-  name: zod.string().min(1, 'Tên là bắt buộc'),
+  name: zod.string().min(1, "Tên là bắt buộc"),
   description: zod.string(),
   active: zod.boolean(),
-
-
 });
 
 export function CustomerJourneyForm({ customerJourney }: Props) {
@@ -41,8 +36,8 @@ export function CustomerJourneyForm({ customerJourney }: Props) {
 
   const defaultValues = useMemo(
     () => ({
-      name: customerJourney?.name || '',
-      description: customerJourney?.description || '',
+      name: customerJourney?.name || "",
+      description: customerJourney?.description || "",
       active: customerJourney?.active || true,
     }),
     [customerJourney]
@@ -68,13 +63,15 @@ export function CustomerJourneyForm({ customerJourney }: Props) {
       } else {
         await createCustomerJourney(data);
       }
-      
+
       reset();
-      toast.success(customerJourney ? 'Cập nhật thành công!' : 'Tạo mới thành công!');
+      toast.success(
+        customerJourney ? "Cập nhật thành công!" : "Tạo mới thành công!"
+      );
       router.push(paths.dashboard.customerJourney.root);
     } catch (error) {
       console.error(error);
-      toast.error('Có lỗi xảy ra!');
+      toast.error("Có lỗi xảy ra!");
     } finally {
       loadingSave.onFalse();
     }
@@ -88,27 +85,24 @@ export function CustomerJourneyForm({ customerJourney }: Props) {
     <Form methods={methods} onSubmit={onSubmit}>
       <Card>
         <CardHeader
-          title={customerJourney ? 'Chỉnh sửa hành trình' : 'Tạo hành trình mới'}
+          title={customerJourney ? "Chỉnh sửa giai đoạn" : "Tạo giai đoạn mới"}
         />
 
         <Stack spacing={3} sx={{ p: 3 }}>
           <RHFTextField
             name="name"
-            label="Tên hành trình"
-            placeholder="Nhập tên hành trình..."
+            label="Tên giai đoạn"
+            placeholder="Nhập tên giai đoạn..."
           />
 
           <RHFTextField
             name="description"
-            label="Mô tả hành trình"
+            label="Mô tả giai đoạn"
             multiline
             rows={4}
-            placeholder="Nhập mô tả hành trình..."
+            placeholder="Nhập mô tả giai đoạn..."
           />
-          <RHFSwitch
-            name="active"
-            label="Trạng thái"
-          />
+          <RHFSwitch name="active" label="Trạng thái" />
         </Stack>
 
         <Stack
@@ -125,12 +119,8 @@ export function CustomerJourneyForm({ customerJourney }: Props) {
             Hủy
           </Button>
 
-          <Button
-            type="submit"
-            variant="contained"
-            loading={isSubmitting}
-          >
-            {customerJourney ? 'Cập nhật' : 'Tạo mới'}
+          <Button type="submit" variant="contained" loading={isSubmitting}>
+            {customerJourney ? "Cập nhật" : "Tạo mới"}
           </Button>
         </Stack>
       </Card>

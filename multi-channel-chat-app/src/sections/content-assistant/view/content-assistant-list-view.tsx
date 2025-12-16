@@ -77,8 +77,7 @@ function ItemsPopup({ open, onClose, title, items }: ItemsPopupProps) {
           {items.map((item, index) => (
             <Chip
               key={index}
-              label={item.label
-              }
+              label={item.label}
               size="small"
               variant="outlined"
               color={item.color}
@@ -87,15 +86,15 @@ function ItemsPopup({ open, onClose, title, items }: ItemsPopupProps) {
                 "&.MuiChip-root": {
                   display: "flex",
                   justifyContent: "flex-start",
-                  overflowY:'auto',
-                  height:'fit-content',
-                  minHeight:'24px'
+                  overflowY: "auto",
+                  height: "fit-content",
+                  minHeight: "24px",
                 },
                 "& .MuiChip-label": {
                   // overflow: "hidden",
                   // textOverflow: "ellipsis",
                   // whiteSpace: "nowrap",
-                  whiteSpace:'wrap'
+                  whiteSpace: "wrap",
                 },
               }}
             />
@@ -165,8 +164,8 @@ export interface Content {
   current_step?: string;
   topic: string; // Chủ đề
   post_type: string | null; // Loại bài viết
-  main_seo_keyword: string; // Từ khoá SEO chính
-  secondary_seo_keywords?: string[]; // Từ khoá SEO phụ
+  main_seo_keyword: string; // Từ khoá chính
+  secondary_seo_keywords?: string[]; // Từ khoá phụ
   customer_group: CustomerGroupItem[]; // Nhóm khách hàng
   customer_journey: CustomerJourneyItem[]; // Giai đoạn khách hàng
   services: ServicesItem[]; // Dịch vụ
@@ -366,13 +365,13 @@ export function ContentAssistantListView() {
     {
       key: "main_seo_keyword",
       id: "main_seo_keyword",
-      label: "Từ khoá SEO chính",
+      label: "Từ khoá chính",
       align: "left",
     },
     {
       key: "secondary_seo_keywords",
       id: "secondary_seo_keywords",
-      label: "Từ khoá SEO phụ",
+      label: "Từ khoá phụ",
       align: "left",
       render: (item: Content) => (
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
@@ -444,7 +443,7 @@ export function ContentAssistantListView() {
           {item.customer_journey.slice(0, 1).map((journey, index) => (
             <Chip
               key={index}
-              label={journey?.customer_journey_id?.name }
+              label={journey?.customer_journey_id?.name}
               size="small"
               variant="outlined"
               color="info"
@@ -522,18 +521,18 @@ export function ContentAssistantListView() {
               return null;
             }
             return (
-            <Chip
-              key={index}
-              label={
-                rule.ai_rule_based_id?.content?.length > 20
-                  ? `${rule.ai_rule_based_id.content.substring(0, 20)}...`
-                  : rule.ai_rule_based_id?.content
-              }
-              size="small"
-              variant="outlined"
-              color="primary"
-            />
-          )
+              <Chip
+                key={index}
+                label={
+                  rule.ai_rule_based_id?.content?.length > 20
+                    ? `${rule.ai_rule_based_id.content.substring(0, 20)}...`
+                    : rule.ai_rule_based_id?.content
+                }
+                size="small"
+                variant="outlined"
+                color="primary"
+              />
+            );
           })}
           {item.ai_rule_based.length > 1 && (
             <Chip

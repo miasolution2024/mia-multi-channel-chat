@@ -24,7 +24,7 @@ import { getCustomerGroups } from "@/actions/customer-group";
 import { CustomerGroup } from "@/sections/customer-group/types";
 import { getCustomerJourneys } from "@/actions/customer-journey";
 import { CustomerJourney } from "@/sections/customer-journey/types";
-import {  MenuItem, SelectChangeEvent, Switch, Tooltip } from "@mui/material";
+import { MenuItem, SelectChangeEvent, Switch, Tooltip } from "@mui/material";
 import { getOmniChannels } from "@/actions/omni-channels";
 import { getServices } from "@/actions/services";
 import { Services } from "@/sections/services/types";
@@ -231,12 +231,12 @@ export function StepResearch() {
             <RHFTextField
               required
               name="main_seo_keyword"
-              label="Từ khoá SEO chính"
+              label="Từ khoá chính"
             />
             <RHFAutocomplete
               sx={{ width: "100%" }}
               name="secondary_seo_keywords"
-              label="Từ khoá SEO phụ"
+              label="Từ khoá phụ"
               placeholder="+ Thêm từ khoá"
               multiple
               freeSolo
@@ -406,30 +406,24 @@ export function StepResearch() {
         <Switch checked={isShowVideo} onChange={handleChangeShowVideo} />
       </Stack>
       {isShowVideo ? (
-        <Stack spacing={2} sx={{marginTop:'-16px'}}>
+        <Stack spacing={2} sx={{ marginTop: "-16px" }}>
           <Stack sx={{ width: "fit-content" }}>
             <Stack direction={"row"} alignItems={"center"}>
-              <RHFCheckbox
-                name="is_post_video"
-                label="Bài đăng video"
-              />
+              <RHFCheckbox name="is_post_video" label="Bài đăng video" />
             </Stack>
             <Stack direction={"row"} alignItems={"center"}>
-              <RHFCheckbox
-                name="is_post_reels"
-                label="Bài đăng reel"
-              />
+              <RHFCheckbox name="is_post_reels" label="Bài đăng reel" />
               {isPostReels && (
-            <Stack
-              direction="row"
-              alignItems="center"
-              sx={{ color: "error.main" }}
-            >
-              <Typography variant="body2" fontWeight={600}>
-                Lưu ý: Video đăng dưới dạng tin (reel) phải dưới 60 giây.
-              </Typography>
-            </Stack>
-          )}
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  sx={{ color: "error.main" }}
+                >
+                  <Typography variant="body2" fontWeight={600}>
+                    Lưu ý: Video đăng dưới dạng tin (reel) phải dưới 60 giây.
+                  </Typography>
+                </Stack>
+              )}
             </Stack>
           </Stack>
           <Card>

@@ -66,11 +66,11 @@ function CampaignEditView({ campaignId }: CampaignEditViewProps) {
     <DashboardContent>
       <Container maxWidth={settings.themeStretch ? false : "lg"}>
         <CustomBreadcrumbs
-          heading="Chỉnh sửa chiến dịch"
+          heading="Chỉnh sửa Chiến dịch Content"
           links={[
             { name: "Dashboard", href: paths.dashboard.root },
             {
-              name: "Chiến dịch Marketing",
+              name: "Chiến dịch Content",
               href: paths.dashboard.marketingCampaign.root,
             },
             { name: "Chỉnh sửa" },
