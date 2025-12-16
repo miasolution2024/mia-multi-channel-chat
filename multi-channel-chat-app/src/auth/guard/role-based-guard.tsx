@@ -14,6 +14,8 @@ export function RoleBasedGuard({
     typeof acceptRoles !== "undefined" &&
     !acceptRoles.includes(currentRole)
   ) {
+    console.log("acceptRoles", acceptRoles);
+    console.log("acceptRoles", acceptRoles);
     return hasContent ? <View403 /> : null;
   }
 
