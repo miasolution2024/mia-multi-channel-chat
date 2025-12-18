@@ -367,7 +367,7 @@ export function CampaignListView() {
           {item.customer_group.slice(0, 1).map((group, index) => (
             <Chip
               key={index}
-              label={group.customer_group_id.name}
+              label={group?.customer_group_id?.name || ""}
               size="small"
               variant="outlined"
             />
