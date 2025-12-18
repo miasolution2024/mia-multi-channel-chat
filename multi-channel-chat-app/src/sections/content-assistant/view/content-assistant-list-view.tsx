@@ -525,7 +525,7 @@ export function ContentAssistantListView() {
           {item.content_tone.slice(0, 1).map((tone, index) => (
             <Chip
               key={index}
-              label={tone.content_tone_id.tone_description || "N/A"}
+              label={tone?.content_tone_id?.tone_description || "N/A"}
               size="small"
               variant="outlined"
               color="secondary"
@@ -541,7 +541,7 @@ export function ContentAssistantListView() {
                   open: true,
                   title: "Tông điệu",
                   items: item.content_tone.map((tone) => ({
-                    label: tone.content_tone_id.tone_description || "N/A",
+                    label: tone?.content_tone_id?.tone_description || "N/A",
                     color: "secondary" as const,
                   })),
                 })
