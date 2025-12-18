@@ -49,6 +49,7 @@ import { getStartStepFromCurrentStep } from "../utils";
 import { Stack } from "@mui/material";
 import { useUpdateContentAssistant } from "@/hooks/apis/use-update-content-assistant";
 import { useGetContentAssistantList } from "@/hooks/apis/use-get-content-assistant-list";
+import { ContentDetailDialog } from "../content-detail-dialog";
 
 // Tạo interface riêng cho table config
 interface ItemsPopupProps {
@@ -289,6 +290,45 @@ function ContentActionMenu({
   );
 }
 
+interface ContentViewActionMenuProps {
+  content: Content;
+  onView: (content: Content) => void;
+}
+
+function ContentViewActionMenu({
+  content,
+  onView,
+}: ContentViewActionMenuProps) {
+  const popover = usePopover();
+
+  return (
+    <>
+      <IconButton onClick={popover.onOpen}>
+        <Iconify icon="eva:more-vertical-fill" />
+      </IconButton>
+      <Popover
+        open={popover.open}
+        anchorEl={popover.anchorEl}
+        onClose={popover.onClose}
+        anchorOrigin={{ vertical: "top", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              onView(content);
+              popover.onClose();
+            }}
+          >
+            <Iconify icon="solar:eye-bold" />
+            Xem chi tiết
+          </MenuItem>
+        </MenuList>
+      </Popover>
+    </>
+  );
+}
+
 export function ContentAssistantListView() {
   const router = useRouter();
   const confirm = useBoolean();
@@ -320,6 +360,10 @@ export function ContentAssistantListView() {
         | "default";
     }>;
   }>({ open: false, title: "", items: [] });
+  const [viewDetailState, setViewDetailState] = useState<{
+    open: boolean;
+    content: Content | null;
+  }>({ open: false, content: null });
 
   const filters = useSetState({ topic: "", status: [] as string[] });
   const debouncedTopic = useDebounce(filters.state.topic, 500);
@@ -638,8 +682,9 @@ export function ContentAssistantListView() {
       post_notes: item.post_notes ?? undefined,
       post_html_format: item.post_html_format ?? undefined,
       video: item.video || "",
-      media: [],
-      media_generated_ai: [],
+      media: (item.media || []) as Content["media"],
+      media_generated_ai:
+        item.media_generated_ai as Content["media_generated_ai"],
       services: (item.services || []) as unknown as Content["services"],
     }));
   };
@@ -781,6 +826,10 @@ export function ContentAssistantListView() {
   const handlePublish = (id: string | number) => {
     setPublishingId(id);
     publishConfirm.onTrue();
+  };
+
+  const handleViewDetail = (content: Content) => {
+    setViewDetailState({ open: true, content });
   };
 
   const handleConfirmPublish = async () => {
@@ -959,14 +1008,29 @@ export function ContentAssistantListView() {
             moreOptions={(item) => {
               const contentItem = item as Content;
               const isDraft = contentItem.status === POST_STATUS.DRAFT;
-              return isDraft ? (
-                <ContentActionMenu
-                  content={contentItem}
-                  onEdit={handleEditRow}
-                  onDelete={handleDeleteRow}
-                  onPublish={handlePublish}
-                />
-              ) : null;
+              const isPublished = contentItem.status === POST_STATUS.PUBLISHED;
+
+              if (isDraft) {
+                return (
+                  <ContentActionMenu
+                    content={contentItem}
+                    onEdit={handleEditRow}
+                    onDelete={handleDeleteRow}
+                    onPublish={handlePublish}
+                  />
+                );
+              }
+
+              if (isPublished) {
+                return (
+                  <ContentViewActionMenu
+                    content={contentItem}
+                    onView={handleViewDetail}
+                  />
+                );
+              }
+
+              return null;
             }}
           />
         </Card>
@@ -1035,6 +1099,12 @@ export function ContentAssistantListView() {
         title={popupState.title}
         items={popupState.items}
         onClose={() => setPopupState({ open: false, title: "", items: [] })}
+      />
+
+      <ContentDetailDialog
+        open={viewDetailState.open}
+        content={viewDetailState.content}
+        onClose={() => setViewDetailState({ open: false, content: null })}
       />
     </>
   );
