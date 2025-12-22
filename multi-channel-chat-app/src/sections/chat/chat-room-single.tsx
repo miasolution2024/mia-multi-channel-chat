@@ -9,12 +9,14 @@ import { Iconify } from "@/components/iconify";
 
 import { CollapseButton } from "./styles";
 import { Participant } from "@/models/participants/participant";
+import { useGetCustomerById } from "@/actions/customer";
 
 // ----------------------------------------------------------------------
 
 export function ChatRoomSingle({ participant }: { participant: Participant }) {
   const collapse = useBoolean(true);
-
+    const { customer} = useGetCustomerById(participant?.participant_id);
+    
   const renderInfo = (
     <Stack alignItems="center" sx={{ py: 5 }}>
       <Avatar
@@ -32,6 +34,7 @@ export function ChatRoomSingle({ participant }: { participant: Participant }) {
         { icon: "mingcute:location-fill", value: participant?.participant_address },
         { icon: "solar:phone-bold", value: participant?.participant_phone },
         { icon: "fluent:mail-24-filled", value: participant?.participant_email },
+        { icon: "streamline-ultimate:saving-bank-international-bold", value: customer?.country },
       ].map((item) => (
         item.value &&
         <Stack

@@ -24,6 +24,25 @@ export function useGetCustomers() {
   return memoizedValue;
 }
 
+export function useGetCustomerById(customerId: string) {
+  const url = customerId ? `${endpoints.customers.list}/${customerId}` :"";
+
+  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrConfig);
+
+  const memoizedValue = useMemo(
+    () => ({
+      customer: (data?.data as Customer),
+      customerLoading: isLoading,
+      customerError: error,
+      customerValidating: isValidating,
+      customerEmpty: !isLoading && !data?.data.length,
+    }),
+    [data?.data, error, isLoading, isValidating]
+  );
+
+  return memoizedValue;
+}
+
 // ----------------------------------------------------------------------
 
 export async function updateCustomerAsync(

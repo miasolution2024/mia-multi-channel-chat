@@ -9,6 +9,7 @@ export type Customer = Common & {
   status: string;
   customer_source: string;
   address: string;
+  country: string;
 }
 
 export interface CustomerRequest {
