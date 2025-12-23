@@ -345,6 +345,7 @@ export function ContentAssistantListView() {
   const [pageSize, setPageSize] = useState(10);
   const [selected, setSelected] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [tableKey, setTableKey] = useState(0); // Add key to force table re-mount
   const [popupState, setPopupState] = useState<{
     open: boolean;
     title: string;
@@ -660,7 +661,7 @@ export function ContentAssistantListView() {
   ): Content[] => {
     return apiData.map((item) => ({
       ...item,
-      id: item.id,
+      id: String(item.id), // Convert to string for consistency
       topic: item.topic || "",
       post_type: item.post_type,
       main_seo_keyword: item.main_seo_keyword || "",
@@ -717,7 +718,6 @@ export function ContentAssistantListView() {
         const errorMessage =
           error instanceof Error ? error.message : "Lỗi khi xóa!";
         toast.error(errorMessage);
-        console.log(error);
       } finally {
         setIsDeleting(false);
       }
@@ -755,12 +755,14 @@ export function ContentAssistantListView() {
   const handleBulkCreatePosts = async () => {
     if (selected.length === 0) return;
 
+    const selectedIds = [...selected]; // Copy selected IDs before clearing
+
     try {
       setIsBulkCreating(true);
-      setBulkCreatingIds(selected);
+      setBulkCreatingIds(selectedIds);
 
       // Process each selected item
-      const promises = selected.map(async (id) => {
+      const promises = selectedIds.map(async (id) => {
         const currentItem = apiResponse?.data.find(
           (item: ContentAssistantApiResponse) => String(item.id) === String(id)
         );
@@ -774,7 +776,6 @@ export function ContentAssistantListView() {
             status: POST_STATUS.IN_PROGRESS,
           });
         } catch (error) {
-          console.error(`Failed to update status for item ${id}:`, error);
           throw error; // Re-throw to prevent createPost from being called
         }
 
@@ -802,13 +803,17 @@ export function ContentAssistantListView() {
 
       // Show immediate success message
       toast.success(
-        `Đã bắt đầu tạo ${selected.length} bài viết. Quá trình sẽ hoàn thành trong khoảng 10 phút.`
+        `Đã bắt đầu tạo ${selectedIds.length} bài viết. Quá trình sẽ hoàn thành trong khoảng 10 phút.`
       );
-      await refetch();
-      setPage(0); // Reset to first page after refresh
-      handleResetFilters();
 
-      setSelected([]); // Clear selection
+      await refetch();
+
+      setSelected([]);
+      // Force table re-mount to clear internal state
+      setTableKey((prev) => prev + 1);
+
+      setPage(0);
+      handleResetFilters();
     } catch (error) {
       console.error("Error starting bulk creation:", error);
       toast.error("Có lỗi xảy ra khi bắt đầu tạo bài viết");
@@ -983,6 +988,7 @@ export function ContentAssistantListView() {
           </Stack>
 
           <CustomTable
+            key={tableKey}
             data={tableData}
             loading={isLoading || isDeleting}
             tableConfig={TABLE_CONFIG as TableConfig[]}
@@ -997,9 +1003,13 @@ export function ContentAssistantListView() {
             updateList={bulkCreatingIds.map((id) => String(id))}
             firstLoading={false}
             checkKey="id"
-            onSelect={(selectedIds) =>
-              setSelected(selectedIds.map((id) => String(id)))
-            }
+            onSelect={(selectedIds) => {
+              const newSelected = selectedIds.map((id) => String(id));
+              // Only update if actually changed to prevent loop
+              if (newSelected.join(",") !== selected.join(",")) {
+                setSelected(newSelected);
+              }
+            }}
             defaultSelected={selected}
             canSelectRow={(item) => {
               const contentItem = item as Content;
