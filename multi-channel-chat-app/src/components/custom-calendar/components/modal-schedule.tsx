@@ -4,11 +4,14 @@ import {
   DialogContent,
   DialogTitle,
   Typography,
-  TextField,
   Button,
   Box,
   Alert,
 } from "@mui/material";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
 import React, { useState, useEffect } from "react";
 import { formatToDDMMYYYY } from "../hooks/use-format-date-time";
 import { updateWorkingSchedulePost } from "@/actions/schedule-post-calendar";
@@ -31,109 +34,47 @@ const ModalSchedule: React.FC<ModalScheduleProps> = ({
   dateCreated,
   timeCreated,
 }) => {
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [selectedTime, setSelectedTime] = useState<string>("");
-  const [timeWarning, setTimeWarning] = useState<string>("");
-  const [dateWarning, setDateWarning] = useState<string>("");
+  const [selectedDateTime, setSelectedDateTime] = useState<Dayjs | null>(null);
+  const [warning, setWarning] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string>("");
 
-  const today = new Date().toISOString().split("T")[0];
-
-  const getMinDate = () => {
-    if (!dateCreated) return today;
-    const dateCreatedStr = new Date(dateCreated).toISOString().split("T")[0];
-    return dateCreatedStr >= today ? dateCreatedStr : today;
+  const getMinDateTime = () => {
+    return dayjs();
   };
 
   useEffect(() => {
     if (isOpened) {
-      const initialDate =
-        dateCreated && new Date(dateCreated) >= new Date(today)
-          ? new Date(dateCreated).toISOString().split("T")[0]
-          : today;
+      const now = dayjs();
+      let initialDateTime = now;
 
-      setSelectedDate(initialDate);
-
-      const isDateCreatedTodayOrLater =
-        dateCreated && new Date(dateCreated) >= new Date(today);
-      if (isDateCreatedTodayOrLater) {
-        setSelectedTime(timeCreated);
-      } else {
-        const now = new Date();
-        const currentTime = now.toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        });
-        setSelectedTime(currentTime);
+      if (dateCreated) {
+        const created = dayjs(dateCreated)
+          .set("hour", parseInt(timeCreated.split(":")[0]))
+          .set("minute", parseInt(timeCreated.split(":")[1]));
+        initialDateTime = created.isAfter(now) ? created : now;
       }
 
-      setTimeWarning("");
-      setDateWarning("");
+      setSelectedDateTime(initialDateTime);
+      setWarning("");
       setSubmitError("");
     }
-  }, [isOpened, dateCreated, timeCreated, today]);
+  }, [isOpened, dateCreated, timeCreated]);
 
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = event.target.value;
-    setSelectedDate(newDate);
+  const handleDateTimeChange = (newValue: Dayjs | null) => {
+    setSelectedDateTime(newValue);
+    setWarning("");
 
-    setTimeWarning("");
-    setDateWarning("");
+    if (!newValue) return;
 
-    if (newDate < today) {
-      setDateWarning("Ngày không được trước ngày hôm nay");
-      return;
-    }
-
-    if (dateCreated) {
-      const dateCreatedStr = new Date(dateCreated).toISOString().split("T")[0];
-      if (newDate < dateCreatedStr) {
-        setDateWarning("Ngày không được trước ngày tạo bài viết");
-        return;
-      }
-    }
-
-    if (
-      dateCreated &&
-      new Date(dateCreated).toISOString().split("T")[0] === newDate
-    ) {
-      setSelectedTime(timeCreated);
-    }
-  };
-
-  const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = event.target.value;
-    setSelectedTime(newTime);
-
-    // Only apply time validation if the selected date is today
-    if (selectedDate === today) {
-      if (
-        dateCreated &&
-        new Date(dateCreated).toISOString().split("T")[0] === selectedDate
-      ) {
-        const [newHour, newMinute] = newTime.split(":").map(Number);
-        const [createdHour, createdMinute] = timeCreated.split(":").map(Number);
-
-        const newTimeMinutes = newHour * 60 + newMinute;
-        const createdTimeMinutes = createdHour * 60 + createdMinute;
-
-        if (newTimeMinutes < createdTimeMinutes) {
-          setTimeWarning("Thời gian không được trước thời gian tạo bài viết");
-        } else {
-          setTimeWarning("");
-        }
-      } else {
-        setTimeWarning("");
-      }
-    } else {
-      setTimeWarning("");
+    const now = dayjs();
+    if (newValue.isBefore(now)) {
+      setWarning("Thời gian đăng bài không được trước thời gian hiện tại");
     }
   };
 
   const handleSubmit = async () => {
-    if (timeWarning || dateWarning || isSubmitting) {
+    if (warning || isSubmitting || !selectedDateTime) {
       return;
     }
 
@@ -141,12 +82,11 @@ const ModalSchedule: React.FC<ModalScheduleProps> = ({
       setIsSubmitting(true);
       setSubmitError("");
 
-      const scheduleDateTime = `${selectedDate} ${selectedTime}:00`;
+      const scheduleDateTime = selectedDateTime.format("YYYY-MM-DD HH:mm:ss");
 
       await updateWorkingSchedulePost(workingId, scheduleDateTime);
 
-      setTimeWarning("");
-      setDateWarning("");
+      setWarning("");
 
       mutate(
         (key) =>
@@ -207,40 +147,25 @@ const ModalSchedule: React.FC<ModalScheduleProps> = ({
           </Box>
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField
-              label="Ngày đăng bài"
-              type="date"
-              value={selectedDate}
-              onChange={handleDateChange}
-              inputProps={{
-                min: getMinDate(),
-              }}
-              fullWidth
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateTimePicker
+                label="Thời gian đăng bài"
+                value={selectedDateTime}
+                onChange={handleDateTimeChange}
+                minDateTime={getMinDateTime()}
+                format="DD/MM/YYYY HH:mm"
+                ampm={false}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                  },
+                }}
+              />
+            </LocalizationProvider>
 
-            <TextField
-              label="Thời gian đăng bài"
-              type="time"
-              value={selectedTime}
-              onChange={handleTimeChange}
-              fullWidth
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-
-            {dateWarning && (
+            {warning && (
               <Alert severity="warning" sx={{ mt: 1 }}>
-                {dateWarning}
-              </Alert>
-            )}
-
-            {timeWarning && (
-              <Alert severity="warning" sx={{ mt: 1 }}>
-                {timeWarning}
+                {warning}
               </Alert>
             )}
 
@@ -263,7 +188,7 @@ const ModalSchedule: React.FC<ModalScheduleProps> = ({
           <Button
             onClick={handleSubmit}
             variant="contained"
-            disabled={!!timeWarning || !!dateWarning || isSubmitting}
+            disabled={!!warning || isSubmitting || !selectedDateTime}
           >
             {isSubmitting ? "Đang cập nhật..." : "Xác nhận"}
           </Button>
