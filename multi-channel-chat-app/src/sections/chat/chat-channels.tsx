@@ -23,12 +23,14 @@ export const CHANNELS = [
   {
     name: ConversationChannel.FACEBOOK,
     src: `${CONFIG.assetsDir}/assets/images/logo/facebook.png`,
+    enableAddFeature: true,
+    link: (companyid: string) => `${CONFIG.serverUrl}/directus-extension-social-connector/api/facebook/auth?companyid=${companyid}`,
   },
-  // {
-  //   name: ConversationChannel.ZALO,
-  //   src: `${CONFIG.assetsDir}/assets/images/logo/zalo.webp`,
-  //   enableAddFeature: true,
-  // },
+  {
+    name: ConversationChannel.ZALO,
+    src: `${CONFIG.assetsDir}/assets/images/logo/zalo.webp`,
+    enableAddFeature: true,
+  },
   {
     name: ConversationChannel.ZALO_OA,
     src: `${CONFIG.assetsDir}/assets/images/logo/zalo-oa.png`,
@@ -42,7 +44,7 @@ export const CHANNELS = [
   {
     name: ConversationChannel.INSTAGRAM,
     src: `${CONFIG.assetsDir}/assets/images/logo/instagram.png`,
-     enableAddFeature: true,
+    enableAddFeature: true,
     link: (companyid: string) => `${CONFIG.serverUrl}/directus-extension-social-connector/api/instagram/auth?companyid=${companyid}`,
   },
   {
