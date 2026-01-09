@@ -23,6 +23,8 @@ export const CHANNELS = [
   {
     name: ConversationChannel.FACEBOOK,
     src: `${CONFIG.assetsDir}/assets/images/logo/facebook.png`,
+    enableAddFeature: true,
+     link: (companyid?: string) => `${CONFIG.serverUrl}/directus-extension-social-connector/api/facebook/auth?companyid=${companyid}`,
   },
   {
     name: ConversationChannel.ZALO,
