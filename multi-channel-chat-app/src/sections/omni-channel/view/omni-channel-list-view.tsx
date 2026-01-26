@@ -365,7 +365,7 @@ export function OmniChannelsListView() {
         <MenuList>
           {CHANNELS.map((c, index) => (
             <MenuItem
-              disabled={!c.enableAddFeature}
+              disabled={!c.enableAddFeature || !user?.company_id}
               key={index}
               onClick={() => {
                 if (c.name === ConversationChannel.ZALO) {
