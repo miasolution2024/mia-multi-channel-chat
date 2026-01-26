@@ -33,6 +33,7 @@ export function ChatHeaderCompose({
     },
     [onAddRecipients]
   );
+  
 
   return (
     <>
