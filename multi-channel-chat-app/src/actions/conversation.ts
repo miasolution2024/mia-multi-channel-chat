@@ -17,31 +17,58 @@ export function getConversationsURL(
   pageId: string,
   companyId: string,
   isGetUnread: boolean,
+  isAdmin: boolean = false,
 ) {
-  if (!companyId || !pageId) return "";
-  const queryParams = new URLSearchParams({
-    "filter[company_id][_eq]": companyId,
-    "filter[omni_channel][page_id][_eq]": pageId,
-    "filter[channel][_eq]": channel,
-    sort: "-last_message_at",
-    "deep[messages][_limit]": "-1",
-    fields: [
-      "*",
-      "participants.participant_id",
-      "participants.participant_name",
-      "participants.participant_avatar",
-      "participants.participant_type",
-      "messages.id",
-      "messages.sender_id",
-      "messages.sender_type",
-      "messages.type",
-      "messages.content",
-      "messages.date_created",
-      "omni_channel.id",
-      "omni_channel.page_id",
-      "omni_channel.page_name",
-    ].join(","),
-  }).toString();
+  if (!pageId) return "";
+  let queryParams = "";
+  if (isAdmin) {
+    queryParams = new URLSearchParams({
+      "filter[omni_channel][page_id][_eq]": pageId,
+      "filter[channel][_eq]": channel,
+      sort: "-last_message_at",
+      "deep[messages][_limit]": "-1",
+      fields: [
+        "*",
+        "participants.participant_id",
+        "participants.participant_name",
+        "participants.participant_avatar",
+        "participants.participant_type",
+        "messages.id",
+        "messages.sender_id",
+        "messages.sender_type",
+        "messages.type",
+        "messages.content",
+        "messages.date_created",
+        "omni_channel.id",
+        "omni_channel.page_id",
+        "omni_channel.page_name",
+      ].join(","),
+    }).toString();
+  } else {
+    queryParams = new URLSearchParams({
+      "filter[company_id][_eq]": companyId,
+      "filter[omni_channel][page_id][_eq]": pageId,
+      "filter[channel][_eq]": channel,
+      sort: "-last_message_at",
+      "deep[messages][_limit]": "-1",
+      fields: [
+        "*",
+        "participants.participant_id",
+        "participants.participant_name",
+        "participants.participant_avatar",
+        "participants.participant_type",
+        "messages.id",
+        "messages.sender_id",
+        "messages.sender_type",
+        "messages.type",
+        "messages.content",
+        "messages.date_created",
+        "omni_channel.id",
+        "omni_channel.page_id",
+        "omni_channel.page_name",
+      ].join(","),
+    }).toString();
+  }
 
   return isGetUnread
     ? `${endpoints.conversations.list}?${queryParams}&filter[unread_count][_gt]=0`
@@ -53,8 +80,15 @@ export function useGetConversations(
   pageId: string,
   companyId: string,
   isGetUnread: boolean,
+  isAdmin: boolean = false,
 ) {
-  const url = getConversationsURL(channel, pageId, companyId, isGetUnread);
+  const url = getConversationsURL(
+    channel,
+    pageId,
+    companyId,
+    isGetUnread,
+    isAdmin,
+  );
 
   const { data, isLoading, error, isValidating } = useSWR(
     url,
@@ -213,21 +247,32 @@ export async function getConversationByParticipantId(participantId: number) {
 }
 
 // ----------------------------------------------------------------------
-export function getConversationsUnreadCountURL(companyId: string) {
-  if (!companyId || companyId.length === 0) return "";
-  const queryParams = new URLSearchParams({
-    "filter[company_id][_eq]": companyId,
-    "filter[unread_count][_gt]": "0",
-    "aggregate[count]": "unread_count",
-    "groupBy[]": "channel",
-  }).toString();
-  return `${endpoints.conversations.list}?${queryParams}`;
+export function getConversationsUnreadCountURL(
+  companyId: string,
+  isAdmin: boolean = false,
+) {
+  if (isAdmin) {
+    const queryParams = new URLSearchParams({
+      "filter[unread_count][_gt]": "0",
+      "aggregate[count]": "unread_count",
+      "groupBy[]": "channel",
+    }).toString();
+    return `${endpoints.conversations.list}?${queryParams}`;
+  } else {
+    const queryParams = new URLSearchParams({
+      "filter[company_id][_eq]": companyId,
+      "filter[unread_count][_gt]": "0",
+      "aggregate[count]": "unread_count",
+      "groupBy[]": "channel",
+    }).toString();
+    return `${endpoints.conversations.list}?${queryParams}`;
+  }
 }
 
-export function useGetUnreadCountGroupByChannel(companyId: string) {
+export function useGetUnreadCountGroupByChannel(companyId: string, isAdmin: boolean = false) {
   try {
     const { data, isLoading, error, isValidating } = useSWR(
-      getConversationsUnreadCountURL(companyId),
+      getConversationsUnreadCountURL(companyId, isAdmin),
       fetcher,
       swrConfig,
     );

@@ -9,7 +9,6 @@ import { ConversationChannel } from "@/models/conversation/conversations";
 import { Avatar, Badge, ListItemButton } from "@mui/material";
 import { CONFIG } from "@/config-global";
 import { useGetUnreadCountGroupByChannel } from "@/actions/conversation";
-import { useGetGroupsByUserId } from "@/actions/user";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
 import { paths } from "@/routes/path";
 import { useState } from "react";
@@ -79,10 +78,9 @@ export function ChatChannels() {
   };
 
   const { user } = useAuthContext();
-  const { userGroups } = useGetGroupsByUserId(user?.id);
 
   const { conversationUnRead } =
-    useGetUnreadCountGroupByChannel(user?.company_id?.id || "");
+    useGetUnreadCountGroupByChannel(user?.company_id?.id || "", user?.isAdmin);
 
   const renderList = (
     <nav>

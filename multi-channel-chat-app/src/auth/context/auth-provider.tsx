@@ -28,13 +28,14 @@ export default function AuthProvider({
       if (accessToken && isValidToken(accessToken)) {
         setSession(accessToken);
 
-        const res = await axios.get(`${endpoints.auth.me}?fields=*,role.name,company_id.id,company_id.name`);
+        const res = await axios.get(`${endpoints.auth.me}?fields=*,role.name,role.policies.policy.admin_access,role.policies.policy.id,company_id.id,company_id.name`);
 
         const user = res.data.data as User;
 
         setState({
           user: {
             ...user,
+            isAdmin: user.role?.policies?.some(p => p.policy.admin_access),
             accessToken,
             full_name: `${user.first_name} ${user.last_name}`,
             avatar: !!user.avatar

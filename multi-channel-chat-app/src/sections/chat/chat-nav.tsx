@@ -42,7 +42,6 @@ import { useGetCustomersByOmniChannel } from "@/actions/customer";
 import { Customer } from "@/models/customer/customer";
 import { useDebounce } from "@/hooks/use-debounce";
 import { SelectChangeEvent, Tab, Tabs } from "@mui/material";
-import { useGetGroupsByUserId } from "@/actions/user";
 import { ChatChannels } from "./chat-channels";
 import { useTabs } from "@/hooks/use-tabs";
 
@@ -93,14 +92,7 @@ export function ChatNav({
 
   const debouncedQuery = useDebounce(searchQuery);
 
-  const { userGroups } = useGetGroupsByUserId(user?.id);
-
   const tabs = useTabs("all");
-
-  const participantIds = [
-    ...(userGroups?.map((g) => g.id.toString()) || []),
-    user?.id || "",
-  ].filter((id) => !!id);
 
   const getKey = (pageIndex: number, previousPageData: any) => {
     if (
@@ -114,7 +106,8 @@ export function ChatNav({
       selectedChannel,
       selectedPageId,
       user?.company_id?.id || "",
-      tabs.value !== "all"
+      tabs.value !== "all",
+      user?.isAdmin
     );
 
     return `${url}&page=${pageIndex + 1}`;
@@ -125,7 +118,7 @@ export function ChatNav({
   }>(getKey, fetcher);
 
   const conversations = useMemo(
-    () => (data ? data.flatMap((page) => page.data) : []),
+    () => (data ? data.flatMap((page) => page.data || []) : []),
     [data]
   );
 
@@ -133,7 +126,8 @@ export function ChatNav({
 
   const { omniChannels } = useGetOmniChannelsByChannel(
     selectedChannel,
-    user?.company_id?.id || ""
+    user?.company_id?.id || "",
+    user?.isAdmin
   );
 
   const { customers } = useGetCustomersByOmniChannel(
@@ -236,10 +230,11 @@ export function ChatNav({
             selectedChannel,
             selectedPageId,
             user?.company_id?.id || "",
-            tabs.value !== "all"
+            tabs.value !== "all",
+            user?.isAdmin
           )
         );
-        mutate(getConversationsUnreadCountURL(user?.company_id?.id || ""));
+        mutate(getConversationsUnreadCountURL(user?.company_id?.id || "", user?.isAdmin));
       } else if (data.event === "update") {
         console.log(`Conversation updated updated!`);
         mutate(
@@ -247,10 +242,11 @@ export function ChatNav({
             selectedChannel,
             selectedPageId,
             user?.company_id?.id || "",
-            tabs.value !== "all"
+            tabs.value !== "all",
+            user?.isAdmin
           )
         );
-        mutate(getConversationsUnreadCountURL(user?.company_id?.id   || ""));
+        mutate(getConversationsUnreadCountURL(user?.company_id?.id || "", user?.isAdmin));
       }
 
       if (data.type === "ping") {

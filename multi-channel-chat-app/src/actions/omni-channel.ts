@@ -8,8 +8,17 @@ import { useMemo } from "react";
 import useSWR from "swr";
 
 export function getOmniChannelsURL() {
-    const queryParams = new URLSearchParams({
-    fields: ["id", "page_id", "page_name","source","is_enabled","expired_date", "company_id.id", "company_id.name"].join(","),
+  const queryParams = new URLSearchParams({
+    fields: [
+      "id",
+      "page_id",
+      "page_name",
+      "source",
+      "is_enabled",
+      "expired_date",
+      "company_id.id",
+      "company_id.name",
+    ].join(","),
     sort: "sort",
   }).toString();
   return `${endpoints.omniChannels.list}?${queryParams}`;
@@ -21,7 +30,7 @@ export function useGetOmniChannels() {
   const { data, isLoading, error, isValidating } = useSWR(
     url,
     fetcher,
-    swrConfig
+    swrConfig,
   );
   const memoizedValue = useMemo(() => {
     return {
@@ -38,29 +47,42 @@ export function useGetOmniChannels() {
 
 export function getOmniChannelsByChannelURL(
   channel: ConversationChannel,
-  companyId?: string
+  companyId?: string,
+  isAdmin: boolean = false,
 ) {
-  if (!channel || !companyId) return "";
-  const queryParams = new URLSearchParams({
-    "filter[source][_eq]": channel,
-    "filter[company_id][_eq]": companyId,
-    "filter[is_enabled][_eq]": "true",
-    fields: ["id", "page_id", "page_name"].join(","),
-    sort: "sort",
-  }).toString();
-  return `${endpoints.omniChannels.list}?${queryParams}`;
+  if (!channel) return "";
+  if (isAdmin) {
+    const queryParams = new URLSearchParams({
+      "filter[source][_eq]": channel,
+      fields: ["id", "page_id", "page_name"].join(","),
+      sort: "sort",
+    }).toString();
+    return `${endpoints.omniChannels.list}?${queryParams}`;
+  } else {
+    const queryParams = new URLSearchParams({
+      "filter[source][_eq]": channel,
+      "filter[company_id][_eq]": companyId || "",
+      "filter[is_enabled][_eq]": "true",
+      fields: ["id", "page_id", "page_name"].join(","),
+      sort: "sort",
+    }).toString();
+    return `${endpoints.omniChannels.list}?${queryParams}`;
+  }
 }
 
 export function useGetOmniChannelsByChannel(
   channel: ConversationChannel,
-  companyId?: string
+  companyId?: string,
+  isAdmin: boolean = false,
 ) {
-  const url = getOmniChannelsByChannelURL(channel, companyId);
+  console.log(channel, companyId, isAdmin);
+  
+  const url = getOmniChannelsByChannelURL(channel, companyId, isAdmin);
 
   const { data, isLoading, error, isValidating } = useSWR(
     url,
     fetcher,
-    swrConfig
+    swrConfig,
   );
   const memoizedValue = useMemo(() => {
     return {
@@ -75,7 +97,10 @@ export function useGetOmniChannelsByChannel(
   return memoizedValue;
 }
 
-export async function getZaloQRLoginImage(requestId: string, companyId?: string) {
+export async function getZaloQRLoginImage(
+  requestId: string,
+  companyId?: string,
+) {
   try {
     const url = `${CONFIG.utilitiesAPIUr}/qr-login/${requestId}?companyId=${companyId || ""}`;
     const response = await axiosInstance.get(url);

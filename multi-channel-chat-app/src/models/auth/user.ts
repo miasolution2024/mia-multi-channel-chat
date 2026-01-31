@@ -35,6 +35,7 @@ export interface User {
   status?: string;
   last_access?: Date;
   accessToken?: string;
+  isAdmin?: boolean;
   policies?: string[];
   company_id?: Company;
 }
@@ -49,5 +50,17 @@ export interface Role {
   name: string;
   icon: string;
   description: string;
-  policies: string[];
+  policies: {
+    policy: Policy;
+  }[];
+}
+
+export interface Policy {
+  id: string;
+  icon: string;
+  name: string;
+  ip_access: string;
+  description: string;
+  app_access: boolean;
+  admin_access: boolean;
 }

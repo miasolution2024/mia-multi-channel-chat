@@ -22,7 +22,7 @@ import { websocketMessage } from "@/models/websocket-message";
 import { CONFIG } from "@/config-global";
 import NotificationSound from "@/components/notification-sound/notification-sound";
 import { uuidv4 } from "@/utils/uuidv4";
-import { useGetGroupsByUserId, useGetUsersByGroupIds } from "@/actions/user";
+import { useGetUsersByGroupIds } from "@/actions/user";
 
 // ----------------------------------------------------------------------
 
@@ -56,13 +56,6 @@ export function ChatMessageList({
     .map((p) => p.participant_id);
 
   const { users } = useGetUsersByGroupIds(userGroupIds);
-
-  const { userGroups } = useGetGroupsByUserId(user?.id);
-
-  const participantIds = [
-    ...(userGroups?.map((g) => g.id.toString()) || []),
-    user?.id || "",
-  ].filter((id) => !!id);
 
   const websocketRef = useRef<WebSocket | null>(null);
 
@@ -158,7 +151,7 @@ export function ChatMessageList({
           setPlayNotification(true);
 
         mutate(getConversationDetailURL(selectConversationId));
-        mutate(getConversationsUnreadCountURL(user?.company_id?.id || ""));
+        mutate(getConversationsUnreadCountURL(user?.company_id?.id || "", user?.isAdmin));
       }
       if (data.type === "ping") {
         connection.send(JSON.stringify({ type: "pong" }));
