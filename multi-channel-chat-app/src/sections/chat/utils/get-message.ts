@@ -35,7 +35,7 @@ export function getMessage({
     case ParticipantType.STAFF:
       senderDetails.firstName = userSender
         ? `${userSender.first_name} ${userSender?.last_name}`
-        : "";
+        : "STAFF";
       break;
     default:
       break;

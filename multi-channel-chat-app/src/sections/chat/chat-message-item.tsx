@@ -267,6 +267,7 @@ export function ChatMessageItem({
         bgcolor: "background.neutral",
         overflow: "auto",
         ...(me && { color: "grey.800", bgcolor: "primary.lighter" }),
+        ...(sender_type === ParticipantType.STAFF && { bgcolor: "grey.300" }),
         ...(type !== MessageType.TEXT && { p: 0, bgcolor: "transparent" }),
       }}
     >
@@ -278,7 +279,10 @@ export function ChatMessageItem({
             <Typography
               variant="caption"
               color="primary"
-              sx={{ display: "block", mt: 0.5 }}
+              sx={{
+                display: "block", mt: 0.5,
+                ...(sender_type === ParticipantType.STAFF && { color: "grey.600" }),
+              }}
             >
               Responsed by {firstName}
             </Typography>
