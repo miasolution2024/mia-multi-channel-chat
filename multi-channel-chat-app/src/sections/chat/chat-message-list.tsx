@@ -158,7 +158,7 @@ export function ChatMessageList({
           setPlayNotification(true);
 
         mutate(getConversationDetailURL(selectConversationId));
-        mutate(getConversationsUnreadCountURL(participantIds));
+        mutate(getConversationsUnreadCountURL(user?.company_id?.id || ""));
       }
       if (data.type === "ping") {
         connection.send(JSON.stringify({ type: "pong" }));

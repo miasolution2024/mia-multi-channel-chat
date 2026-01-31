@@ -113,7 +113,7 @@ export function ChatNav({
     const url = getConversationsURL(
       selectedChannel,
       selectedPageId,
-      participantIds,
+      user?.company_id?.id || "",
       tabs.value !== "all"
     );
 
@@ -133,7 +133,7 @@ export function ChatNav({
 
   const { omniChannels } = useGetOmniChannelsByChannel(
     selectedChannel,
-    user?.id
+    user?.company_id?.id || ""
   );
 
   const { customers } = useGetCustomersByOmniChannel(
@@ -235,22 +235,22 @@ export function ChatNav({
           getConversationsURL(
             selectedChannel,
             selectedPageId,
-            participantIds,
+            user?.company_id?.id || "",
             tabs.value !== "all"
           )
         );
-        mutate(getConversationsUnreadCountURL(participantIds));
+        mutate(getConversationsUnreadCountURL(user?.company_id?.id || ""));
       } else if (data.event === "update") {
         console.log(`Conversation updated updated!`);
         mutate(
           getConversationsURL(
             selectedChannel,
             selectedPageId,
-            participantIds,
+            user?.company_id?.id || "",
             tabs.value !== "all"
           )
         );
-        mutate(getConversationsUnreadCountURL(participantIds));
+        mutate(getConversationsUnreadCountURL(user?.company_id?.id   || ""));
       }
 
       if (data.type === "ping") {

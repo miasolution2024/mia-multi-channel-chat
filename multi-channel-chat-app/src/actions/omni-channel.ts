@@ -9,7 +9,7 @@ import useSWR from "swr";
 
 export function getOmniChannelsURL() {
     const queryParams = new URLSearchParams({
-    fields: ["id", "page_id", "page_name","source","is_enabled","expired_date"].join(","),
+    fields: ["id", "page_id", "page_name","source","is_enabled","expired_date", "company_id.id", "company_id.name"].join(","),
     sort: "sort",
   }).toString();
   return `${endpoints.omniChannels.list}?${queryParams}`;
@@ -38,13 +38,12 @@ export function useGetOmniChannels() {
 
 export function getOmniChannelsByChannelURL(
   channel: ConversationChannel,
-  userId?: string
+  companyId?: string
 ) {
-  if (!channel || !userId) return "";
+  if (!channel || !companyId) return "";
   const queryParams = new URLSearchParams({
     "filter[source][_eq]": channel,
-    "filter[user_groups][_some][user_groups_id][users][directus_users_id][_eq]":
-      userId,
+    "filter[company_id][_eq]": companyId,
     "filter[is_enabled][_eq]": "true",
     fields: ["id", "page_id", "page_name"].join(","),
     sort: "sort",
@@ -54,9 +53,9 @@ export function getOmniChannelsByChannelURL(
 
 export function useGetOmniChannelsByChannel(
   channel: ConversationChannel,
-  userId?: string
+  companyId?: string
 ) {
-  const url = getOmniChannelsByChannelURL(channel, userId);
+  const url = getOmniChannelsByChannelURL(channel, companyId);
 
   const { data, isLoading, error, isValidating } = useSWR(
     url,

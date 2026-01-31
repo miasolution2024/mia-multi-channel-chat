@@ -15,13 +15,12 @@ import {
 export function getConversationsURL(
   channel: ConversationChannel,
   pageId: string,
-  participantIds: string[],
-  isGetUnread: boolean
+  companyId: string,
+  isGetUnread: boolean,
 ) {
-  if (!participantIds || !pageId) return "";
+  if (!companyId || !pageId) return "";
   const queryParams = new URLSearchParams({
-    "filter[participants][_some][participant_id][_in]":
-      participantIds.join(","),
+    "filter[company_id][_eq]": companyId,
     "filter[omni_channel][page_id][_eq]": pageId,
     "filter[channel][_eq]": channel,
     sort: "-last_message_at",
@@ -52,15 +51,15 @@ export function getConversationsURL(
 export function useGetConversations(
   channel: ConversationChannel,
   pageId: string,
-  participantIds: string[],
-  isGetUnread: boolean
+  companyId: string,
+  isGetUnread: boolean,
 ) {
-  const url = getConversationsURL(channel, pageId, participantIds, isGetUnread);
+  const url = getConversationsURL(channel, pageId, companyId, isGetUnread);
 
   const { data, isLoading, error, isValidating } = useSWR(
     url,
     fetcher,
-    swrConfig
+    swrConfig,
   );
 
   const memoizedValue = useMemo(() => {
@@ -108,7 +107,7 @@ export function useGetConversation(conversationId: number) {
   const { data, isLoading, error, isValidating } = useSWR(
     url,
     fetcher,
-    swrConfig
+    swrConfig,
   );
 
   const memoizedValue = useMemo(
@@ -118,7 +117,7 @@ export function useGetConversation(conversationId: number) {
       conversationError: error,
       conversationValidating: isValidating,
     }),
-    [data?.data, error, isLoading, isValidating]
+    [data?.data, error, isLoading, isValidating],
   );
 
   return memoizedValue;
@@ -127,7 +126,7 @@ export function useGetConversation(conversationId: number) {
 // ----------------------------------------------------------------------
 
 export async function createConversationAsync(
-  request: ConversationCreateRequest
+  request: ConversationCreateRequest,
 ) {
   try {
     const response = await axios.post(endpoints.conversations.create, request);
@@ -144,7 +143,7 @@ export async function createConversationAsync(
 
 export async function updateConversationLastMessageDataAsync(
   conversationId: string,
-  message: string
+  message: string,
 ) {
   try {
     const url = `${endpoints.conversations.update}/${conversationId}`;
@@ -165,7 +164,7 @@ export async function updateConversationLastMessageDataAsync(
 
 export async function updateConversationChatbotActiveAsync(
   conversationId: number,
-  isChatbotActive: boolean
+  isChatbotActive: boolean,
 ) {
   try {
     const url = `${endpoints.conversations.update}/${conversationId}`;
@@ -214,11 +213,10 @@ export async function getConversationByParticipantId(participantId: number) {
 }
 
 // ----------------------------------------------------------------------
-export function getConversationsUnreadCountURL(participantIds: string[]) {
-  if (!participantIds) return "";
+export function getConversationsUnreadCountURL(companyId: string) {
+  if (!companyId || companyId.length === 0) return "";
   const queryParams = new URLSearchParams({
-    "filter[participants][_some][participant_id][_in]":
-      participantIds.join(","),
+    "filter[company_id][_eq]": companyId,
     "filter[unread_count][_gt]": "0",
     "aggregate[count]": "unread_count",
     "groupBy[]": "channel",
@@ -226,12 +224,12 @@ export function getConversationsUnreadCountURL(participantIds: string[]) {
   return `${endpoints.conversations.list}?${queryParams}`;
 }
 
-export function useGetUnreadCountGroupByChannel(participantIds: string[]) {
+export function useGetUnreadCountGroupByChannel(companyId: string) {
   try {
     const { data, isLoading, error, isValidating } = useSWR(
-      getConversationsUnreadCountURL(participantIds),
+      getConversationsUnreadCountURL(companyId),
       fetcher,
-      swrConfig
+      swrConfig,
     );
 
     const memoizedValue = useMemo(
@@ -241,7 +239,7 @@ export function useGetUnreadCountGroupByChannel(participantIds: string[]) {
         conversationUnReadError: error,
         conversationUnReadValidating: isValidating,
       }),
-      [data?.data, error, isLoading, isValidating]
+      [data?.data, error, isLoading, isValidating],
     );
 
     return memoizedValue;

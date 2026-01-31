@@ -36,7 +36,12 @@ export interface User {
   last_access?: Date;
   accessToken?: string;
   policies?: string[];
-  company_id?: string;
+  company_id?: Company;
+}
+
+export interface Company {
+  id: string;
+  name: string;
 }
 
 export interface Role {

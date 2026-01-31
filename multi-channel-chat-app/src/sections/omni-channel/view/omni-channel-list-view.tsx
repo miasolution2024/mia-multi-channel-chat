@@ -365,7 +365,7 @@ export function OmniChannelsListView() {
         <MenuList>
           {CHANNELS.map((c, index) => (
             <MenuItem
-              disabled={!c.enableAddFeature || !user?.company_id}
+              disabled={!c.enableAddFeature || !user?.company_id?.id}
               key={index}
               onClick={() => {
                 if (c.name === ConversationChannel.ZALO) {
@@ -373,7 +373,7 @@ export function OmniChannelsListView() {
                   popover.onClose();
                 }
                 else if (c.link) {
-                  window.location.href = c.link(user?.company_id);
+                  window.location.href = c.link(user?.company_id?.id || "");
                 }
               }}
               sx={{ gap: 1 }}
@@ -385,7 +385,7 @@ export function OmniChannelsListView() {
         </MenuList>
       </CustomPopover>
 
-      <ZaloLoginQR requestId={requestId} companyId={user?.company_id} open={openZaloLoginDialog.value} onClose={openZaloLoginDialog.onFalse}></ZaloLoginQR>
+      <ZaloLoginQR requestId={requestId} companyId={user?.company_id?.id} open={openZaloLoginDialog.value} onClose={openZaloLoginDialog.onFalse}></ZaloLoginQR>
     </>
   );
 }

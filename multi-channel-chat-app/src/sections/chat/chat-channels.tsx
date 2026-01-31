@@ -81,13 +81,8 @@ export function ChatChannels() {
   const { user } = useAuthContext();
   const { userGroups } = useGetGroupsByUserId(user?.id);
 
-  const participantIds = [
-    ...(userGroups?.map((g) => g.id.toString()) || []),
-    user?.id || "",
-  ].filter((id) => !!id);
-
   const { conversationUnRead } =
-    useGetUnreadCountGroupByChannel(participantIds);
+    useGetUnreadCountGroupByChannel(user?.company_id?.id || "");
 
   const renderList = (
     <nav>

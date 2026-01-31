@@ -109,6 +109,13 @@ export function AccountDrawer({ data = [], sx, ...other }: any) {
             >
               {user?.email}
             </Typography>
+
+              <Typography
+              sx={{  mt: 1 }}
+              noWrap
+            >
+              {user?.company_id?.name}
+            </Typography>
           </Stack>
 
           <Stack

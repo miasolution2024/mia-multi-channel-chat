@@ -28,7 +28,7 @@ export default function AuthProvider({
       if (accessToken && isValidToken(accessToken)) {
         setSession(accessToken);
 
-        const res = await axios.get(`${endpoints.auth.me}?fields=*,role.name`);
+        const res = await axios.get(`${endpoints.auth.me}?fields=*,role.name,company_id.id,company_id.name`);
 
         const user = res.data.data as User;
 

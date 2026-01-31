@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback } from "react";
+import { use, useCallback } from "react";
 
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
@@ -80,7 +80,7 @@ export function ChatNavItem({
 
       conversation.unread_count = 0;
 
-      mutate(getConversationsUnreadCountURL(participantIds));
+      mutate(getConversationsUnreadCountURL(user?.company_id?.id || ""));
 
       router.push(`${paths.dashboard.chat}?${newQueryString}`);
     } catch (error) {
