@@ -19,7 +19,7 @@ export function getMessage({
       participant.participant_id == message.sender_id
   );
 
-  const userSender = users.find((user: User) => user.id == message.sender_id);
+  const userSender = users.find((user: User) => user?.id == message.sender_id);
 
   const senderDetails = {
     firstName: "",
