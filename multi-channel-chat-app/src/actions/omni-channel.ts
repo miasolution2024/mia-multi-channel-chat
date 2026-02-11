@@ -62,7 +62,6 @@ export function getOmniChannelsByChannelURL(
     const queryParams = new URLSearchParams({
       "filter[source][_eq]": channel,
       "filter[company_id][_eq]": companyId || "",
-      "filter[is_enabled][_eq]": "true",
       fields: ["id", "page_id", "page_name"].join(","),
       sort: "sort",
     }).toString();
