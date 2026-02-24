@@ -14,7 +14,7 @@ export function getConversationsURL(userId?: string) {
   const queryParams = new URLSearchParams({
     "filter[participants][_some][participant_id][_eq]": userId,
     "filter[messages][id][_nnull]": "true",
-    sort: "-last_message_at",
+    sort: "-messages.date_created",
     fields: [
       "*",
       "participants.participant_id",
@@ -40,7 +40,7 @@ export function useGetConversations(userId?: string) {
   );
   const memoizedValue = useMemo(() => {
     return {
-      conversations: (data?.data as Conversation[]) || [],
+      conversations: ((data?.data as Conversation[]) || []).filter((conv) => conv.messages?.length > 0),
       conversationsLoading: isLoading,
       conversationsError: error,
       conversationsValidating: isValidating,
