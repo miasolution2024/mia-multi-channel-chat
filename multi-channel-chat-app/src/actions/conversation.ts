@@ -25,7 +25,7 @@ export function getConversationsURL(
     queryParams = new URLSearchParams({
       "filter[omni_channel][page_id][_eq]": pageId,
       "filter[channel][_eq]": channel,
-      sort: "-last_message_at",
+      sort: "-messages.date_created",
       "deep[messages][_limit]": "-1",
       fields: [
         "*",
@@ -49,7 +49,7 @@ export function getConversationsURL(
       "filter[company_id][_eq]": companyId,
       "filter[omni_channel][page_id][_eq]": pageId,
       "filter[channel][_eq]": channel,
-      sort: "-last_message_at",
+      sort: "-messages.date_created",
       "deep[messages][_limit]": "-1",
       fields: [
         "*",
