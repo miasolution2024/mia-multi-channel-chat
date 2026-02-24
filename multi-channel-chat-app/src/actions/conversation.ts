@@ -24,7 +24,7 @@ export function getConversationsURL(
       participantIds.join(","),
     "filter[omni_channel][page_id][_eq]": pageId,
     "filter[channel][_eq]": channel,
-    sort: "-last_message_at",
+    sort: "-messages.date_created",
     "deep[messages][_limit]": "-1",
     fields: [
       "*",
@@ -65,7 +65,9 @@ export function useGetConversations(
 
   const memoizedValue = useMemo(() => {
     return {
-      conversations: (data?.data as Conversation[]) || [],
+      conversations: ((data?.data as Conversation[]) || []).filter(
+        (conversation) => conversation.messages.length > 0
+      ),
       conversationsLoading: isLoading,
       conversationsError: error,
       conversationsValidating: isValidating,

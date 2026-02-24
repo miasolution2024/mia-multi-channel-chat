@@ -125,7 +125,9 @@ export function ChatNav({
   }>(getKey, fetcher);
 
   const conversations = useMemo(
-    () => (data ? data.flatMap((page) => page.data) : []),
+    () => (data ? data.flatMap((page) => page.data) : []).filter(
+      (conversation) => conversation.messages.length > 0
+    ),
     [data]
   );
 
