@@ -1,9 +1,9 @@
-import { ServiceListView } from '@/sections/service/view/service-list-view';
+import { ServiceListView } from "@/sections/service/view/service-list-view";
 
 // ----------------------------------------------------------------------
 
 export const metadata = {
-  title: 'Danh sách dịch vụ',
+  title: "Danh sách Dịch vụ/Sản phẩm",
 };
 
 export default function ServiceListPage() {

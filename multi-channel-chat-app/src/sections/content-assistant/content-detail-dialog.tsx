@@ -113,7 +113,7 @@ export function ContentDetailDialog({
                 </Typography>
                 <Typography>
                   {POST_TYPE_OPTIONS.find(
-                    (option) => option.value === content.post_type
+                    (option) => option.value === content.post_type,
                   )?.label || "N/A"}
                 </Typography>
               </Grid>
@@ -224,7 +224,7 @@ export function ContentDetailDialog({
 
               <Grid item xs={12} md={6}>
                 <Typography variant="subtitle2" color="text.secondary">
-                  Dịch vụ
+                  Dịch vụ/Sản phẩm
                 </Typography>
                 {content.services && content.services.length > 0 ? (
                   <Box

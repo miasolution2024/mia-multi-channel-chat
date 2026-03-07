@@ -135,7 +135,7 @@ export function ServiceListView() {
     },
     {
       key: "name",
-      label: "Tên dịch vụ",
+      label: "Tên Dịch vụ/Sản phẩm",
       width: 200,
       render: (row: DataItem) => {
         const service = row as Service;
@@ -205,13 +205,19 @@ export function ServiceListView() {
         return (
           <Stack direction="row" spacing={1} alignItems="center">
             <Chip
-              label={<Typography sx={{
-                maxWidth: 200,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                fontSize: 12
-              }}>{firstChannelName}</Typography>}
+              label={
+                <Typography
+                  sx={{
+                    maxWidth: 200,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    fontSize: 12,
+                  }}
+                >
+                  {firstChannelName}
+                </Typography>
+              }
               size="small"
               variant="outlined"
               color="info"
@@ -277,14 +283,14 @@ export function ServiceListView() {
       setSelected([id]);
       confirm.onTrue();
     },
-    [confirm]
+    [confirm],
   );
 
   const handleEditRow = useCallback(
     (id: string) => {
       router.push(paths.dashboard.service.edit(id));
     },
-    [router]
+    [router],
   );
 
   const handleConfirmDelete = useCallback(async () => {
@@ -293,17 +299,17 @@ export function ServiceListView() {
 
       if (selected.length === 1) {
         await deleteService(selected[0]);
-        toast.success("Xóa dịch vụ thành công!");
+        toast.success("Xóa Dịch vụ/Sản phẩm thành công!");
       } else {
         await deleteServices(selected);
-        toast.success(`Xóa ${selected.length} dịch vụ thành công!`);
+        toast.success(`Xóa ${selected.length} Dịch vụ/Sản phẩm thành công!`);
       }
 
       setSelected([]);
       await refetch();
     } catch (error) {
       console.error("Error deleting service(s):", error);
-      toast.error("Có lỗi xảy ra khi xóa dịch vụ!");
+      toast.error("Có lỗi xảy ra khi xóa Dịch vụ/Sản phẩm!");
     } finally {
       deleteLoading.onFalse();
       confirm.onFalse();
@@ -315,10 +321,10 @@ export function ServiceListView() {
       <DashboardContent>
         <Container maxWidth="xl">
           <CustomBreadcrumbs
-            heading="Danh sách dịch vụ"
+            heading="Danh sách Dịch vụ/Sản phẩm"
             links={[
               { name: "Dashboard", href: paths.dashboard.root },
-              { name: "Dịch vụ" },
+              { name: "Dịch vụ/Sản phẩm" },
             ]}
             action={
               <Button
@@ -326,7 +332,7 @@ export function ServiceListView() {
                 startIcon={<Iconify icon="mingcute:add-line" />}
                 onClick={() => router.push(paths.dashboard.service.new)}
               >
-                Thêm dịch vụ
+                Thêm Dịch vụ/Sản phẩm
               </Button>
             }
             sx={{ mb: { xs: 3, md: 5 } }}
@@ -375,8 +381,8 @@ export function ServiceListView() {
         title="Xác nhận xóa"
         content={
           selected.length === 1
-            ? "Bạn có chắc chắn muốn xóa dịch vụ này?"
-            : `Bạn có chắc chắn muốn xóa ${selected.length} dịch vụ đã chọn?`
+            ? "Bạn có chắc chắn muốn xóa Dịch vụ/Sản phẩm này?"
+            : `Bạn có chắc chắn muốn xóa ${selected.length} Dịch vụ/Sản phẩm đã chọn?`
         }
         action={
           <Button

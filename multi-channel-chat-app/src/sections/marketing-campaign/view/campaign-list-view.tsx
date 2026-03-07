@@ -112,7 +112,7 @@ interface CampaignTableConfig {
 // ----------------------------------------------------------------------
 
 const getCampaignStatusLabelAndColor = (
-  status: string
+  status: string,
 ): {
   label: string;
   color:
@@ -297,7 +297,7 @@ export function CampaignListView() {
     {
       key: "main_seo_keyword",
       id: "main_seo_keyword",
-      label: "Từ khóa SEO chính",
+      label: "Từ khóa chính",
       align: "left",
       width: 180,
       render: (item: CampaignDataItem) => (
@@ -320,7 +320,7 @@ export function CampaignListView() {
     {
       key: "secondary_seo_keywords",
       id: "secondary_seo_keywords",
-      label: "Từ khóa SEO phụ",
+      label: "Từ khóa phụ",
       align: "left",
       width: 200,
       render: (item: CampaignDataItem) => (
@@ -343,7 +343,7 @@ export function CampaignListView() {
               onClick={() =>
                 setPopupState({
                   open: true,
-                  title: "Từ khóa SEO phụ",
+                  title: "Từ khóa phụ",
                   items: item.secondary_seo_keywords.map((keyword) => ({
                     label: keyword,
                     color: "default" as const,
@@ -396,7 +396,7 @@ export function CampaignListView() {
     {
       key: "services",
       id: "services",
-      label: "Dịch vụ",
+      label: "Dịch vụ/Sản phẩm",
       width: 200,
       align: "left",
       render: (item: CampaignDataItem) => (
@@ -418,10 +418,53 @@ export function CampaignListView() {
               onClick={() =>
                 setPopupState({
                   open: true,
-                  title: "Dịch vụ",
+                  title: "Dịch vụ/Sản phẩm",
                   items: item.services.map((service) => ({
                     label: service?.services_id?.name || "",
                     color: "info" as const,
+                  })),
+                })
+              }
+              sx={{ cursor: "pointer" }}
+            />
+          )}
+        </Box>
+      ),
+    },
+    {
+      key: "knowledge_based",
+      id: "knowledge_based",
+      label: "Kiến thức AI",
+      width: 200,
+      align: "left",
+      render: (item: CampaignDataItem) => (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+          {item.knowledge_based?.slice(0, 1).map((kb, index) => (
+            <Chip
+              key={index}
+              label={
+                (kb?.knowledge_based_id?.content?.substring(0, 20) || "") +
+                ((kb?.knowledge_based_id?.content?.length || 0) > 20
+                  ? "..."
+                  : "")
+              }
+              size="small"
+              variant="outlined"
+              color="secondary"
+            />
+          ))}
+          {item.knowledge_based?.length > 1 && (
+            <Chip
+              label={`+${item.knowledge_based.length - 1}`}
+              size="small"
+              variant="outlined"
+              onClick={() =>
+                setPopupState({
+                  open: true,
+                  title: "Kiến thức AI",
+                  items: item.knowledge_based.map((kb) => ({
+                    label: kb?.knowledge_based_id?.content || "",
+                    color: "secondary" as const,
                   })),
                 })
               }
@@ -529,14 +572,14 @@ export function CampaignListView() {
         setIsDeleting(false);
       }
     },
-    [refetch, setIsDeleting]
+    [refetch, setIsDeleting],
   );
 
   const handleEditRow = useCallback(
     (id: string | number) => {
       router.push(paths.dashboard.marketingCampaign.edit(String(id)));
     },
-    [router]
+    [router],
   );
 
   const handleDeleteRows = useCallback(async () => {

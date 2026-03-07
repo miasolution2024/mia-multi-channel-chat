@@ -43,6 +43,8 @@ export async function getCampaigns(filters: UseGetCampaignsParams = {}) {
     params.append('fields[]', 'customer_group.customer_group_id.name');
     params.append('fields[]', 'services.services_id.id');
     params.append('fields[]', 'services.services_id.name');
+    params.append('fields[]', 'knowledge_based.knowledge_based_id.id');
+    params.append('fields[]', 'knowledge_based.knowledge_based_id.content');
     params.append('fields[]', '38a0c536.id');
     params.append('fields[]', '38a0c536.page_name');
     params.append('fields[]', 'customer_journey.customer_journey_id.id');

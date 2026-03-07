@@ -12,11 +12,10 @@ import { Services } from "@/sections/services/types";
 import { MenuItem, Stack } from "@mui/material";
 
 export function ResearchCustomer() {
-
   const { data: servicesData } = useGetServices({
     limit: 100,
   });
-  const {data: customerJourneyProcessData} = useGetCustomerJourneyProcess({
+  const { data: customerJourneyProcessData } = useGetCustomerJourneyProcess({
     limit: 100,
     page: 1,
     status: CUSTOMER_JOURNEY_PROCESS_STATUS.PUBLISHED,
@@ -67,43 +66,47 @@ export function ResearchCustomer() {
             sx={{ width: "100%" }}
           />
         </Stack>
-        
-          <RHFSelect required name="customer_journey_process" label="Hành trình khách hàng">
-            {customerJourneyProcessData?.map((item) => (
-              <MenuItem key={item.id} value={item.id}>
-                {item.name}
-              </MenuItem>
-            ))}
-          </RHFSelect>
-          <RHFAutocomplete
-            name="services"
-            label="Dịch vụ *"
-            required
-            sx={{ width: "100%" }}
-            multiple
-            disableCloseOnSelect
-            options={servicesData || []}
-            getOptionLabel={(option: Services) => option.name}
-            getOptionValue={(option: Services) => option.id}
-            useValueAsId={true}
-            isOptionEqualToValue={(option: Services, value: Services) =>
-              option.id === value.id
-            }
-            renderOption={(
-              props: React.HTMLAttributes<HTMLLIElement>,
-              option: CustomerGroup
-            ) => (
-              <li {...props} key={option.id}>
-                {option.name}
-              </li>
-            )}
-          />
+
+        <RHFSelect
+          required
+          name="customer_journey_process"
+          label="Hành trình khách hàng"
+        >
+          {customerJourneyProcessData?.map((item) => (
+            <MenuItem key={item.id} value={item.id}>
+              {item.name}
+            </MenuItem>
+          ))}
+        </RHFSelect>
+        <RHFAutocomplete
+          name="services"
+          label="Dịch vụ/Sản phẩm *"
+          required
+          sx={{ width: "100%" }}
+          multiple
+          disableCloseOnSelect
+          options={servicesData || []}
+          getOptionLabel={(option: Services) => option.name}
+          getOptionValue={(option: Services) => option.id}
+          useValueAsId={true}
+          isOptionEqualToValue={(option: Services, value: Services) =>
+            option.id === value.id
+          }
+          renderOption={(
+            props: React.HTMLAttributes<HTMLLIElement>,
+            option: CustomerGroup,
+          ) => (
+            <li {...props} key={option.id}>
+              {option.name}
+            </li>
+          )}
+        />
         <RHFTextField
           type="textarea"
           name="descriptions"
           label="Mô tả"
           multiline
-          minRows={2} 
+          minRows={2}
           maxRows={3}
         />
       </Stack>

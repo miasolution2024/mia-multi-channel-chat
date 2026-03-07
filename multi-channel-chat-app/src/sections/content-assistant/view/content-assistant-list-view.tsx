@@ -176,9 +176,9 @@ export interface Content {
   secondary_seo_keywords?: string[]; // Từ khoá phụ
   customer_group: CustomerGroupItem[]; // Nhóm khách hàng
   customer_journey: CustomerJourneyItem[]; // Giai đoạn khách hàng
-  services: ServicesItem[]; // Dịch vụ
+  services: ServicesItem[]; // Dịch vụ/Sản phẩm
   ai_rule_based: AiRuleBasedItem[]; // Quy tắc AI
-  knowledge_based: KnowledgeBasedItem[]; // Kiến thức cơ sở
+  knowledge_based: KnowledgeBasedItem[]; // Kiến thức AI
   content_tone: ContentToneItem[]; // Tonal
   omni_channels?: OmniChannelsItem[]; // Kênh omni
   additional_notes?: string; // Ghi chú bổ sung
@@ -611,7 +611,7 @@ export function ContentAssistantListView() {
     {
       key: "services",
       id: "services",
-      label: "Dịch vụ",
+      label: "Dịch vụ/Sản phẩm",
       width: 250,
       align: "left",
       render: (item: Content) => (
@@ -632,7 +632,7 @@ export function ContentAssistantListView() {
               onClick={() =>
                 setPopupState({
                   open: true,
-                  title: "Dịch vụ",
+                  title: "Dịch vụ/Sản phẩm",
                   items: item.services.map((service) => ({
                     label: service.services_id?.name,
                     color: "default" as const,
@@ -680,6 +680,8 @@ export function ContentAssistantListView() {
         []) as unknown as Content["customer_journey"],
       ai_rule_based: (item.ai_rule_based ||
         []) as unknown as Content["ai_rule_based"],
+      knowledge_based: (item.knowledge_based ||
+        []) as unknown as Content["knowledge_based"],
       content_tone: (item.content_tone ||
         []) as unknown as Content["content_tone"],
       omni_channels: (item.omni_channels ||

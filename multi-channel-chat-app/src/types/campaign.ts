@@ -36,6 +36,13 @@ export interface CampaignAiRuleBased {
   };
 }
 
+export interface CampaignKnowledgeBased {
+  knowledge_based_id?: {
+    id: number;
+    content: string;
+  };
+}
+
 export interface CampaignAiContentSuggestion {
   id: number;
   current_step: string;
@@ -96,6 +103,7 @@ export interface Campaign {
   ai_content_suggestions: CampaignAiContentSuggestion[];
   customer_group: CampaignCustomerGroup[];
   services: CampaignService[];
+  knowledge_based: CampaignKnowledgeBased[];
   customer_journey: CampaignCustomerJourney[];
   content_tone: CampaignContentTone[];
   ai_rule_based: CampaignAiRuleBased[];

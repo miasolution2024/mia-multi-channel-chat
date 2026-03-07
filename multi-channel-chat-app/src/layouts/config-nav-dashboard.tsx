@@ -64,10 +64,10 @@ export const navData = [
     ],
   },
   {
-    subheader: "Danh mục dịch vụ",
+    subheader: "Danh mục Dịch vụ/Sản phẩm",
     items: [
       {
-        title: "Dịch vụ",
+        title: "Dịch vụ/Sản phẩm",
         path: paths.dashboard.service.root,
         icon: ICONS.ecommerce,
       },

@@ -12,7 +12,9 @@ import { useGetServices } from "@/hooks/apis/use-get-services";
 import { CustomerGroup } from "@/sections/customer-group/types";
 import { OmniChannel } from "@/sections/omni-channel/types";
 import { Services } from "@/sections/services/types";
-import { MenuItem, Stack } from "@mui/material";
+import { KnowledgeBased } from "@/sections/knowledge-based/types";
+import { MenuItem, Stack, Box } from "@mui/material";
+import { useGetKnowledgeBasedList } from "@/hooks/apis/use-get-knowledge-based-list";
 
 export function CampaignInfoStep() {
   const { data: customerGroupsData } = useGetCustomerGroups({
@@ -26,6 +28,12 @@ export function CampaignInfoStep() {
   const { data: omniChannelsData } = useGetOmniChannels({
     limit: 100,
   });
+
+  const { data: knowledgeBasedData } = useGetKnowledgeBasedList({
+    limit: 100,
+    status: "PUBLISHED",
+  });
+
   return (
     <Stack spacing={3}>
       <Stack spacing={2}>
@@ -112,11 +120,11 @@ export function CampaignInfoStep() {
             useValueAsId={true}
             isOptionEqualToValue={(
               option: CustomerGroup,
-              value: CustomerGroup
+              value: CustomerGroup,
             ) => option.id === value.id}
             renderOption={(
               props: React.HTMLAttributes<HTMLLIElement>,
-              option: CustomerGroup
+              option: CustomerGroup,
             ) => (
               <li {...props} key={option.id}>
                 {option.name}
@@ -125,8 +133,7 @@ export function CampaignInfoStep() {
           />
           <RHFAutocomplete
             name="services"
-            label="Dịch vụ *"
-            required
+            label="Dịch vụ/Sản phẩm"
             sx={{ width: "100%" }}
             multiple
             disableCloseOnSelect
@@ -139,10 +146,44 @@ export function CampaignInfoStep() {
             }
             renderOption={(
               props: React.HTMLAttributes<HTMLLIElement>,
-              option: CustomerGroup
+              option: CustomerGroup,
             ) => (
               <li {...props} key={option.id}>
                 {option.name}
+              </li>
+            )}
+          />
+        </Stack>
+        <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+          <RHFAutocomplete
+            name="knowledge_based"
+            label="Kiến thức AI"
+            sx={{ width: "100%" }}
+            multiple
+            disableCloseOnSelect
+            options={knowledgeBasedData || []}
+            getOptionLabel={(option: KnowledgeBased) => option.content || ""}
+            getOptionValue={(option: KnowledgeBased) => option.id}
+            useValueAsId={true}
+            isOptionEqualToValue={(
+              option: KnowledgeBased,
+              value: KnowledgeBased,
+            ) => option.id === value.id}
+            renderOption={(
+              props: React.HTMLAttributes<HTMLLIElement>,
+              option: KnowledgeBased,
+            ) => (
+              <li {...props} key={option.id}>
+                <Box
+                  sx={{
+                    width: "100%",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {option.content}
+                </Box>
               </li>
             )}
           />

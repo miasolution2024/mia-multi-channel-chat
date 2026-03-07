@@ -40,11 +40,11 @@ type FileWithPreview = File & {
 };
 
 const ServiceSchema = zod.object({
-  name: zod.string().min(1, "Tên dịch vụ là bắt buộc"),
+  name: zod.string().min(1, "Tên Dịch vụ/Sản phẩm là bắt buộc"),
   description: zod.string().optional(),
   price: zod
     .number({ message: "Giá phải là số" })
-    .min(0, "Giá dịch vụ là bắt buộc"),
+    .min(0, "Giá Dịch vụ/Sản phẩm là bắt buộc"),
   duration: zod
     .number({ message: "Thời lượng phải là số" })
     .min(0, "Thời lượng phải lớn hơn hoặc bằng 0"),
@@ -74,11 +74,12 @@ export function ServiceForm({ service }: Props) {
         service?.omni_channels
           ?.map((channel) => channel.omni_channels_id?.id)
           .filter(Boolean) || [],
-      file_training: service?.file_training && service.file_training.length > 0 
-        ? [service.file_training[0].directus_files_id] 
-        : [],
+      file_training:
+        service?.file_training && service.file_training.length > 0
+          ? [service.file_training[0].directus_files_id]
+          : [],
     }),
-    [service]
+    [service],
   );
 
   const methods = useForm<ServiceFormData>({
@@ -96,22 +97,19 @@ export function ServiceForm({ service }: Props) {
 
   const watchedOmniChannels = watch("omni_channels") || [];
 
-  const handleUploadVideo = useCallback(
-    async (video: (string | File)[]) => {
-     let videoId = null;
-       if (Array.isArray(video) && video.length > 0) {
-         const videoFile = video[0];  
-         if (videoFile instanceof File) {
-           const videoUploadResult = await uploadFile(videoFile);
-           videoId = videoUploadResult.data.id;
-         } else if (typeof videoFile === 'string') {
-           videoId = videoFile;
-         }
-       }
-       return videoId;
-    },
-    []
-  );
+  const handleUploadVideo = useCallback(async (video: (string | File)[]) => {
+    let videoId = null;
+    if (Array.isArray(video) && video.length > 0) {
+      const videoFile = video[0];
+      if (videoFile instanceof File) {
+        const videoUploadResult = await uploadFile(videoFile);
+        videoId = videoUploadResult.data.id;
+      } else if (typeof videoFile === "string") {
+        videoId = videoFile;
+      }
+    }
+    return videoId;
+  }, []);
 
   const onSubmit = handleSubmit(async (data) => {
     loadingSave.onTrue();
@@ -120,7 +118,10 @@ export function ServiceForm({ service }: Props) {
       if (service) {
         // Handle file_training: delete existing and create new if video changed
         const fileTrainingPayload: {
-          create: Array<{ services_id: string; directus_files_id: { id: string } }>;
+          create: Array<{
+            services_id: string;
+            directus_files_id: { id: string };
+          }>;
           update: Array<unknown>;
           delete: Array<number>;
         } = {
@@ -143,23 +144,26 @@ export function ServiceForm({ service }: Props) {
         }
 
         // Handle omni_channels: compare existing vs new
-        const existingChannelIds = service?.omni_channels
-          ?.map((channel) => channel.omni_channels_id?.id)
-          .filter((id): id is number => id !== undefined) || [];
-        
+        const existingChannelIds =
+          service?.omni_channels
+            ?.map((channel) => channel.omni_channels_id?.id)
+            .filter((id): id is number => id !== undefined) || [];
+
         const newChannelIds = data.omni_channels || [];
 
         // Find channels to delete (junction table IDs of channels that exist but not in new selection)
-        const channelsToDelete = service?.omni_channels
-          ?.filter((channel) => 
-            channel.omni_channels_id?.id && 
-            !newChannelIds.includes(channel.omni_channels_id.id)
-          )
-          .map((channel) => channel.id) || [];
+        const channelsToDelete =
+          service?.omni_channels
+            ?.filter(
+              (channel) =>
+                channel.omni_channels_id?.id &&
+                !newChannelIds.includes(channel.omni_channels_id.id),
+            )
+            .map((channel) => channel.id) || [];
 
         // Find channels to create (in new but not in existing)
         const channelsToCreate = newChannelIds.filter(
-          (id) => !existingChannelIds.includes(id)
+          (id) => !existingChannelIds.includes(id),
         );
 
         const omniChannelsPayload = {
@@ -179,7 +183,7 @@ export function ServiceForm({ service }: Props) {
 
         await updateService(
           service.id,
-          updateData as unknown as Partial<ServiceFormData>
+          updateData as unknown as Partial<ServiceFormData>,
         );
       } else {
         const createPayload = {
@@ -188,7 +192,7 @@ export function ServiceForm({ service }: Props) {
           price: data.price,
           duration: data.duration,
           note: data.note,
-          
+
           omni_channels: {
             create:
               data.omni_channels?.map((channelId: number) => ({
@@ -198,24 +202,30 @@ export function ServiceForm({ service }: Props) {
             update: [],
             delete: [],
           },
-          ...(fileTrainingId ? {
-            file_training: {
-              create: [{
-                services_id: "+",
-                directus_files_id: { id: fileTrainingId },
-              }],
-              update: [],
-              delete: [],
-            },
-          } : {}),
+          ...(fileTrainingId
+            ? {
+                file_training: {
+                  create: [
+                    {
+                      services_id: "+",
+                      directus_files_id: { id: fileTrainingId },
+                    },
+                  ],
+                  update: [],
+                  delete: [],
+                },
+              }
+            : {}),
         };
-        
+
         await createService(createPayload as unknown as ServiceFormData);
       }
 
       reset();
       toast.success(
-        service ? "Cập nhật dịch vụ thành công!" : "Tạo dịch vụ mới thành công!"
+        service
+          ? "Cập nhật Dịch vụ/Sản phẩm thành công!"
+          : "Tạo Dịch vụ/Sản phẩm mới thành công!",
       );
       router.push(paths.dashboard.service.root);
     } catch (error) {
@@ -235,15 +245,15 @@ export function ServiceForm({ service }: Props) {
       const channelIds = newValue.map((channel) => Number(channel.id));
       setValue("omni_channels", channelIds);
     },
-    [setValue]
+    [setValue],
   );
 
   const selectedOmniChannels = omniChannels.filter((channel) =>
-    watchedOmniChannels.includes(Number(channel.id))
+    watchedOmniChannels.includes(Number(channel.id)),
   );
 
   const fileTrainingValue = watch("file_training");
-  console.log('fileTrainingValue',fileTrainingValue)
+  console.log("fileTrainingValue", fileTrainingValue);
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
@@ -251,24 +261,24 @@ export function ServiceForm({ service }: Props) {
         <Stack spacing={3} sx={{ p: 3 }}>
           <RHFTextField
             name="name"
-            label="Tên dịch vụ"
-            placeholder="Nhập tên dịch vụ..."
+            label="Tên Dịch vụ/Sản phẩm"
+            placeholder="Nhập tên Dịch vụ/Sản phẩm..."
             required
           />
 
           <RHFTextField
             name="description"
-            label="Mô tả dịch vụ"
+            label="Mô tả Dịch vụ/Sản phẩm"
             multiline
             rows={4}
-            placeholder="Nhập mô tả dịch vụ..."
+            placeholder="Nhập mô tả Dịch vụ/Sản phẩm..."
           />
 
           <RHFTextField
             name="price"
             type="number"
-            label="Giá dịch vụ"
-            placeholder="Nhập giá dịch vụ..."
+            label="Giá Dịch vụ/Sản phẩm"
+            placeholder="Nhập giá Dịch vụ/Sản phẩm..."
           />
 
           <RHFTextField
@@ -337,9 +347,10 @@ export function ServiceForm({ service }: Props) {
                         typeof fileTrainingValue[0] === "string"
                           ? `${CONFIG.serverUrl}/assets/${fileTrainingValue[0]}`
                           : fileTrainingValue?.[0] instanceof File
-                          ? (fileTrainingValue[0] as FileWithPreview).preview ||
-                            URL.createObjectURL(fileTrainingValue[0])
-                          : ""
+                            ? (fileTrainingValue[0] as FileWithPreview)
+                                .preview ||
+                              URL.createObjectURL(fileTrainingValue[0])
+                            : ""
                       }
                       controls
                       style={{
