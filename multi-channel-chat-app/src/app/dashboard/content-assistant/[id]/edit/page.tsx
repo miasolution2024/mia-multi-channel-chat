@@ -20,7 +20,7 @@ interface ApiResponseWrapper {
 // ----------------------------------------------------------------------
 
 // Helper function to transform media items to File-like objects
- const transformMediaItems = (mediaItems: MediaGeneratedAiItem[]): File[] => {
+const transformMediaItems = (mediaItems: MediaGeneratedAiItem[]): File[] => {
   return mediaItems.map((mediaItem: MediaGeneratedAiItem) => {
     const imageUrl = `${CONFIG.serverUrl}/assets/${mediaItem.directus_files_id}`;
     // Create a File-like object that RHFUpload can handle
@@ -46,7 +46,7 @@ interface ApiResponseWrapper {
 
 // Transform API data to match Content interface
 const transformApiData = (
-  apiData: ContentAssistantApiResponse | ApiResponseWrapper
+  apiData: ContentAssistantApiResponse | ApiResponseWrapper,
 ): Content => {
   // Check if apiData has 'data' property (wrapped response)
   const data = "data" in apiData ? apiData.data : apiData;
@@ -63,12 +63,19 @@ const transformApiData = (
     post_type: data.post_type,
     main_seo_keyword: data.main_seo_keyword || "",
     secondary_seo_keywords: data.secondary_seo_keywords || [],
-    customer_group: (data.customer_group || []) as unknown as Content['customer_group'],
-    customer_journey: (data.customer_journey || []) as unknown as Content['customer_journey'],
-    services: (data.services || []) as unknown as Content['services'],
-    ai_rule_based: (data.ai_rule_based || []) as unknown as Content['ai_rule_based'],
-    content_tone: (data.content_tone || []) as unknown as Content['content_tone'],
-    omni_channels: (data.omni_channels || []) as unknown as Content['omni_channels'],
+    customer_group: (data.customer_group ||
+      []) as unknown as Content["customer_group"],
+    customer_journey: (data.customer_journey ||
+      []) as unknown as Content["customer_journey"],
+    services: (data.services || []) as unknown as Content["services"],
+    ai_rule_based: (data.ai_rule_based ||
+      []) as unknown as Content["ai_rule_based"],
+    knowledge_based: (data.knowledge_based ||
+      []) as unknown as Content["knowledge_based"],
+    content_tone: (data.content_tone ||
+      []) as unknown as Content["content_tone"],
+    omni_channels: (data.omni_channels ||
+      []) as unknown as Content["omni_channels"],
     status: data.status || "draft",
     current_step: data.current_step,
     outline_post: data.outline_post ?? undefined,
