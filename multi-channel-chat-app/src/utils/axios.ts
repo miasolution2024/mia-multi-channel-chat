@@ -243,6 +243,12 @@ export const endpoints = {
     update: "/items/ai_rule_based",
     delete: "/items/ai_rule_based",
   },
+  knowledgeBased: {
+    list: "/items/knowledge_based",
+    create: "/items/knowledge_based",
+    update: "/items/knowledge_based",
+    delete: "/items/knowledge_based",
+  },
   customerGroups: {
     list: "/items/customer_group",
     create: "/items/customer_group",

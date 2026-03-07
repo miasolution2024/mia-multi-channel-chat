@@ -16,10 +16,12 @@ import {
 import { Iconify } from "@/components/iconify";
 import { getContentTones } from "@/actions/content-tone";
 import { getAiRules } from "@/actions/ai-rules";
+import { getKnowledgeBasedList } from "@/actions/knowledge-based";
 import { ContentTone } from "@/sections/content-tone/types";
 import { AiRule } from "@/sections/ai-rules/types";
+import { KnowledgeBased } from "@/sections/knowledge-based/types";
 
-type SelectionType = "content_tone" | "ai_rule_based";
+type SelectionType = "content_tone" | "ai_rule_based" | "knowledge_based";
 
 interface SelectedItemsTableProps {
   type: SelectionType;
@@ -32,24 +34,29 @@ export function SelectedItemsTable({
   selectedIds,
   onRemove,
 }: SelectedItemsTableProps) {
-  const [items, setItems] = useState<(ContentTone | AiRule)[]>([]);
+  const [items, setItems] = useState<(ContentTone | AiRule | KnowledgeBased)[]>(
+    [],
+  );
 
   useEffect(() => {
     const fetchSelectedItems = async () => {
       try {
-        let allItems: (ContentTone | AiRule)[] = [];
+        let allItems: (ContentTone | AiRule | KnowledgeBased)[] = [];
 
         if (type === "content_tone") {
           const data = await getContentTones(1, 100);
           allItems = data.data || [];
-        } else {
+        } else if (type === "ai_rule_based") {
           const data = await getAiRules(1, 100);
+          allItems = data.data || [];
+        } else if (type === "knowledge_based") {
+          const data = await getKnowledgeBasedList(1, 100);
           allItems = data.data || [];
         }
 
         // Filter only selected items
         const selectedItems = allItems.filter((item) =>
-          selectedIds.includes(item.id)
+          selectedIds.includes(String(item.id)),
         );
         setItems(selectedItems);
       } catch (error) {
@@ -64,12 +71,29 @@ export function SelectedItemsTable({
     }
   }, [selectedIds, type]);
 
-  const getDisplayText = (item: ContentTone | AiRule) => {
+  const getDisplayText = (item: ContentTone | AiRule | KnowledgeBased) => {
     if (type === "content_tone") {
       return (item as ContentTone).tone_description;
+    } else if (type === "ai_rule_based") {
+      return (item as AiRule).content;
+    } else {
+      return (item as KnowledgeBased).content;
     }
-    return (item as AiRule).content;
   };
+
+  const emptyText =
+    type === "content_tone"
+      ? "văn phong AI"
+      : type === "ai_rule_based"
+        ? "quy tắc AI"
+        : "kiến thức cơ sở";
+
+  const columnLabel =
+    type === "content_tone"
+      ? "Mô tả văn phong"
+      : type === "ai_rule_based"
+        ? "Nội dung quy tắc"
+        : "Nội dung kiến thức";
 
   if (selectedIds.length === 0) {
     return (
@@ -84,8 +108,7 @@ export function SelectedItemsTable({
         }}
       >
         <Typography variant="body2" color="text.secondary">
-          Chưa có {type === "content_tone" ? "văn phong AI" : "quy tắc AI"} nào
-          được chọn
+          Chưa có {emptyText} nào được chọn
         </Typography>
       </Box>
     );
@@ -97,11 +120,7 @@ export function SelectedItemsTable({
         <TableHead>
           <TableRow>
             <TableCell>
-              <Typography variant="subtitle2">
-                {type === "content_tone"
-                  ? "Mô tả văn phong"
-                  : "Nội dung quy tắc"}
-              </Typography>
+              <Typography variant="subtitle2">{columnLabel}</Typography>
             </TableCell>
             <TableCell width={60} align="center">
               <Typography variant="subtitle2">Thao tác</Typography>
@@ -118,7 +137,7 @@ export function SelectedItemsTable({
                 <IconButton
                   size="small"
                   color="error"
-                  onClick={() => onRemove(item.id)}
+                  onClick={() => onRemove(String(item.id))}
                 >
                   <Iconify icon="solar:trash-bin-trash-bold" width={16} />
                 </IconButton>

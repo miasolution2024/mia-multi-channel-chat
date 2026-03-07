@@ -8,4 +8,5 @@ export interface AiRule {
 
 export interface AiRuleFormData {
   content: string;
+  type?: string;
 }

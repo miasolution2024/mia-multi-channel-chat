@@ -56,6 +56,11 @@ export const navData = [
         path: paths.dashboard.contentTone.root,
         icon: ICONS.file,
       },
+      {
+        title: "Kiến thức AI",
+        path: paths.dashboard.knowledgeBased.root,
+        icon: ICONS.folder,
+      },
     ],
   },
   {

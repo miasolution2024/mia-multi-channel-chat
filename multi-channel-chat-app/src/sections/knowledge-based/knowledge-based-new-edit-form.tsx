@@ -6,39 +6,48 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-import { Card, Stack, Button, CardHeader } from "@mui/material";
+import { Card, Stack, Button, CardHeader, MenuItem } from "@mui/material";
 
 import { paths } from "@/routes/path";
 import { useBoolean } from "@/hooks/use-boolean";
 import { toast } from "@/components/snackbar";
-import { Form, RHFTextField } from "@/components/hook-form";
-import { createAiRule, updateAiRule } from "@/actions/ai-rules";
+import { Form, RHFTextField, RHFSelect } from "@/components/hook-form";
+import {
+  createKnowledgeBased,
+  updateKnowledgeBased,
+} from "@/actions/knowledge-based";
 
-import { AiRule, AiRuleFormData } from "./types";
+import {
+  KnowledgeBased,
+  KnowledgeBasedFormData,
+  STATUS_OPTIONS,
+} from "./types";
 
 // ----------------------------------------------------------------------
 
 type Props = {
-  currentRule?: AiRule;
+  currentItem?: KnowledgeBased;
 };
 
-const NewRuleSchema = zod.object({
+const NewKnowledgeBasedSchema = zod.object({
   content: zod.string().min(1, "Nội dung là bắt buộc"),
+  status: zod.enum(["PUBLISHED", "DRAFT", "SUSPENDED"]),
 });
 
-export function AiRulesNewEditForm({ currentRule }: Props) {
+export function KnowledgeBasedNewEditForm({ currentItem }: Props) {
   const router = useRouter();
   const loadingSave = useBoolean();
 
   const defaultValues = useMemo(
     () => ({
-      content: currentRule?.content || "",
+      content: currentItem?.content || "",
+      status: currentItem?.status || ("DRAFT" as const),
     }),
-    [currentRule],
+    [currentItem],
   );
 
-  const methods = useForm<AiRuleFormData>({
-    resolver: zodResolver(NewRuleSchema),
+  const methods = useForm<KnowledgeBasedFormData>({
+    resolver: zodResolver(NewKnowledgeBasedSchema),
     defaultValues,
   });
 
@@ -52,17 +61,17 @@ export function AiRulesNewEditForm({ currentRule }: Props) {
     loadingSave.onTrue();
 
     try {
-      if (currentRule) {
-        await updateAiRule(currentRule.id, data);
+      if (currentItem) {
+        await updateKnowledgeBased(currentItem.id, data);
       } else {
-        await createAiRule(data);
+        await createKnowledgeBased(data);
       }
 
       reset();
       toast.success(
-        currentRule ? "Cập nhật thành công!" : "Tạo mới thành công!",
+        currentItem ? "Cập nhật thành công!" : "Tạo mới thành công!",
       );
-      router.push(paths.dashboard.aiRules.root);
+      router.push(paths.dashboard.knowledgeBased.root);
     } catch (error) {
       console.error(error);
       toast.error("Có lỗi xảy ra!");
@@ -72,25 +81,33 @@ export function AiRulesNewEditForm({ currentRule }: Props) {
   });
 
   const handleCancel = useCallback(() => {
-    router.push(paths.dashboard.aiRules.root);
+    router.push(paths.dashboard.knowledgeBased.root);
   }, [router]);
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
       <Card>
         <CardHeader
-          title={currentRule ? "Chỉnh sửa quy tắc" : "Tạo quy tắc mới"}
-          subheader="Nhập nội dung quy tắc AI"
+          title={currentItem ? "Chỉnh sửa kiến thức" : "Tạo kiến thức mới"}
+          subheader="Nhập thông tin kiến thức AI"
         />
 
         <Stack spacing={3} sx={{ p: 3 }}>
           <RHFTextField
             name="content"
-            label="Nội dung quy tắc"
+            label="Nội dung"
             multiline
             rows={14}
-            placeholder="Nhập nội dung quy tắc AI..."
+            placeholder="Nhập nội dung kiến thức..."
           />
+
+          <RHFSelect name="status" label="Trạng thái" required>
+            {STATUS_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </RHFSelect>
         </Stack>
 
         <Stack
@@ -108,7 +125,7 @@ export function AiRulesNewEditForm({ currentRule }: Props) {
           </Button>
 
           <Button type="submit" variant="contained" loading={isSubmitting}>
-            {currentRule ? "Cập nhật" : "Tạo mới"}
+            {currentItem ? "Cập nhật" : "Tạo mới"}
           </Button>
         </Stack>
       </Card>

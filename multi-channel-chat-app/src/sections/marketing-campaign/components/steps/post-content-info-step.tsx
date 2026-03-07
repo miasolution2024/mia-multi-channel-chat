@@ -100,7 +100,7 @@ export function PostContentInfoStep() {
           getOptionLabel={(option: string) => option}
           renderOption={(
             props: React.HTMLAttributes<HTMLLIElement>,
-            option: string
+            option: string,
           ) => (
             <li {...props} key={option}>
               {option}

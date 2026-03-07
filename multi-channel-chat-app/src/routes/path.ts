@@ -36,6 +36,11 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/ai-rules/new`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/ai-rules/${id}/edit`,
     },
+    knowledgeBased: {
+      root: `${ROOTS.DASHBOARD}/knowledge-based`,
+      new: `${ROOTS.DASHBOARD}/knowledge-based/new`,
+      edit: (id: string | number) => `${ROOTS.DASHBOARD}/knowledge-based/${id}/edit`,
+    },
     marketingCampaign: {
       root: `${ROOTS.DASHBOARD}/marketing-campaign`,
       new: `${ROOTS.DASHBOARD}/marketing-campaign/new`,
