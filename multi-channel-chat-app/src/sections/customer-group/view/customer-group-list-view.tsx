@@ -47,7 +47,7 @@ function CustomerGroupActionMenu({
   onDelete,
 }: CustomerGroupActionMenuProps) {
   const popover = usePopover();
-  const canDelete = true
+  const canDelete = true;
   return (
     <>
       <IconButton onClick={popover.onOpen}>
@@ -152,15 +152,15 @@ export function CustomerGroupListView() {
     {
       key: "services",
       id: "services",
-      label: "Dịch vụ",
+      label: "Dịch vụ/Sản phẩm",
       align: "left",
       width: 250,
       render: (item: CustomerGroup) => {
         const services = item.services || [];
         if (services.length === 0) {
-          return '-'
+          return "-";
         }
-        
+
         return (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
             {services.slice(0, 1).map((service, index) => (
@@ -181,7 +181,7 @@ export function CustomerGroupListView() {
                 onClick={() =>
                   setPopupState({
                     open: true,
-                    title: "Dịch vụ",
+                    title: "Dịch vụ/Sản phẩm",
                     items: services.map((service) => ({
                       label: service.services_id.name,
                       color: "info" as const,
@@ -202,7 +202,7 @@ export function CustomerGroupListView() {
       align: "left",
       width: 250,
       render: (item: CustomerGroup) => (
-        <Tooltip title={item.descriptions || '-'} arrow>
+        <Tooltip title={item.descriptions || "-"} arrow>
           <Typography
             variant="body2"
             sx={{
@@ -213,7 +213,7 @@ export function CustomerGroupListView() {
               cursor: "pointer",
             }}
           >
-            {item.descriptions || '-'}
+            {item.descriptions || "-"}
           </Typography>
         </Tooltip>
       ),
@@ -263,14 +263,14 @@ export function CustomerGroupListView() {
         setIsDeleting(false);
       }
     },
-    [refetch, setIsDeleting]
+    [refetch, setIsDeleting],
   );
 
   const handleEditRow = useCallback(
     (id: string | number) => {
       router.push(paths.dashboard.customerGroup.edit(String(id)));
     },
-    [router]
+    [router],
   );
 
   return (
@@ -357,9 +357,7 @@ export function CustomerGroupListView() {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Xóa"
-        content={
-            "Bạn có chắc chắn muốn xóa hành vi khách hàng này?"
-        }
+        content={"Bạn có chắc chắn muốn xóa hành vi khách hàng này?"}
         action={
           <Button
             variant="contained"

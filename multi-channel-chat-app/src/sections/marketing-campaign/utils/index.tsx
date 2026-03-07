@@ -33,13 +33,14 @@ const CampaignSchema = zod.object({
         required_error: "Số lượng mục tiêu bài viết là bắc buộc",
       })
       .int()
-      .min(1, "Số lượng mục tiêu bài viết phải lớn hơn 0")
+      .min(1, "Số lượng mục tiêu bài viết phải lớn hơn 0"),
   ),
   start_date: zod.date().nullable().default(null),
   end_date: zod.date().nullable().default(null),
   post_type: zod.string().default(POST_TYPE.FACEBOOK_POST),
   customer_group: zod.number().array().min(1, "Nhóm khách hàng là bắt buộc"),
-  services: zod.number().array().min(1, "Dịch vụ là bắt buộc"),
+  services: zod.number().array().default([]),
+  knowledge_based: zod.number().array().default([]),
   omni_channels: zod.number({
     required_error: "Omni channel là bắt buộc",
   }),
@@ -59,12 +60,18 @@ const CampaignSchema = zod.object({
   content_tone: zod.number().array().default([]),
   ai_rule_based: zod.number().array().default([]),
   ai_create_post_list_notes: zod.string(),
-  need_create_post_amount: zod.preprocess((val) => {
-    if (val === "" || val === null || val === undefined) {
-      return undefined;
-    }
-    return Number(val);
-  }, zod.number({ required_error: "Số lượng bài viết cần tạo là bắt buộc" }).int().min(0, "Số lượng bài viết cần tạo phải lớn hơn hoặc bằng 0")),
+  need_create_post_amount: zod.preprocess(
+    (val) => {
+      if (val === "" || val === null || val === undefined) {
+        return undefined;
+      }
+      return Number(val);
+    },
+    zod
+      .number({ required_error: "Số lượng bài viết cần tạo là bắt buộc" })
+      .int()
+      .min(0, "Số lượng bài viết cần tạo phải lớn hơn hoặc bằng 0"),
+  ),
   post_notes: zod.string().default(""),
 
   // Step 3: Create Post List
@@ -81,11 +88,11 @@ export const validateDateRange = (
   endDate: Date | null,
   setError: (
     field: "start_date" | "end_date",
-    error: { type: string; message: string }
+    error: { type: string; message: string },
   ) => void,
   clearErrors: (
-    fields?: ("start_date" | "end_date") | ("start_date" | "end_date")[]
-  ) => void
+    fields?: ("start_date" | "end_date") | ("start_date" | "end_date")[],
+  ) => void,
 ) => {
   if (startDate && endDate) {
     // Kiểm tra nếu ngày bắt đầu lớn hơn ngày kết thúc
@@ -122,13 +129,13 @@ export const createDebouncedDateValidation = (
   endDate: Date | null,
   setError: (
     field: "start_date" | "end_date",
-    error: { type: string; message: string }
+    error: { type: string; message: string },
   ) => void,
   clearErrors: (
-    fields?: ("start_date" | "end_date") | ("start_date" | "end_date")[]
+    fields?: ("start_date" | "end_date") | ("start_date" | "end_date")[],
   ) => void,
   formState: { errors: Record<string, unknown> },
-  debounceMs: number = 100
+  debounceMs: number = 100,
 ) => {
   const timeoutId = setTimeout(() => {
     validateDateRange(startDate, endDate, setError, clearErrors);
@@ -140,7 +147,7 @@ export const createDebouncedDateValidation = (
 // Utility function to check if date validation passes for handleNext
 export const isDateRangeValid = (
   startDate: Date | null,
-  endDate: Date | null
+  endDate: Date | null,
 ): boolean => {
   // If both dates are null, consider it valid (no date range set)
   if (!startDate && !endDate) {
@@ -163,6 +170,7 @@ export const getFieldsForStep = (step: string): (keyof CampaignFormData)[] => {
         "name",
         "customer_group",
         "services",
+        "knowledge_based",
         "omni_channels",
         "post_topic",
         "objectives",
@@ -193,7 +201,7 @@ export const getFieldsForStep = (step: string): (keyof CampaignFormData)[] => {
 
 // Build campaign data for Step 1 creation only
 export const buildCampaignDataStep1 = (
-  formData: CampaignFormData
+  formData: CampaignFormData,
 ): CampaignStep1Data => {
   return {
     current_step: CAMPAIGN_STEP_KEY.POST_CONTENT_INFO,
@@ -223,6 +231,14 @@ export const buildCampaignDataStep1 = (
       update: [],
       delete: [],
     },
+    knowledge_based: {
+      create: (formData.knowledge_based || []).map((id: number) => ({
+        campaign_id: "+",
+        knowledge_based_id: { id },
+      })),
+      update: [],
+      delete: [],
+    },
     omni_channels: formData.omni_channels
       ? Number(formData.omni_channels)
       : undefined,
@@ -232,7 +248,7 @@ export const buildCampaignDataStep1 = (
 // Build campaign data for Step 2 update only
 export const buildCampaignDataStep2 = (
   formData: CampaignFormData,
-  campaignId: string
+  campaignId: string,
 ): CampaignStep2Data => {
   return {
     current_step: CAMPAIGN_STEP_KEY.CREATE_POST_LIST,
@@ -275,7 +291,7 @@ export const buildCampaignDataStep2 = (
 export const buildCampaignDataStep3 = (
   formData: CampaignFormData,
   campaignId: string,
-  selectedContentSuggestions: (string | number)[]
+  selectedContentSuggestions: (string | number)[],
 ): CampaignStep3Data => {
   return {
     status: CAMPAIGN_STATUS.IN_PROGRESS,
@@ -291,7 +307,7 @@ export const buildCampaignDataStep3 = (
 };
 
 export const getDefaultValues = (
-  editData?: Campaign | null
+  editData?: Campaign | null,
 ): Partial<CampaignFormData> => {
   // If editData is provided, transform it to form data
   if (editData) {
@@ -312,7 +328,11 @@ export const getDefaultValues = (
       services:
         editData.services
           ?.map((s) => s.services_id?.id)
-          .filter((id) => id !== undefined) || [],
+          .filter((id): id is number => id !== undefined) || [],
+      knowledge_based:
+        editData.knowledge_based
+          ?.map((kb) => kb.knowledge_based_id?.id)
+          .filter((id): id is number => id !== undefined) || [],
       omni_channels: editData["38a0c536"]?.id || editData["704a9f83"] ? 1 : 1,
       post_topic: editData.post_topic || "",
       objectives: editData.objectives || "",
@@ -325,11 +345,11 @@ export const getDefaultValues = (
       content_tone:
         editData.content_tone
           ?.map((ct) => ct.content_tone_id?.id)
-          .filter((id) => id !== undefined) || [],
+          .filter((id): id is number => id !== undefined) || [],
       ai_rule_based:
         editData.ai_rule_based
           ?.map((ar) => ar.ai_rule_based_id?.id)
-          .filter((id) => id !== undefined) || [],
+          .filter((id): id is number => id !== undefined) || [],
       ai_create_post_list_notes: "",
       need_create_post_amount: editData.need_create_post_amount
         ? Number(editData.need_create_post_amount)
@@ -354,6 +374,7 @@ export const getDefaultValues = (
     post_type: POST_TYPE.FACEBOOK_POST,
     customer_group: undefined,
     services: undefined,
+    knowledge_based: undefined,
     omni_channels: undefined,
     post_topic: undefined,
     objectives: undefined,
@@ -375,7 +396,7 @@ export const getDefaultValues = (
 };
 
 export const buildCampaignData = (
-  formData: CampaignFormData
+  formData: CampaignFormData,
 ): CampaignApiData => {
   // Transform form data to match API expected format
   return {
@@ -406,6 +427,14 @@ export const buildCampaignData = (
       create: (formData.services || []).map((id: number) => ({
         campaign_id: "+",
         services_id: { id },
+      })),
+      update: [],
+      delete: [],
+    },
+    knowledge_based: {
+      create: (formData.knowledge_based || []).map((id: number) => ({
+        campaign_id: "+",
+        knowledge_based_id: { id },
       })),
       update: [],
       delete: [],
@@ -465,7 +494,7 @@ export const buildCampaignData = (
           ai_content_suggestion: suggestion,
           ai_create_post_detail_notes:
             formData.ai_create_post_detail_notes || "",
-        })
+        }),
       ),
       update: [],
       delete: [],
@@ -481,7 +510,7 @@ export const compareArrays = (arr1: unknown[], arr2: unknown[]): boolean => {
 
 export const compareDates = (
   date1: Date | null,
-  date2: Date | null
+  date2: Date | null,
 ): boolean => {
   if (date1 === null && date2 === null) return true;
   if (date1 === null || date2 === null) return false;
@@ -492,7 +521,7 @@ export const compareDates = (
 export const hasStepDataChanged = (
   currentData: CampaignFormData,
   cachedData: Partial<CampaignFormData> | null,
-  step: string
+  step: string,
 ): boolean => {
   if (!cachedData) return true;
 
@@ -511,7 +540,7 @@ export const hasStepDataChanged = (
     if (currentValue instanceof Date || cachedValue instanceof Date) {
       return !compareDates(
         currentValue as Date | null,
-        cachedValue as Date | null
+        cachedValue as Date | null,
       );
     }
 
@@ -523,7 +552,7 @@ export const hasStepDataChanged = (
 // Extract data for specific step
 export const extractStepData = (
   formData: CampaignFormData,
-  step: string
+  step: string,
 ): Partial<CampaignFormData> => {
   const fieldsForStep = getFieldsForStep(step);
   const stepData: Partial<CampaignFormData> = {};
@@ -544,6 +573,7 @@ export const transformCampaignToContentAssistant = (data: CampaignFormData) => {
     secondary_seo_keywords: data.secondary_seo_keywords || [],
     customer_group: data.customer_group || [],
     services: data.services || [],
+    knowledge_based: data.knowledge_based || [],
     customer_journey: data.customer_journey,
     content_tone: data.content_tone || [],
     ai_rule_based: data.ai_rule_based || [],

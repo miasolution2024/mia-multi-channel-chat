@@ -86,7 +86,7 @@ export function SelectedItemsTable({
       ? "văn phong AI"
       : type === "ai_rule_based"
         ? "quy tắc AI"
-        : "kiến thức cơ sở";
+        : "Kiến thức AI";
 
   const columnLabel =
     type === "content_tone"

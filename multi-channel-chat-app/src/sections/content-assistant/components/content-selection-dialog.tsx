@@ -73,7 +73,7 @@ export function ContentSelectionDialog({
             ? "văn phong AI"
             : type === "ai_rule_based"
               ? "quy tắc AI"
-              : "kiến thức cơ sở"
+              : "Kiến thức AI"
         }`,
       );
     } finally {
@@ -124,7 +124,7 @@ export function ContentSelectionDialog({
       ? "Chọn văn phong AI"
       : type === "ai_rule_based"
         ? "Chọn quy tắc AI"
-        : "Chọn kiến thức cơ sở";
+        : "Chọn Kiến thức AI";
 
   const columnLabel =
     type === "content_tone"

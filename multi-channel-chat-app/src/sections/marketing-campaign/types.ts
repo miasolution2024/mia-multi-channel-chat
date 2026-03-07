@@ -79,6 +79,14 @@ export interface CampaignStep1Data {
     update: never[];
     delete: never[];
   };
+  knowledge_based: {
+    create: Array<{
+      campaign_id: string;
+      knowledge_based_id: { id: number };
+    }>;
+    update: never[];
+    delete: never[];
+  };
   omni_channels: number | undefined;
 }
 
@@ -111,6 +119,14 @@ export interface CampaignApiData {
     create: Array<{
       campaign_id: string;
       services_id: { id: number };
+    }>;
+    update: never[];
+    delete: never[];
+  };
+  knowledge_based: {
+    create: Array<{
+      campaign_id: string;
+      knowledge_based_id: { id: number };
     }>;
     update: never[];
     delete: never[];

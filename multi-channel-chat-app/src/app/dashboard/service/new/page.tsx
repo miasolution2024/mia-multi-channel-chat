@@ -1,10 +1,10 @@
-import { Metadata } from 'next';
-import ServiceNewView from '@/sections/service/view/service-new-view';
+import { Metadata } from "next";
+import ServiceNewView from "@/sections/service/view/service-new-view";
 
 // ----------------------------------------------------------------------
 
 export const metadata: Metadata = {
-  title: 'Tạo dịch vụ mới',
+  title: "Tạo Dịch vụ/Sản phẩm mới",
 };
 
 export default function ServiceNewPage() {

@@ -317,7 +317,7 @@ export function StepResearch() {
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <RHFAutocomplete
               name="services"
-              label="Dịch vụ"
+              label="Dịch vụ/Sản phẩm"
               sx={{ width: "100%" }}
               multiple
               disableCloseOnSelect
@@ -365,7 +365,7 @@ export function StepResearch() {
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <RHFAutocomplete
               name="knowledge_based"
-              label="Kiến thức cơ sở"
+              label="Kiến thức AI"
               sx={{ width: "100%" }}
               multiple
               disableCloseOnSelect

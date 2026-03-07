@@ -1,17 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/components/snackbar';
-import { getServices } from '@/actions/service';
-import { Service } from '@/sections/service/types';
+import { getKnowledgeBasedList } from '@/actions/knowledge-based';
+import { KnowledgeBased } from '@/sections/knowledge-based/types';
 
-export interface UseGetServicesParams {
+export interface UseGetKnowledgeBasedListParams {
   page?: number;
   limit?: number;
-  name?: string;
-  id?: string;
+  status?: string;
 }
 
-export interface UseGetServicesReturn {
-  data: Service[];
+export interface UseGetKnowledgeBasedListReturn {
+  data: KnowledgeBased[];
   total: number;
   isLoading: boolean;
   error: string | null;
@@ -20,33 +19,33 @@ export interface UseGetServicesReturn {
   options: { value: string; label: string }[];
 }
 
-export function useGetServices(
-  params: UseGetServicesParams = {}
-): UseGetServicesReturn {
-  const [data, setData] = useState<Service[]>([]);
+export function useGetKnowledgeBasedList(
+  params: UseGetKnowledgeBasedListParams = {}
+): UseGetKnowledgeBasedListReturn {
+  const [data, setData] = useState<KnowledgeBased[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { page = 1, limit = 25, name = '', id = '' } = params;
+  const { page = 1, limit = 25, status } = params;
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await getServices(page, limit, name, id);
+      const response = await getKnowledgeBasedList(page, limit, status);
       setData(response.data || []);
-      setTotal(response.total || 0);
+      setTotal(response.meta?.total_count || 0);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách Dịch vụ/Sản phẩm';
+      const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách Kiến thức cơ sở';
       setError(errorMessage);
       toast.error(errorMessage);
-      console.error('Error fetching services:', err);
+      console.error('Error fetching knowledge based:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, name, id]);
+  }, [page, limit, status]);
 
   // Auto-fetch when parameters change
   useEffect(() => {
@@ -62,7 +61,7 @@ export function useGetServices(
     total,
     options: data.map((item) => ({
       value: item.id.toString(),
-      label: item.name,
+      label: item.content?.substring(0, 50) + (item.content?.length > 50 ? '...' : ''),
     })),
     isLoading,
     error,

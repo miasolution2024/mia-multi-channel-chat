@@ -12,7 +12,11 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { Content } from "@/sections/content-assistant/view/content-assistant-list-view";
-import { POST_STATUS, POST_STEP, POST_TYPE_OPTIONS } from "@/constants/auto-post";
+import {
+  POST_STATUS,
+  POST_STEP,
+  POST_TYPE_OPTIONS,
+} from "@/constants/auto-post";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Iconify } from "@/components/iconify";
 import { CustomTable } from "@/components/custom-table";
@@ -25,7 +29,7 @@ import { useGetContentAssistantList } from "@/hooks/apis/use-get-content-assista
 
 // Utility functions from content-assistant-list-view
 const getAIContentStatusLabelAndColor = (
-  status: string
+  status: string,
 ): {
   label: string;
   color:
@@ -86,14 +90,14 @@ const PostSelectionDialog = memo(function PostSelectionDialog({
   const variable = useMemo(
     () => ({
       topic: debouncedSearchTerm,
-      status:  [POST_STATUS.DRAFT],
+      status: [POST_STATUS.DRAFT],
       page: page + 1,
       pageSize: rowsPerPage,
       postType: postType || undefined,
       omniChannel: omniChannel || undefined,
       isNotLinkToCampaign: true,
     }),
-    [debouncedSearchTerm, page, rowsPerPage, postType, omniChannel]
+    [debouncedSearchTerm, page, rowsPerPage, postType, omniChannel],
   );
   // Use the hook to fetch data with filters
   const { data, total, isLoading } = useGetContentAssistantList(variable);
@@ -114,6 +118,8 @@ const PostSelectionDialog = memo(function PostSelectionDialog({
             []) as unknown as Content["customer_journey"],
           ai_rule_based: (item.ai_rule_based ||
             []) as unknown as Content["ai_rule_based"],
+          knowledge_based: (item.knowledge_based ||
+            []) as unknown as Content["knowledge_based"],
           content_tone: (item.content_tone ||
             []) as unknown as Content["content_tone"],
           omni_channels: (item.omni_channels ||
@@ -154,7 +160,7 @@ const PostSelectionDialog = memo(function PostSelectionDialog({
           label={
             POST_TYPE_OPTIONS.find(
               (option: { value: string; label: string }) =>
-                option.value === item.post_type
+                option.value === item.post_type,
             )?.label || item.post_type
           }
           size="small"
@@ -174,12 +180,12 @@ const PostSelectionDialog = memo(function PostSelectionDialog({
     },
     {
       key: "main_seo_keyword",
-      label: "Từ khóa SEO chính",
+      label: "Từ khóa chính",
       width: 180,
     },
     {
       key: "secondary_seo_keywords",
-      label: "Từ khóa SEO phụ",
+      label: "Từ khóa phụ",
       width: 400,
       render: (item: Content) => (
         <Box
@@ -201,7 +207,7 @@ const PostSelectionDialog = memo(function PostSelectionDialog({
                   variant="outlined"
                   color="primary"
                 />
-              )
+              ),
             )
           ) : (
             <Typography variant="body2" color="text.secondary">
@@ -248,7 +254,7 @@ const PostSelectionDialog = memo(function PostSelectionDialog({
 
   const handlePageChange = (
     event: React.MouseEvent<HTMLButtonElement> | null,
-    newPage: number
+    newPage: number,
   ) => {
     setPage(newPage);
   };
@@ -273,7 +279,7 @@ const PostSelectionDialog = memo(function PostSelectionDialog({
         <Stack spacing={2} sx={{ mb: 2 }}>
           <TextField
             sx={{ width: 400 }}
-            placeholder="Tìm kiếm theo chủ đề, từ khóa SEO..."
+            placeholder="Tìm kiếm theo chủ đề, từ khóa..."
             value={searchTerm}
             onChange={handleSearchChange}
             InputProps={{
