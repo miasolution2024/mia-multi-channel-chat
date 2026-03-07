@@ -40,7 +40,7 @@ export async function getAiRule(id: string) {
  */
 export async function createAiRule(data: AiRuleFormData) {
   try {
-    const response = await axiosInstance.post(endpoints.aiRules.create, data);
+    const response = await axiosInstance.post(endpoints.aiRules.create, {...data, type:"POST_SOCIAL"});
     return response.data;
   } catch (error) {
     console.error('Error creating AI rule:', error);

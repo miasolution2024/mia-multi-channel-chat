@@ -22,10 +22,12 @@ import {
 import { toast } from "@/components/snackbar";
 import { getContentTones } from "@/actions/content-tone";
 import { getAiRules } from "@/actions/ai-rules";
+import { getKnowledgeBasedList } from "@/actions/knowledge-based";
 import { ContentTone } from "@/sections/content-tone/types";
 import { AiRule } from "@/sections/ai-rules/types";
+import { KnowledgeBased } from "@/sections/knowledge-based/types";
 
-type SelectionType = "content_tone" | "ai_rule_based";
+type SelectionType = "content_tone" | "ai_rule_based" | "knowledge_based";
 
 interface ContentSelectionDialogProps {
   open: boolean;
@@ -42,7 +44,9 @@ export function ContentSelectionDialog({
   selectedIds,
   onConfirm,
 }: ContentSelectionDialogProps) {
-  const [items, setItems] = useState<(ContentTone | AiRule)[]>([]);
+  const [items, setItems] = useState<(ContentTone | AiRule | KnowledgeBased)[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>(selectedIds);
 
@@ -52,18 +56,25 @@ export function ContentSelectionDialog({
       let data;
 
       if (type === "content_tone") {
-        data = await getContentTones(1, 100); // Get first 100 items
+        data = await getContentTones(1, 100);
         setItems(data.data || []);
-      } else {
-        data = await getAiRules(1, 100); // Get first 100 items
+      } else if (type === "ai_rule_based") {
+        data = await getAiRules(1, 100);
+        setItems(data.data || []);
+      } else if (type === "knowledge_based") {
+        data = await getKnowledgeBasedList(1, 100);
         setItems(data.data || []);
       }
     } catch (error) {
       console.error(`Error fetching ${type}:`, error);
       toast.error(
         `Không thể tải danh sách ${
-          type === "content_tone" ? "văn phong AI" : "quy tắc AI"
-        }`
+          type === "content_tone"
+            ? "văn phong AI"
+            : type === "ai_rule_based"
+              ? "quy tắc AI"
+              : "kiến thức cơ sở"
+        }`,
       );
     } finally {
       setLoading(false);
@@ -81,7 +92,7 @@ export function ContentSelectionDialog({
     setTempSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
@@ -89,7 +100,7 @@ export function ContentSelectionDialog({
     if (tempSelectedIds.length === items.length) {
       setTempSelectedIds([]);
     } else {
-      setTempSelectedIds(items.map((item) => item.id));
+      setTempSelectedIds(items.map((item) => String(item.id)));
     }
   };
 
@@ -98,15 +109,29 @@ export function ContentSelectionDialog({
     onClose();
   };
 
-  const getDisplayText = (item: ContentTone | AiRule) => {
+  const getDisplayText = (item: ContentTone | AiRule | KnowledgeBased) => {
     if (type === "content_tone") {
       return (item as ContentTone).tone_description;
+    } else if (type === "ai_rule_based") {
+      return (item as AiRule).content;
+    } else {
+      return (item as KnowledgeBased).content;
     }
-    return (item as AiRule).content;
   };
 
   const title =
-    type === "content_tone" ? "Chọn văn phong AI" : "Chọn quy tắc AI";
+    type === "content_tone"
+      ? "Chọn văn phong AI"
+      : type === "ai_rule_based"
+        ? "Chọn quy tắc AI"
+        : "Chọn kiến thức cơ sở";
+
+  const columnLabel =
+    type === "content_tone"
+      ? "Mô tả văn phong"
+      : type === "ai_rule_based"
+        ? "Nội dung quy tắc"
+        : "Nội dung kiến thức";
   const isAllSelected =
     tempSelectedIds.length === items.length && items.length > 0;
   const isIndeterminate =
@@ -133,11 +158,7 @@ export function ContentSelectionDialog({
                     />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">
-                      {type === "content_tone"
-                        ? "Mô tả văn phong"
-                        : "Nội dung quy tắc"}
-                    </Typography>
+                    <Typography variant="subtitle2">{columnLabel}</Typography>
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -146,8 +167,8 @@ export function ContentSelectionDialog({
                   <TableRow key={item.id} hover sx={{ cursor: "pointer" }}>
                     <TableCell padding="checkbox">
                       <Checkbox
-                        checked={tempSelectedIds.includes(item.id)}
-                        onChange={() => handleToggleItem(item.id)}
+                        checked={tempSelectedIds.includes(String(item.id))}
+                        onChange={() => handleToggleItem(String(item.id))}
                       />
                     </TableCell>
                     <TableCell>

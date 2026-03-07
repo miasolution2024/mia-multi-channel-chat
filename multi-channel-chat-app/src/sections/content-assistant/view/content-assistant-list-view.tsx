@@ -155,6 +155,13 @@ interface AiRuleBasedItem {
   };
 }
 
+interface KnowledgeBasedItem {
+  knowledge_based_id: {
+    id: number;
+    content: string;
+  };
+}
+
 interface OmniChannelsItem {
   omni_channels_id: number;
 }
@@ -171,6 +178,7 @@ export interface Content {
   customer_journey: CustomerJourneyItem[]; // Giai đoạn khách hàng
   services: ServicesItem[]; // Dịch vụ
   ai_rule_based: AiRuleBasedItem[]; // Quy tắc AI
+  knowledge_based: KnowledgeBasedItem[]; // Kiến thức cơ sở
   content_tone: ContentToneItem[]; // Tonal
   omni_channels?: OmniChannelsItem[]; // Kênh omni
   additional_notes?: string; // Ghi chú bổ sung
@@ -192,7 +200,7 @@ export interface Content {
 }
 
 const getAIContentStatusLabelAndColor = (
-  status: string
+  status: string,
 ): {
   label: string;
   color:
@@ -336,7 +344,7 @@ export function ContentAssistantListView() {
   const bulkCreateConfirm = useBoolean();
   const { updateContentAssistant } = useUpdateContentAssistant();
   const [publishingId, setPublishingId] = useState<string | number | null>(
-    null
+    null,
   );
   const [isPublishing, setIsPublishing] = useState(false);
   const [isBulkCreating, setIsBulkCreating] = useState(false);
@@ -657,7 +665,7 @@ export function ContentAssistantListView() {
 
   // Transform API data to match Content interface
   const transformApiData = (
-    apiData: ContentAssistantApiResponse[]
+    apiData: ContentAssistantApiResponse[],
   ): Content[] => {
     return apiData.map((item) => ({
       ...item,
@@ -722,14 +730,14 @@ export function ContentAssistantListView() {
         setIsDeleting(false);
       }
     },
-    [refetch, setIsDeleting]
+    [refetch, setIsDeleting],
   );
 
   const handleEditRow = useCallback(
     (id: string | number) => {
       router.push(paths.dashboard.contentAssistant.edit(String(id)));
     },
-    [router]
+    [router],
   );
 
   const handleDeleteRows = useCallback(async () => {
@@ -764,10 +772,10 @@ export function ContentAssistantListView() {
       // Process each selected item
       const promises = selectedIds.map(async (id) => {
         const currentItem = apiResponse?.data.find(
-          (item: ContentAssistantApiResponse) => String(item.id) === String(id)
+          (item: ContentAssistantApiResponse) => String(item.id) === String(id),
         );
         const startStep = getStartStepFromCurrentStep(
-          currentItem?.current_step
+          currentItem?.current_step,
         );
 
         // Update status to IN_PROGRESS before calling createPost
@@ -803,7 +811,7 @@ export function ContentAssistantListView() {
 
       // Show immediate success message
       toast.success(
-        `Đã bắt đầu tạo ${selectedIds.length} bài viết. Quá trình sẽ hoàn thành trong khoảng 10 phút.`
+        `Đã bắt đầu tạo ${selectedIds.length} bài viết. Quá trình sẽ hoàn thành trong khoảng 10 phút.`,
       );
 
       await refetch();
@@ -842,7 +850,7 @@ export function ContentAssistantListView() {
 
     // Find the item to get current_step
     const currentItem = apiResponse?.data.find(
-      (item: ContentAssistantApiResponse) => item.id === publishingId
+      (item: ContentAssistantApiResponse) => item.id === publishingId,
     );
     const startStep = getStartStepFromCurrentStep(currentItem?.current_step);
 
@@ -944,7 +952,7 @@ export function ContentAssistantListView() {
                           key={value}
                           label={
                             POST_STATUS_OPTIONS.find(
-                              (option) => option.value === value
+                              (option) => option.value === value,
                             )?.label || value
                           }
                           size="small"

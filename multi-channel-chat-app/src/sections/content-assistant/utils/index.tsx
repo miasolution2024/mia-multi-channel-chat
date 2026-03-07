@@ -33,11 +33,12 @@ const ContentSchema = zod.object({
     .min(1, { message: "Từ khoá chính là bắt buộc!" }),
   secondary_seo_keywords: zod.string().array().default([]),
   customer_group: zod.number().array().min(1, "Nhóm khách hàng là bắt buộc"),
-  services: zod.number().array().min(1, "Dịch vụ là bắt buộc"),
+  services: zod.number().array().default([]),
   customer_journey: zod.number({
     required_error: "Giai đoạn khách hàng là bắt buộc",
   }),
   ai_rule_based: zod.number().array().default([]),
+  knowledge_based: zod.number().array().default([]),
   content_tone: zod.number().array().default([]),
   ai_notes_make_outline: zod.string().default(""),
   omni_channels: zod
@@ -102,7 +103,7 @@ export const getFieldsForStep = (step: string): (keyof FormData)[] => {
 };
 
 export const getDefaultValues = (
-  editData?: Content | ContentAssistantApiResponse | null
+  editData?: Content | ContentAssistantApiResponse | null,
 ): Partial<FormData> => {
   if (editData) {
     // Helper function to safely extract IDs from relation arrays
@@ -144,6 +145,13 @@ export const getDefaultValues = (
               typeof obj.ai_rule_based_id === "object"
             ) {
               const nested = obj.ai_rule_based_id as Record<string, unknown>;
+              if (nested.id && typeof nested.id === "number") return nested.id;
+            }
+            if (
+              obj.knowledge_based_id &&
+              typeof obj.knowledge_based_id === "object"
+            ) {
+              const nested = obj.knowledge_based_id as Record<string, unknown>;
               if (nested.id && typeof nested.id === "number") return nested.id;
             }
             if (obj.omni_channels_id) {
@@ -201,6 +209,10 @@ export const getDefaultValues = (
         extractIds(editData.ai_rule_based).length > 0
           ? extractIds(editData.ai_rule_based)
           : [],
+      knowledge_based:
+        extractIds(editData.knowledge_based).length > 0
+          ? extractIds(editData.knowledge_based)
+          : [],
       ai_notes_make_outline: getString(apiData.ai_notes_make_outline),
       status: editData.status || (POST_STATUS.DRAFT as string),
       omni_channels:
@@ -238,6 +250,7 @@ export const getDefaultValues = (
     customer_journey: undefined,
     content_tone: [],
     ai_rule_based: [],
+    knowledge_based: [],
     ai_notes_make_outline: "",
     status: POST_STATUS.DRAFT as string,
     omni_channels: [],
@@ -263,6 +276,7 @@ export const getStep1FormData = (formData: FormData) => {
     customer_journey: formData.customer_journey,
     content_tone: formData.content_tone,
     ai_rule_based: formData.ai_rule_based,
+    knowledge_based: formData.knowledge_based,
     ai_notes_make_outline: formData.ai_notes_make_outline,
     omni_channels: formData.omni_channels,
     video: formData.video,
@@ -289,7 +303,7 @@ export const buildStepWriteArticleData = async (
     media_generated_ai?: MediaGeneratedAiItem[];
     id?: string;
   },
-  excludeMedia = false
+  excludeMedia = false,
 ) => {
   // Process media data for upload and deletion only if not excluding media
   let mediaArray: Array<{ id: string }> = [];
@@ -349,7 +363,7 @@ export const buildStepWriteArticleData = async (
 
 // Helper function to upload files
 export const uploadFiles = async (
-  files: File[]
+  files: File[],
 ): Promise<Array<{ id: string; url: string }>> => {
   if (!files || files.length === 0) {
     return [];
@@ -369,7 +383,7 @@ export const uploadFiles = async (
 // Helper function to get deleted media files
 export const getDeletedMediaFiles = (
   currentMedia: (File | FileWithApiProperties)[],
-  originalMedia: FileWithApiProperties[]
+  originalMedia: FileWithApiProperties[],
 ): string[] => {
   if (!Array.isArray(originalMedia)) return [];
   if (!Array.isArray(currentMedia))
@@ -377,12 +391,12 @@ export const getDeletedMediaFiles = (
 
   // Get only the FileWithApiProperties from currentMedia (existing files)
   const currentApiFiles = currentMedia.filter(
-    (file): file is FileWithApiProperties => !(file instanceof File)
+    (file): file is FileWithApiProperties => !(file instanceof File),
   );
 
   // Count new File objects being added
   const newFileCount = currentMedia.filter(
-    (file) => file instanceof File
+    (file) => file instanceof File,
   ).length;
 
   // Special handling when all current media are new File objects
@@ -450,7 +464,7 @@ export const getDeletedMediaFiles = (
 
 export const getDeletedMediaGeneratedAiFiles = (
   currentMediaGeneratedAi: (string | MediaGeneratedAiItem)[],
-  originalMediaGeneratedAi: MediaGeneratedAiItem[]
+  originalMediaGeneratedAi: MediaGeneratedAiItem[],
 ): string[] => {
   if (!Array.isArray(originalMediaGeneratedAi)) return [];
   if (!Array.isArray(currentMediaGeneratedAi))
@@ -475,7 +489,7 @@ export const getDeletedMediaGeneratedAiFiles = (
 // Helper function to get new media files that need to be uploaded
 export const getNewMediaFiles = (
   currentMedia: (File | FileWithApiProperties)[],
-  originalMedia: FileWithApiProperties[]
+  originalMedia: FileWithApiProperties[],
 ): File[] => {
   if (!Array.isArray(currentMedia)) return [];
 
@@ -503,25 +517,25 @@ export const processMediaDataForUpdate = async (
   editData?: {
     media?: FileWithApiProperties[];
     media_generated_ai?: MediaGeneratedAiItem[];
-  }
+  },
 ) => {
   const currentMedia =
     (formData.media as (File | FileWithApiProperties)[]) || [];
   const newMediaFiles = getNewMediaFiles(currentMedia, editData?.media || []);
   const deletedMediaIds = getDeletedMediaFiles(
     currentMedia,
-    editData?.media || []
+    editData?.media || [],
   );
   const deletedMediaGeneratedAiIds = getDeletedMediaGeneratedAiFiles(
     (formData.media_generated_ai as (string | MediaGeneratedAiItem)[]) || [],
-    (editData?.media_generated_ai as MediaGeneratedAiItem[]) || []
+    (editData?.media_generated_ai as MediaGeneratedAiItem[]) || [],
   );
 
   let mediaArray: Array<{ id: string }> = [];
   if (newMediaFiles.length > 0) {
     // Filter only File objects for upload
     const filesToUpload = newMediaFiles.filter(
-      (file): file is File => file instanceof File
+      (file): file is File => file instanceof File,
     );
     if (filesToUpload.length > 0) {
       const uploadResults = await uploadFiles(filesToUpload);
@@ -551,7 +565,7 @@ export const processMediaDataForUpdate = async (
 export const hasFormDataChanged = (
   currentData: FormData,
   initialData: FormData | null,
-  step?: string
+  step?: string,
 ) => {
   if (!currentData.id || !initialData) {
     return false; // No comparison needed for new records
@@ -587,6 +601,7 @@ export const hasFormDataChanged = (
       "customer_group",
       "customer_journey",
       "ai_rule_based",
+      "knowledge_based",
       "content_tone",
       "ai_notes_make_outline",
       "omni_channels",
@@ -611,7 +626,7 @@ export const hasFormDataChanged = (
 
 export const buildStepResearchData = async (
   formData: FormData,
-  isCreate = false
+  isCreate = false,
 ) => {
   // Handle video upload if present
   let videoId = null;
@@ -628,6 +643,7 @@ export const buildStepResearchData = async (
   if (isCreate) {
     // Remove duplicates from arrays before mapping
     const uniqueAiRuleBased = [...new Set(formData.ai_rule_based || [])];
+    const uniqueKnowledgeBased = [...new Set(formData.knowledge_based || [])];
     const uniqueContentTone = [...new Set(formData.content_tone || [])];
     const uniqueOmniChannels = [...new Set(formData.omni_channels || [])];
 
@@ -647,6 +663,14 @@ export const buildStepResearchData = async (
         create: uniqueAiRuleBased.map((id) => ({
           ai_content_suggestions_id: "+",
           ai_rule_based_id: { id },
+        })),
+        update: [],
+        delete: [],
+      },
+      knowledge_based: {
+        create: uniqueKnowledgeBased.map((id) => ({
+          ai_content_suggestions_id: "+",
+          knowledge_based_id: { id },
         })),
         update: [],
         delete: [],
@@ -727,6 +751,10 @@ export const buildStepResearchData = async (
       formData.ai_rule_based?.map((item) => ({
         ai_rule_based_id: item,
       })) || [],
+    knowledge_based:
+      formData.knowledge_based?.map((item) => ({
+        knowledge_based_id: item,
+      })) || [],
     content_tone:
       formData.content_tone?.map((item) => ({
         content_tone_id: item,
@@ -746,7 +774,7 @@ export const getStartStepFromCurrentStep = (currentStep?: string): number => {
 };
 
 export const transformMediaItems = (
-  mediaItems: MediaGeneratedAiItem[]
+  mediaItems: MediaGeneratedAiItem[],
 ): File[] => {
   return mediaItems.map((mediaItem: MediaGeneratedAiItem) => {
     const imageUrl = `${CONFIG.serverUrl}/assets/${mediaItem.directus_files_id}`;

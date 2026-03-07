@@ -27,7 +27,9 @@ import { CustomerJourney } from "@/sections/customer-journey/types";
 import { MenuItem, SelectChangeEvent, Switch, Tooltip } from "@mui/material";
 import { getOmniChannels } from "@/actions/omni-channels";
 import { getServices } from "@/actions/services";
+import { getKnowledgeBasedList } from "@/actions/knowledge-based";
 import { Services } from "@/sections/services/types";
+import { KnowledgeBased } from "@/sections/knowledge-based/types";
 import { CONFIG } from "@/config-global";
 import { OmniChannel } from "@/sections/omni-channel/types";
 
@@ -54,13 +56,16 @@ export function StepResearch() {
   const [contentTonesDialogOpen, setContentTonesDialogOpen] = useState(false);
   const [aiRulesDialogOpen, setAiRulesDialogOpen] = useState(false);
   const [customerGroupsData, setCustomerGroupsData] = useState<CustomerGroup[]>(
-    []
+    [],
   );
   const [customerJourneysData, setCustomerJourneysData] = useState<
     CustomerJourney[]
   >([]);
   const [omniChannelsData, setOmniChannelsData] = useState<OmniChannel[]>([]);
   const [servicesData, setServicesData] = useState<Services[]>([]);
+  const [knowledgeBasedData, setKnowledgeBasedData] = useState<
+    KnowledgeBased[]
+  >([]);
   const [source, setSource] = useState("");
 
   const { watch, setValue } = useFormContext();
@@ -127,7 +132,7 @@ export function StepResearch() {
           source,
         });
         const filteredData = (response.data || []).filter(
-          (item: OmniChannel) => item.page_name !== null
+          (item: OmniChannel) => item.page_name !== null,
         );
         setOmniChannelsData(filteredData);
       } catch (error) {
@@ -144,10 +149,20 @@ export function StepResearch() {
       }
     };
 
+    const fetchKnowledgeBased = async () => {
+      try {
+        const response = await getKnowledgeBasedList(1, 100, "PUBLISHED");
+        setKnowledgeBasedData(response.data || []);
+      } catch (error) {
+        console.error("Error fetching knowledge based:", error);
+      }
+    };
+
     fetchCustomerGroups();
     fetchCustomerJourneys();
     fetchOmniChannels();
     fetchServices();
+    fetchKnowledgeBased();
   }, [source]);
   const handleChangeShowVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.checked) {
@@ -211,7 +226,7 @@ export function StepResearch() {
               onChange={(e: SelectChangeEvent) => {
                 const selectedValue = e.target.value;
                 const selectedOption = PostOptions.find(
-                  (item) => item.value === selectedValue
+                  (item) => item.value === selectedValue,
                 );
                 if (selectedOption) {
                   setSource(selectedOption.type);
@@ -245,7 +260,7 @@ export function StepResearch() {
               getOptionLabel={(option: string) => option}
               renderOption={(
                 props: React.HTMLAttributes<HTMLLIElement>,
-                option: string
+                option: string,
               ) => (
                 <li {...props} key={option}>
                   {option}
@@ -274,11 +289,11 @@ export function StepResearch() {
               useValueAsId={true}
               isOptionEqualToValue={(
                 option: CustomerGroup,
-                value: CustomerGroup
+                value: CustomerGroup,
               ) => option.id === value.id}
               renderOption={(
                 props: React.HTMLAttributes<HTMLLIElement>,
-                option: CustomerGroup
+                option: CustomerGroup,
               ) => (
                 <li {...props} key={option.id}>
                   {option.name}
@@ -302,8 +317,7 @@ export function StepResearch() {
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <RHFAutocomplete
               name="services"
-              label="Dịch vụ *"
-              required
+              label="Dịch vụ"
               sx={{ width: "100%" }}
               multiple
               disableCloseOnSelect
@@ -316,13 +330,14 @@ export function StepResearch() {
               }
               renderOption={(
                 props: React.HTMLAttributes<HTMLLIElement>,
-                option: Services
+                option: Services,
               ) => (
                 <li {...props} key={option.id}>
                   {option.name}
                 </li>
               )}
             />
+
             <RHFAutocomplete
               name="omni_channels"
               label="Kênh Omni *"
@@ -339,10 +354,44 @@ export function StepResearch() {
               }
               renderOption={(
                 props: React.HTMLAttributes<HTMLLIElement>,
-                option: OmniChannel
+                option: OmniChannel,
               ) => (
                 <li {...props} key={option.id}>
                   {option.page_name}
+                </li>
+              )}
+            />
+          </Stack>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <RHFAutocomplete
+              name="knowledge_based"
+              label="Kiến thức cơ sở"
+              sx={{ width: "100%" }}
+              multiple
+              disableCloseOnSelect
+              options={knowledgeBasedData || []}
+              getOptionLabel={(option: KnowledgeBased) => option.content || ""}
+              getOptionValue={(option: KnowledgeBased) => option.id}
+              useValueAsId={true}
+              isOptionEqualToValue={(
+                option: KnowledgeBased,
+                value: KnowledgeBased,
+              ) => option.id === value.id}
+              renderOption={(
+                props: React.HTMLAttributes<HTMLLIElement>,
+                option: KnowledgeBased,
+              ) => (
+                <li {...props} key={option.id}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {option.content}
+                  </Box>
                 </li>
               )}
             />
@@ -474,9 +523,10 @@ export function StepResearch() {
                           typeof watch("video")[0] === "string"
                             ? `${CONFIG.serverUrl}/assets/${watch("video")[0]}`
                             : watch("video")[0] instanceof File
-                            ? (watch("video")[0] as FileWithPreview).preview ||
-                              URL.createObjectURL(watch("video")[0])
-                            : ""
+                              ? (watch("video")[0] as FileWithPreview)
+                                  .preview ||
+                                URL.createObjectURL(watch("video")[0])
+                              : ""
                         }
                         controls
                         style={{
