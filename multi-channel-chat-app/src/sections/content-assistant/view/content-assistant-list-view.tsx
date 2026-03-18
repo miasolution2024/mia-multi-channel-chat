@@ -916,9 +916,10 @@ export function ContentAssistantListView() {
               <TextField
                 size="small"
                 value={filters.state.topic}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                  filters.setState({ topic: event.target.value })
-                }
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  filters.setState({ topic: event.target.value });
+                  setPage(0); // Reset to first page when search changes
+                }}
                 placeholder="Tìm kiếm chủ đề..."
                 InputProps={{
                   startAdornment: (
@@ -945,6 +946,7 @@ export function ContentAssistantListView() {
                       status:
                         typeof value === "string" ? value.split(",") : value,
                     });
+                    setPage(0); // Reset to first page when status filter changes
                   }}
                   label="Trạng thái"
                   renderValue={(selected) => (

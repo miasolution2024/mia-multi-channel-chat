@@ -34,20 +34,20 @@ export function PostContentInfoStep() {
   const aiRules = watch("ai_rule_based") || [];
 
   const handleContentTonesConfirm = (selectedIds: string[]) => {
-    setValue("content_tone", selectedIds);
+    setValue("content_tone", selectedIds.map(Number));
   };
 
   const handleAiRulesConfirm = (selectedIds: string[]) => {
-    setValue("ai_rule_based", selectedIds);
+    setValue("ai_rule_based", selectedIds.map(Number));
   };
 
   const handleRemoveContentTone = (id: string) => {
-    const updatedTones = contentTones.filter((toneId: string) => toneId !== id);
+    const updatedTones = contentTones.filter((toneId: number) => toneId !== Number(id));
     setValue("content_tone", updatedTones);
   };
 
   const handleRemoveAiRule = (id: string) => {
-    const updatedRules = aiRules.filter((ruleId: string) => ruleId !== id);
+    const updatedRules = aiRules.filter((ruleId: number) => ruleId !== Number(id));
     setValue("ai_rule_based", updatedRules);
   };
   return (
@@ -146,7 +146,7 @@ export function PostContentInfoStep() {
           <Box sx={{ p: 3 }}>
             <SelectedItemsTable
               type="content_tone"
-              selectedIds={contentTones}
+              selectedIds={contentTones.map(String)}
               onRemove={handleRemoveContentTone}
             />
           </Box>
@@ -170,7 +170,7 @@ export function PostContentInfoStep() {
           <Box sx={{ p: 3 }}>
             <SelectedItemsTable
               type="ai_rule_based"
-              selectedIds={aiRules}
+              selectedIds={aiRules.map(String)}
               onRemove={handleRemoveAiRule}
             />
           </Box>
@@ -181,7 +181,7 @@ export function PostContentInfoStep() {
         open={contentTonesDialogOpen}
         onClose={() => setContentTonesDialogOpen(false)}
         type="content_tone"
-        selectedIds={contentTones}
+        selectedIds={contentTones.map(String)}
         onConfirm={handleContentTonesConfirm}
       />
 
@@ -190,7 +190,7 @@ export function PostContentInfoStep() {
         open={aiRulesDialogOpen}
         onClose={() => setAiRulesDialogOpen(false)}
         type="ai_rule_based"
-        selectedIds={aiRules}
+        selectedIds={aiRules.map(String)}
         onConfirm={handleAiRulesConfirm}
       />
     </Stack>

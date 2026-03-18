@@ -295,6 +295,11 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
       return;
     }
 
+    if (!selectedContentSuggestions || selectedContentSuggestions.length === 0) {
+      toast.error("Vui lòng chọn ít nhất một bài viết");
+      return;
+    }
+
     // Use the new buildCampaignDataStep3 function
     const updateData = buildCampaignDataStep3(data, campaignId.toString(), selectedContentSuggestions);
 
@@ -419,7 +424,7 @@ function CampaignMultiStepFormComponent({ editData }: { editData?: Campaign | nu
   const renderLabelNextStep = {
     [CAMPAIGN_STEP_KEY.CAMPAIGN_INFO]: "Lên thông tin bài viết",
     [CAMPAIGN_STEP_KEY.POST_CONTENT_INFO]: "Tạo bài viết",
-    [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: `Tạo bài viết (${selectedContentSuggestions.length})`,
+    [CAMPAIGN_STEP_KEY.CREATE_POST_LIST]: `Tạo bài viết (${selectedContentSuggestions?.length ?? 0})`,
   };
 
   if (!activeStep) return null;
