@@ -1,11 +1,14 @@
 import { useMemo } from "react";
 import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
 
 import axios, { fetcher, endpoints, swrConfig } from "@/utils/axios";
 import {
   Conversation,
   ConversationCreateRequest,
 } from "@/models/conversation/conversations";
+
+const PAGE_SIZE = 20;
 
 // ----------------------------------------------------------------------
 
@@ -49,6 +52,63 @@ export function useGetConversations(userId?: string) {
   }, [data?.data, error, isLoading, isValidating]);
 
   return memoizedValue;
+}
+
+export function getConversationsPageURL(userId?: string, offset = 0) {
+  if (!userId) return null;
+  const queryParams = new URLSearchParams({
+    "filter[participants][_some][participant_id][_eq]": userId,
+    "filter[messages][id][_nnull]": "true",
+    sort: "-messages.date_created",
+    limit: PAGE_SIZE.toString(),
+    offset: offset.toString(),
+    fields: [
+      "*",
+      "participants.participant_id",
+      "participants.participant_name",
+      "messages.id",
+      "messages.sender_id",
+      "messages.type",
+      "messages.content",
+      "messages.date_created",
+    ].join(","),
+  }).toString();
+  return `${endpoints.conversations.list}?${queryParams}`;
+}
+
+export function useGetConversationsPaginated(userId?: string) {
+  const getKey = (pageIndex: number, previousPageData: { data: Conversation[] } | null) => {
+    if (!userId) return null;
+    if (previousPageData && previousPageData.data?.length < PAGE_SIZE) return null;
+    return getConversationsPageURL(userId, pageIndex * PAGE_SIZE);
+  };
+
+  const { data, isLoading, size, setSize, mutate } = useSWRInfinite(
+    getKey,
+    fetcher,
+    { ...swrConfig, revalidateFirstPage: false }
+  );
+
+  const conversations = useMemo(
+    () =>
+      (data?.flatMap((page) => (page?.data as Conversation[]) ?? []) ?? []).filter(
+        (conv) => conv.messages?.length > 0
+      ),
+    [data]
+  );
+
+  const lastPage = data?.[data.length - 1];
+  const hasMore = lastPage ? lastPage.data?.length === PAGE_SIZE : false;
+  const isLoadingMore = isLoading || (size > 0 && !!data && typeof data[size - 1] === "undefined");
+
+  return {
+    conversations,
+    conversationsLoading: isLoading && !data,
+    isLoadingMore: !!isLoadingMore,
+    hasMore,
+    loadMore: () => setSize((s) => s + 1),
+    mutateConversations: mutate,
+  };
 }
 // ----------------------------------------------------------------------
 

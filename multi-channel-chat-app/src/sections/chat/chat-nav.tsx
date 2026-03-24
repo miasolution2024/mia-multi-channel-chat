@@ -26,12 +26,8 @@ import { useRouter } from "next/navigation";
 import { Participant } from "@/models/participants/participant";
 import { Conversation } from "@/models/conversation/conversations";
 import { initialConversation } from "./utils/initial-conversation";
-import {
-  createConversationAsync,
-  getConversationsURL,
-} from "@/actions/conversation";
+import { createConversationAsync } from "@/actions/conversation";
 import { websocketMessage } from "@/models/websocket-message";
-import { mutate } from "swr";
 import { CONFIG } from "@/config-global";
 import NotificationSound from "@/components/notification-sound/notification-sound";
 import { uuidv4 } from "@/utils/uuidv4";
@@ -48,12 +44,20 @@ export function ChatNav({
   collapseNav,
   conversations,
   selectedConversationId,
+  loadMore,
+  hasMore,
+  isLoadingMore,
+  mutateConversations,
 }: {
   loading: boolean;
   contacts: Participant[];
   collapseNav: any;
   conversations: Conversation[];
   selectedConversationId: string;
+  loadMore: () => void;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  mutateConversations: () => void;
 }) {
   const router = useRouter();
 
@@ -93,6 +97,7 @@ export function ChatNav({
   );
 
   const websocketRef = useRef<WebSocket | null>(null);
+  const scrollRef = useRef<HTMLElement | null>(null);
 
   const [playNotification, setPlayNotification] = useState<boolean>(false);
   useEffect(() => {
@@ -103,6 +108,20 @@ export function ChatNav({
       return () => clearTimeout(timer);
     }
   }, [playNotification]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const handleScroll = () => {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 80 && hasMore && !isLoadingMore) {
+        loadMore();
+      }
+    };
+
+    el.addEventListener("scroll", handleScroll);
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [hasMore, isLoadingMore, loadMore]);
 
   useEffect(() => {
     if (!user?.accessToken || !user?.id) {
@@ -170,10 +189,10 @@ export function ChatNav({
       if (data.event === "create") {
         console.log(`New conversation created`);
         setPlayNotification(true);
-        mutate(getConversationsURL(user?.id));
+        mutateConversations();
       } else if (data.event === "update") {
         console.log(`Conversation updated updated!`);
-        mutate(getConversationsURL(user?.id));
+        mutateConversations();
       }
 
       if (data.type === "ping") {
@@ -375,10 +394,11 @@ export function ChatNav({
       {loading ? (
         renderLoading
       ) : (
-        <Scrollbar sx={{ pb: 1 }}>
+        <Scrollbar ref={scrollRef} sx={{ pb: 1 }}>
           {searchContacts.query && !!allIds.length
             ? renderListResults
             : renderList}
+          {isLoadingMore && <ChatNavItemSkeleton />}
         </Scrollbar>
       )}
     </>

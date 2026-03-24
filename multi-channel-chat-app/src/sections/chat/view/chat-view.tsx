@@ -26,7 +26,7 @@ import {
 import { useGetUsers } from "@/actions/user";
 import {
   useGetConversation,
-  useGetConversations,
+  useGetConversationsPaginated,
 } from "@/actions/conversation";
 
 // ----------------------------------------------------------------------
@@ -49,7 +49,8 @@ export function ChatView() {
 
   const [recipients, setRecipients] = useState<Participant[]>([]);
 
-  const { conversations, conversationsLoading } = useGetConversations(user?.id);
+  const { conversations, conversationsLoading, loadMore, hasMore, isLoadingMore, mutateConversations } =
+    useGetConversationsPaginated(user?.id);
 
   const { conversation, conversationError, conversationLoading } =
     useGetConversation(`${selectedConversationId}`);
@@ -136,6 +137,10 @@ export function ChatView() {
               loading={conversationsLoading}
               selectedConversationId={selectedConversationId}
               collapseNav={conversationsNav}
+              loadMore={loadMore}
+              hasMore={hasMore}
+              isLoadingMore={isLoadingMore}
+              mutateConversations={mutateConversations}
             />
           ),
           main: (
