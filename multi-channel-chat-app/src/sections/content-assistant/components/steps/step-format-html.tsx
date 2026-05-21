@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import DOMPurify from "dompurify";
 import { useFormContext } from "react-hook-form";
 import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
@@ -154,7 +155,7 @@ export function StepFormatHtml() {
             }}
           >
             {htmlContent ? (
-              <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlContent) }} />
             ) : (
               <Typography color="text.secondary" sx={{ fontStyle: "italic" }}>
                 Chưa có nội dung để xem trước

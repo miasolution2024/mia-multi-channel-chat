@@ -55,7 +55,7 @@ export async function handleFacebookCallback(
     services,
     getSchema,
     `Redirect with authenticated code successfully`,
-    code,
+    "[REDACTED]",
     "handleFacebookCallback"
   );
 
@@ -72,8 +72,8 @@ export async function handleFacebookCallback(
       req,
       services,
       getSchema,
-      `Short-lived User Access Token successfully`,
-      shortLivedUserAccessToken,
+      `Short-lived User Access Token obtained successfully`,
+      "[REDACTED]",
       "handleFacebookCallback"
     );
 
@@ -86,8 +86,8 @@ export async function handleFacebookCallback(
       req,
       services,
       getSchema,
-      `Long-lived User Access Token successfully`,
-      userAccessToken,
+      `Long-lived User Access Token obtained successfully`,
+      "[REDACTED]",
       "handleFacebookCallback"
     );
 
@@ -171,7 +171,7 @@ export async function handleInstagramCallback(
     services,
     getSchema,
     `Redirect with authenticated code successfully`,
-    code,
+    "[REDACTED]",
     "handleInstagramCallback"
   );
 
@@ -187,8 +187,8 @@ export async function handleInstagramCallback(
       req,
       services,
       getSchema,
-      `Short-lived User Access Token successfully`,
-      shortLivedUserAccessToken,
+      `Short-lived User Access Token obtained successfully`,
+      "[REDACTED]",
       "handleInstagramCallback"
     );
 
@@ -201,8 +201,8 @@ export async function handleInstagramCallback(
       req,
       services,
       getSchema,
-      `Long-lived User Access Token successfully`,
-      accessToken,
+      `Long-lived User Access Token obtained successfully`,
+      "[REDACTED]",
       "handleInstagramCallback"
     );
 
@@ -281,8 +281,8 @@ export async function handleZaloOACallback(
     req,
     services,
     getSchema,
-    `Redirect with authenticated code and code_verifier: ${code_verifier} successfully`,
-    code,
+    `Redirect with authenticated code successfully`,
+    "[REDACTED]",
     "handleZaloCallback"
   );
 
@@ -298,7 +298,7 @@ export async function handleZaloOACallback(
       services,
       getSchema,
       `Get Access Token successfully`,
-      JSON.stringify({ accessToken, refreshToken, expiresIn }),
+      "[REDACTED]",
       "handleZaloCallback"
     );
 
