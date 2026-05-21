@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useRef, useMemo, useState, useCallback } from "react";
+import { useRef, useMemo, useState, useCallback, useEffect } from "react";
 
 import Stack from "@mui/material/Stack";
 import InputBase from "@mui/material/InputBase";
 import IconButton from "@mui/material/IconButton";
+import { mutate } from "swr";
 
 import { Iconify } from "@/components/iconify";
 
@@ -20,6 +21,7 @@ import { MultiFilePreview } from "@/components/upload";
 import { uploadFile } from "@/actions/upload";
 import { fileTypeByUrl, getMessageType } from "@/components/file-thumbnail";
 import { useSearchParams } from "next/navigation";
+import { getConversationDetailURL } from "@/actions/conversation";
 
 // ----------------------------------------------------------------------
 
@@ -27,10 +29,14 @@ export function ChatMessageInput({
   disabled,
   selectedConversationId,
   conversation,
+  pendingSuggestion,
+  onSuggestionConsumed,
 }: {
   disabled: boolean;
   selectedConversationId?: number;
   conversation?: Conversation;
+  pendingSuggestion?: string;
+  onSuggestionConsumed?: () => void;
 }) {
   const { user } = useAuthContext();
 
@@ -39,6 +45,13 @@ export function ChatMessageInput({
 
   const [message, setMessage] = useState("");
   const isSending = useBoolean();
+
+  useEffect(() => {
+    if (pendingSuggestion) {
+      setMessage(pendingSuggestion);
+      onSuggestionConsumed?.();
+    }
+  }, [pendingSuggestion, onSuggestionConsumed]);
 
   const searchParams = useSearchParams();
 
@@ -113,6 +126,9 @@ export function ChatMessageInput({
       }
 
       await sendMessage(messageData);
+      if (selectedConversationId) {
+        mutate(getConversationDetailURL(selectedConversationId));
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -134,20 +150,24 @@ export function ChatMessageInput({
         name="chat-message"
         id="chat-message-input"
         value={message}
-        onKeyUp={(event) => {
-          if (event.key !== "Enter") return;
-          handleSendMessage();
+        multiline
+        maxRows={6}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            handleSendMessage();
+          }
         }}
         onChange={handleChangeMessage}
         placeholder="Type a message"
         disabled={disabled || isSending.value}
         startAdornment={
-          <IconButton>
+          <IconButton sx={{ alignSelf: 'flex-end', mb: '2px' }}>
             <Iconify icon="eva:smiling-face-fill" />
           </IconButton>
         }
         endAdornment={
-          <Stack direction="row" sx={{ flexShrink: 0 }}>
+          <Stack direction="row" sx={{ flexShrink: 0, alignSelf: 'flex-end', mb: '2px' }}>
             <IconButton onClick={handleAttach}>
               <Iconify icon="eva:attach-2-fill" />
             </IconButton>
@@ -158,9 +178,18 @@ export function ChatMessageInput({
         }
         sx={{
           px: 1,
-          height: 56,
+          py: 0.75,
+          minHeight: 56,
           flexShrink: 0,
+          alignItems: 'flex-end',
           borderTop: (theme: any) => `solid 1px ${theme.vars.palette.divider}`,
+          '& .MuiInputBase-inputMultiline': {
+            py: '6px',
+            maxHeight: 130,
+            overflowY: 'auto !important',
+            resize: 'none',
+            alignSelf: 'flex-end',
+          },
         }}
       />
       {file && (

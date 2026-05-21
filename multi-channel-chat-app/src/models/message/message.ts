@@ -18,6 +18,9 @@ export type Message = Common & {
   type: MessageType;
   external_message_id: string;
   attachments: Attachment[];
+  translated_message: string | null;
+  original_language: string | null;
+  ai_reply_message_suggestion: string | null;
 };
 
 export type MessageCreateRequest = {
@@ -36,6 +39,7 @@ export type MessageCreateRequest = {
   }[];
   external_receive_id?: string;
   external_sender_id?: string;
+  original_language?: string | 'vi';
 };
 
 export type Attachment = {

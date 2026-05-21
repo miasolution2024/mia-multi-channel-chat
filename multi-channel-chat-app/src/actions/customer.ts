@@ -1,7 +1,11 @@
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import axiosInstance, { endpoints, fetcher, swrConfig } from "@/utils/axios";
 import { useMemo } from "react";
 import { Customer, CustomerRequest } from "@/models/customer/customer";
+
+export function getCustomerByIdURL(customerId: string) {
+  return `${endpoints.customers.list}/${customerId}`;
+}
 
 // ----------------------------------------------------------------------
 
@@ -76,7 +80,7 @@ export function useGetCustomers() {
 
 // ----------------------------------------------------------------------
 export function useGetCustomerById(customerID?: string) {
-  const url = customerID ? `${endpoints.customers.list}/${customerID}` : "";
+  const url = customerID ? getCustomerByIdURL(customerID) : "";
   const { data, isLoading, error, isValidating } = useSWR(
     url,
     fetcher,
@@ -161,6 +165,7 @@ export async function updateCustomerChatbotActiveAsync(
       chatbot_response: isChatbotActive,
     });
     if ((response.status = 200)) {
+      mutate(getCustomerByIdURL(customerId));
       return response.data;
     }
   } catch (error) {

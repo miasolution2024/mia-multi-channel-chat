@@ -30,6 +30,10 @@ export function initialConversation({
     (participant: Participant) => participant.participant_type === ParticipantType.CUSTOMER
   );
 
+  const lastCustomerMessage = [...(conversation?.messages ?? [])]
+    .reverse()
+    .find((m) => m.sender_type === ParticipantType.CUSTOMER);
+
   const messageData: MessageCreateRequest = {
     channel: conversation?.channel || selectedChannel,
     conversation: selectedConversationId ?? 0,
@@ -41,6 +45,7 @@ export function initialConversation({
     sender_type: ParticipantType.STAFF,
     external_receive_id: conversation?.omni_channel?.page_id,
     external_sender_id: recipient?.external_user_id,
+    original_language: lastCustomerMessage?.original_language ?? 'vi',
   };
 
   return { messageData };

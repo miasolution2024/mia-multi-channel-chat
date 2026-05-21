@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { EmptyContent } from "@/components/empty-content";
 
@@ -11,6 +11,7 @@ import { ChatRoom } from "../chat-room";
 import { ChatMessageList } from "../chat-message-list";
 import { ChatMessageInput } from "../chat-message-input";
 import { ChatHeaderDetail } from "../chat-header-detail";
+import { ChatAiSuggestion } from "../chat-ai-suggestion";
 import { useCollapseNav } from "../hooks/use-collapse-nav";
 import { useRouter, useSearchParams } from "next/navigation";
 import { paths } from "@/routes/path";
@@ -37,6 +38,8 @@ export function ChatView() {
   const conversationsNav = useCollapseNav();
 
   const allParticipants = conversation ? conversation.participants : [];
+
+  const [pendingSuggestion, setPendingSuggestion] = useState<string | undefined>();
 
   useEffect(() => {
     if (conversationError || !selectedConversationId) {
@@ -96,10 +99,19 @@ export function ChatView() {
                 />
               )}
 
+              {conversation && (
+                <ChatAiSuggestion
+                  conversation={conversation}
+                  onUseSuggestion={(text) => setPendingSuggestion(text)}
+                />
+              )}
+
               <ChatMessageInput
                 selectedConversationId={selectedConversationId}
                 disabled={!selectedConversationId}
                 conversation={conversation}
+                pendingSuggestion={pendingSuggestion}
+                onSuggestionConsumed={() => setPendingSuggestion(undefined)}
               />
             </>
           ),

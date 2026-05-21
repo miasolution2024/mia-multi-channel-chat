@@ -124,6 +124,23 @@ export function ChatMessageList({
           },
         })
       );
+
+      connection.send(
+        JSON.stringify({
+          type: "subscribe",
+          event: "update",
+          collection: "mc_messages",
+          uid: uuidv4(),
+          query: {
+            fields: ["id,conversation,ai_reply_message_suggestion,translated_message"],
+            filter: {
+              conversation: {
+                _eq: selectConversationId,
+              },
+            },
+          },
+        })
+      );
     };
 
     const handleOpen = () => {
@@ -152,6 +169,11 @@ export function ChatMessageList({
 
         mutate(getConversationDetailURL(selectConversationId));
         mutate(getConversationsUnreadCountURL(user?.company_id?.id || "", user?.isAdmin));
+      }
+
+      if (data.event === "update") {
+        console.log("Message updated (AI suggestion / translation), refetching.");
+        mutate(getConversationDetailURL(selectConversationId));
       }
       if (data.type === "ping") {
         connection.send(JSON.stringify({ type: "pong" }));

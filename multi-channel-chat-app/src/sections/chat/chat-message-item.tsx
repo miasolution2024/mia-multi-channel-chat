@@ -43,6 +43,7 @@ export function ChatMessageItem({
   onOpenLightbox: () => void;
 }) {
   const [isOpenDialog, setIsOpenDialog] = useState(false);
+  const [showTranslated, setShowTranslated] = useState(false);
 
   const popover = usePopover();
 
@@ -56,9 +57,25 @@ export function ChatMessageItem({
 
   const { firstName, participant_avatar } = senderDetails;
 
-  const { content, attachments, date_created, sender_type } = message;
+  const {
+    content,
+    attachments,
+    date_created,
+    sender_type,
+    translated_message,
+    original_language,
+  } = message;
 
   const firstAttachment = attachments[0]?.directus_files_id;
+
+  const canTranslate =
+    !!translated_message &&
+    !!original_language &&
+    original_language.toLowerCase() !== "vi" &&
+    original_language.toLowerCase() !== "vietnamese" &&
+    original_language.toLowerCase() !== "tiếng việt";
+
+  const displayedContent = canTranslate && showTranslated ? translated_message : content;
 
   const handleCloseDialog = () => setIsOpenDialog(false);
 
@@ -274,7 +291,26 @@ export function ChatMessageItem({
       {type === MessageType.IMAGE && renderImage}
       {type === MessageType.TEXT && (
         <>
-          {content}
+          {displayedContent}
+          {canTranslate && (
+            <Stack direction="row" alignItems="center" sx={{ mt: 0.5 }}>
+              <Typography
+                variant="caption"
+                onClick={() => setShowTranslated((prev) => !prev)}
+                sx={{
+                  cursor: "pointer",
+                  color: "primary.main",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.25,
+                  "&:hover": { textDecoration: "underline" },
+                }}
+              >
+                <Iconify icon="solar:translation-bold-duotone" width={14} />
+                {showTranslated ? `Original (${original_language})` : "Translate"}
+              </Typography>
+            </Stack>
+          )}
           {sender_type !== ParticipantType.CUSTOMER && (
             <Typography
               variant="caption"
