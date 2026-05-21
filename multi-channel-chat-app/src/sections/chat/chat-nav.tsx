@@ -83,6 +83,7 @@ export function ChatNav({
 
   const [searchQuery, setSearchQuery] = useState("");
 
+  const PAGE_SESSION_KEY = "chat_selected_page_id";
   const [selectedPageId, setSelectedPageId] = useState("");
 
   const searchParams = useSearchParams();
@@ -136,9 +137,10 @@ export function ChatNav({
   );
 
   useEffect(() => {
-    if (omniChannels.length > 0) {
-      setSelectedPageId(omniChannels[0].page_id);
-    }
+    if (omniChannels.length === 0) return;
+    const saved = sessionStorage.getItem(PAGE_SESSION_KEY);
+    const valid = saved && omniChannels.some((c) => c.page_id === saved);
+    setSelectedPageId(valid ? saved : omniChannels[0].page_id);
   }, [omniChannels]);
 
   useEffect(() => {
@@ -305,8 +307,11 @@ export function ChatNav({
     async (result: Customer) => {
       handleClickAwaySearch();
 
-      const linkTo = (id: number) =>
-        router.push(`${paths.dashboard.chat}?id=${id}`);
+      const linkTo = (id: number) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("id", id.toString());
+        router.push(`${paths.dashboard.chat}?${params.toString()}`);
+      };
 
       try {
         const conversationSearchResults = (await getConversationByParticipantId(
@@ -345,6 +350,7 @@ export function ChatNav({
 
   const handSelectPage = (event: SelectChangeEvent) => {
     setSelectedPageId(event.target.value);
+    sessionStorage.setItem(PAGE_SESSION_KEY, event.target.value);
     if (chatNavRef.current) {
       chatNavRef.current.scrollTop = 0;
     }

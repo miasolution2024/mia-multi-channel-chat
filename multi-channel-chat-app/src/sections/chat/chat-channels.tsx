@@ -6,7 +6,7 @@ import Stack from "@mui/material/Stack";
 import { Scrollbar } from "@/components/scrollbar";
 
 import { ConversationChannel } from "@/models/conversation/conversations";
-import { Avatar, Badge, ListItemButton } from "@mui/material";
+import { Avatar, Badge, ListItemButton, Tooltip } from "@mui/material";
 import { CONFIG } from "@/config-global";
 import { useGetUnreadCountGroupByChannel } from "@/actions/conversation";
 import { useAuthContext } from "@/auth/hooks/use-auth-context";
@@ -57,7 +57,10 @@ export function ChatChannels() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const SESSION_KEY = "chat_selected_channel";
+
   const currentChannel = (searchParams.get("channel") ||
+    (typeof sessionStorage !== "undefined" && sessionStorage.getItem(SESSION_KEY)) ||
     ConversationChannel.FACEBOOK) as ConversationChannel;
 
   const [selectedChannel, setSelectedChannel] =
@@ -65,6 +68,7 @@ export function ChatChannels() {
 
   const handleSelectedChannel = (channel: ConversationChannel) => {
     setSelectedChannel(channel);
+    sessionStorage.setItem(SESSION_KEY, channel);
     const newSearchParams = new URLSearchParams();
     for (const key of searchParams.keys()) {
       if (key !== "channel") {
@@ -94,29 +98,31 @@ export function ChatChannels() {
 
             return (
               <Box key={index} component="li" sx={{ display: "flex" }}>
-                <ListItemButton
-                  onClick={() => handleSelectedChannel(c.name)}
-                  sx={{
-                    py: 1.5,
-                    px: 2.5,
-                    gap: 2,
-                    ...(c.name === selectedChannel && {
-                      bgcolor: "action.selected",
-                    }),
-                  }}
-                >
-                  <Badge
-                    badgeContent={unreadCount}
-                    color="error"
-                    overlap="circular"
+                <Tooltip title={c.name} placement="right" arrow>
+                  <ListItemButton
+                    onClick={() => handleSelectedChannel(c.name)}
+                    sx={{
+                      py: 1.5,
+                      px: 2.5,
+                      gap: 2,
+                      ...(c.name === selectedChannel && {
+                        bgcolor: "action.selected",
+                      }),
+                    }}
                   >
-                    <Avatar
-                      alt={c.name}
-                      src={c.src}
-                      sx={{ width: 40, height: 40 }}
-                    />
-                  </Badge>
-                </ListItemButton>
+                    <Badge
+                      badgeContent={unreadCount}
+                      color="error"
+                      overlap="circular"
+                    >
+                      <Avatar
+                        alt={c.name}
+                        src={c.src}
+                        sx={{ width: 40, height: 40 }}
+                      />
+                    </Badge>
+                  </ListItemButton>
+                </Tooltip>
               </Box>
             );
           }

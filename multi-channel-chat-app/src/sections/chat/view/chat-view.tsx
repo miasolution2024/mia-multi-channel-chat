@@ -43,9 +43,13 @@ export function ChatView() {
 
   useEffect(() => {
     if (conversationError || !selectedConversationId) {
-      router.push(paths.dashboard.chat);
+      const channel = searchParams.get("channel");
+      const target = channel
+        ? `${paths.dashboard.chat}?channel=${channel}`
+        : paths.dashboard.chat;
+      router.push(target);
     }
-  }, [conversationError, router, selectedConversationId]);
+  }, [conversationError, router, selectedConversationId, searchParams]);
 
   return (
     <DashboardContent
