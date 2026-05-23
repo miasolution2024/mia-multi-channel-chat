@@ -31,12 +31,14 @@ export function ChatMessageInput({
   conversation,
   pendingSuggestion,
   onSuggestionConsumed,
+  onMessageSending,
 }: {
   disabled: boolean;
   selectedConversationId?: number;
   conversation?: Conversation;
   pendingSuggestion?: string;
   onSuggestionConsumed?: () => void;
+  onMessageSending?: (content: string) => void;
 }) {
   const { user } = useAuthContext();
 
@@ -120,6 +122,7 @@ export function ChatMessageInput({
       if (!message && !file) return;
 
       isSending.onTrue();
+      onMessageSending?.(message);
 
       if (file) {
         await handleUpload(file);
@@ -142,6 +145,7 @@ export function ChatMessageInput({
     isSending,
     file,
     handleUpload,
+    onMessageSending,
   ]);
 
   return (

@@ -7,6 +7,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
 import { alpha } from '@mui/material/styles';
 
 import { Iconify } from '@/components/iconify';
@@ -36,9 +37,10 @@ export function ChatAiSuggestion({ conversation, onUseSuggestion }: Props) {
   const lastIsCustomer = lastMessage?.sender_type === ParticipantType.CUSTOMER;
   const aiSuggestion = lastMessage?.ai_reply_message_suggestion;
 
-  const showSuggestion = !isChatbotActive && !!aiSuggestion && lastIsCustomer;
+  const showSuggestion = !!aiSuggestion && lastIsCustomer;
+  const isLoadingSuggestion = !isChatbotActive && !aiSuggestion && lastIsCustomer;
 
-  if (!showSuggestion) return null;
+  if (!showSuggestion && !isLoadingSuggestion) return null;
 
   return (
     <Box
@@ -60,47 +62,53 @@ export function ChatAiSuggestion({ conversation, onUseSuggestion }: Props) {
         sx={{
           px: 1.5,
           py: 0.75,
-          cursor: 'pointer',
+          cursor: isLoadingSuggestion ? 'default' : 'pointer',
           bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
           borderBottom: expanded
             ? (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
             : 'none',
           userSelect: 'none',
         }}
-        onClick={() => setExpanded((prev) => !prev)}
+        onClick={() => !isLoadingSuggestion && setExpanded((prev) => !prev)}
       >
-        <Iconify
-          icon="solar:magic-stick-3-bold-duotone"
-          width={18}
-          sx={{ color: 'primary.main' }}
-        />
+        {isLoadingSuggestion ? (
+          <CircularProgress size={16} thickness={5} sx={{ color: 'primary.main' }} />
+        ) : (
+          <Iconify
+            icon="solar:magic-stick-3-bold-duotone"
+            width={18}
+            sx={{ color: 'primary.main' }}
+          />
+        )}
         <Typography
           variant="caption"
           fontWeight={700}
           sx={{ color: 'primary.main', flex: 1 }}
         >
-          AI gợi ý câu trả lời
+          {isLoadingSuggestion ? 'AI đang soạn gợi ý...' : 'AI gợi ý câu trả lời'}
         </Typography>
 
-        <Tooltip title={expanded ? 'Thu gọn' : 'Mở rộng'}>
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpanded((prev) => !prev);
-            }}
-            sx={{ color: 'primary.main', p: 0.25 }}
-          >
-            <Iconify
-              icon={expanded ? 'eva:chevron-down-fill' : 'eva:chevron-up-fill'}
-              width={18}
-            />
-          </IconButton>
-        </Tooltip>
+        {!isLoadingSuggestion && (
+          <Tooltip title={expanded ? 'Thu gọn' : 'Mở rộng'}>
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((prev) => !prev);
+              }}
+              sx={{ color: 'primary.main', p: 0.25 }}
+            >
+              <Iconify
+                icon={expanded ? 'eva:chevron-down-fill' : 'eva:chevron-up-fill'}
+                width={18}
+              />
+            </IconButton>
+          </Tooltip>
+        )}
       </Stack>
 
       {/* Content */}
-      <Collapse in={expanded} unmountOnExit>
+      <Collapse in={expanded && !isLoadingSuggestion} unmountOnExit>
         <Box sx={{ p: 1.5 }}>
           <Stack
             direction="row"

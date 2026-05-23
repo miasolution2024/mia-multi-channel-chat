@@ -1,5 +1,7 @@
 import Stack from "@mui/material/Stack";
 import LinearProgress from "@mui/material/LinearProgress";
+import CircularProgress from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
 
 import { Scrollbar } from "@/components/scrollbar";
 import { Lightbox, useLightBox } from "@/components/lightbox";
@@ -31,11 +33,13 @@ export function ChatMessageList({
   participants,
   loading,
   selectConversationId,
+  pendingMessageContent,
 }: {
   messages: Message[];
   participants: Participant[];
   loading: boolean;
   selectConversationId: number;
+  pendingMessageContent?: string;
 }) {
   const { messagesEndRef } = useMessagesScroll(messages);
 
@@ -249,6 +253,36 @@ export function ChatMessageList({
             }
           />
         ))}
+
+        {pendingMessageContent && (
+          <Stack direction="row" justifyContent="flex-end" sx={{ mb: 5 }}>
+            <Stack alignItems="flex-end">
+              <Typography
+                noWrap
+                variant="caption"
+                sx={{ mb: 1, color: 'text.disabled', display: 'flex', alignItems: 'center', gap: 0.5 }}
+              >
+                <CircularProgress size={10} thickness={5} />
+                Đang gửi...
+              </Typography>
+              <Stack
+                sx={{
+                  p: 1.5,
+                  minWidth: 48,
+                  maxWidth: 350,
+                  borderRadius: 1,
+                  typography: 'body2',
+                  bgcolor: 'primary.lighter',
+                  color: 'grey.800',
+                  opacity: 0.6,
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {pendingMessageContent}
+              </Stack>
+            </Stack>
+          </Stack>
+        )}
       </Scrollbar>
 
       <Lightbox

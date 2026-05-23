@@ -40,6 +40,13 @@ export function ChatView() {
   const allParticipants = conversation ? conversation.participants : [];
 
   const [pendingSuggestion, setPendingSuggestion] = useState<string | undefined>();
+  const [pendingMessageContent, setPendingMessageContent] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (conversation?.messages?.length) {
+      setPendingMessageContent(undefined);
+    }
+  }, [conversation?.messages?.length]);
 
   useEffect(() => {
     if (conversationError || !selectedConversationId) {
@@ -94,6 +101,7 @@ export function ChatView() {
                   participants={allParticipants}
                   loading={conversationLoading}
                   selectConversationId={selectedConversationId}
+                  pendingMessageContent={pendingMessageContent}
                 />
               ) : (
                 <EmptyContent
@@ -116,6 +124,7 @@ export function ChatView() {
                 conversation={conversation}
                 pendingSuggestion={pendingSuggestion}
                 onSuggestionConsumed={() => setPendingSuggestion(undefined)}
+                onMessageSending={(content) => setPendingMessageContent(content)}
               />
             </>
           ),
