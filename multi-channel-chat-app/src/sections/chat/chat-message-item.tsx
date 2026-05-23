@@ -68,12 +68,7 @@ export function ChatMessageItem({
 
   const firstAttachment = attachments[0]?.directus_files_id;
 
-  const canTranslate =
-    !!translated_message &&
-    !!original_language &&
-    original_language.toLowerCase() !== "vi" &&
-    original_language.toLowerCase() !== "vietnamese" &&
-    original_language.toLowerCase() !== "tiếng việt";
+  const canTranslate = !!translated_message;
 
   const displayedContent = canTranslate && showTranslated ? translated_message : content;
 
